@@ -3,163 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite | Terminal</title>
+    <title>ATS Elite Terminal | Market Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
+        #chart { width: 100%; height: 400px; }
+    </style>
+</head>
+<body x-data="terminalLogic()">
+
+    <header class="h-16 glass border-b border-[#14211e] flex justify-between items-center px-8">
+        <div class="flex items-center gap-4">
+            <a href="dashboard.html" class="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest">← Volver</a>
+            <div class="h-4 w-[1px] bg-gray-800"></div>
+            <span class="text-[10px] font-black italic uppercase">Market: <span class="text-[#00ffa3]">Volatility 100 (1s)</span></span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right">
+                <div class="text-[8px] text-gray-500 font-bold uppercase" x-text="'Balance ' + accountType"></div>
+                <div class="text-[#00ffa3] font-mono font-bold text-sm italic">$<span x-text="balance">0.00</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 space-y-6">
+            <div class="glass rounded-[32px] p-6 overflow-hidden">
+                <div id="chart"></div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button @click="executeTrade('buy')" class="bg-[#00ffa3] text-black font-black py-6 rounded-2xl uppercase italic text-sm hover:scale-[1.02] transition shadow-lg shadow-[#00ffa3]/20">Compra (Rise)</button>
+                <button @click="executeTrade('sell')" class="bg-[#ff4444] text-white font-black py-6 rounded-2xl uppercase italic text-sm hover:scale-[1.02] transition shadow-lg shadow-red-500/20">Venta (Fall)</button>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="glass rounded-[32px] p-6">
+                <h3 class="text-[10px] font-black uppercase text-gray-500 mb-4 tracking-widest">Configuración</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Inversión (USD)</label>
+                        <input type="number" x-model="stake" class="w-full bg-black border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00ffa3]">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Duración (Ticks)</label>
+                        <select class="w-full bg-black border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none">
+                            <option>5 Ticks</option>
+                            <option>10 Ticks</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' },
-                        deriv: { green: '#00ffad', red: '#ff4444' }
-                    }
+        function terminalLogic() {
+            return {
+                balance: '0.00',
+                accountType: 'Real',
+                stake: 10,
+                socket: null,
+                lineSeries: null,
+
+                init() {
+                    this.initChart();
+                    this.connectMarket();
+                },
+
+                initChart() {
+                    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+                        layout: { backgroundColor: 'transparent', textColor: '#666' },
+                        grid: { vertLines: { color: '#0a0f0e' }, horzLines: { color: '#0a0f0e' } },
+                        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                        rightPriceScale: { borderColor: '#14211e' },
+                        timeScale: { borderColor: '#14211e', timeVisible: true, secondsVisible: true }
+                    });
+                    this.lineSeries = chart.addLineSeries({ color: '#00ffa3', lineWidth: 2 });
+                },
+
+                connectMarket() {
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token1');
+                    
+                    this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
+
+                    this.socket.onopen = () => {
+                        if(token) this.socket.send(JSON.stringify({ "authorize": token }));
+                        // Suscribirse a precios de Volatility 100
+                        this.socket.send(JSON.stringify({ "ticks": "R_100" }));
+                    };
+
+                    this.socket.onmessage = (msg) => {
+                        const data = JSON.parse(msg.data);
+                        
+                        if (data.msg_type === 'tick') {
+                            this.lineSeries.update({
+                                time: data.tick.epoch,
+                                value: data.tick.quote
+                            });
+                        }
+
+                        if (data.msg_type === 'authorize') {
+                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                        }
+
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        }
+                    };
+                },
+
+                executeTrade(direction) {
+                    alert(`Ejecutando ${direction} de $${this.stake} en mercado real...`);
                 }
             }
         }
     </script>
-    <style>
-        body { background-color: #000; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-        .input-terminal { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 8px; padding: 10px; font-size: 11px; outline: none; width: 100%; }
-        .price-line-anim { animation: scan 2s linear infinite; }
-        @keyframes scan { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
-        .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .btn-action { transition: all 0.3s ease; }
-        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.2); }
-        @keyframes candle-up { from { height: 0; } to { height: var(--h); } }
-        .candle { animation: candle-up 0.6s ease-out forwards; }
-    </style>
-</head>
-<body class="h-screen flex flex-col">
-    <header class="h-14 bg-brand-panel border-b border-brand-border flex justify-between items-center px-4 shrink-0">
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded bg-white flex items-center justify-center font-black text-black text-[10px]">ATS</div>
-                <span class="font-bold text-xs tracking-tighter uppercase italic">ATS <span class="text-brand-accent">Elite Terminal</span></span>
-            </div>
-            <nav class="flex gap-6 text-[10px] font-bold uppercase tracking-widest ml-4">
-                <a href="dashboard.html" class="text-gray-500 hover:text-white transition">Dashboard</a>
-                <span class="text-brand-accent border-b-2 border-brand-accent pb-1">Operar</span>
-                <span class="text-gray-500 italic opacity-50">Turbo Signals <span class="bg-red-500 text-white px-1 rounded text-[7px] ml-1">OFF</span></span>
-            </nav>
-        </div>
-        <div class="bg-black/40 border border-brand-border px-3 py-1 rounded-lg">
-            <span class="text-[7px] text-gray-500 font-bold uppercase block leading-none text-right">Conta real</span>
-            <span class="text-white font-mono font-bold text-xs">$ 4,779.87</span>
-        </div>
-    </header>
-
-    <div class="flex-1 flex overflow-hidden">
-        <aside class="w-72 bg-brand-panel border-r border-brand-border flex flex-col p-4 shrink-0">
-            <div class="mb-6">
-                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] italic mb-1">Configurações da IA</h3>
-                <p class="text-lg font-black text-white">$0 <span class="text-[10px] text-gray-500">(0%)</span></p>
-            </div>
-            <div class="space-y-4 flex-1">
-                <div>
-                    <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Mercado</label>
-                    <div class="input-terminal flex justify-between items-center mt-1">
-                        <span class="text-[10px] font-bold">📊 Volatility 100 Index</span>
-                        <span class="text-[8px] text-gray-600">▼</span>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div><label class="text-[8px] font-bold text-gray-500 uppercase">Quantia</label><input type="text" class="input-terminal text-center font-bold" value="$ 1"></div>
-                    <div><label class="text-[8px] font-bold text-gray-500 uppercase">Meta</label><input type="text" class="input-terminal text-center font-bold" value="$ 20"></div>
-                    <div><label class="text-[8px] font-bold text-gray-500 uppercase">Perda</label><input type="text" class="input-terminal text-center font-bold" value="$ 1k"></div>
-                </div>
-                <div class="bg-brand-accent/5 border border-brand-accent/20 rounded-xl p-3 flex items-center gap-3">
-                    <div class="w-8 h-8 bg-brand-accent/20 rounded-lg flex items-center justify-center text-brand-accent text-lg">🛡️</div>
-                    <div>
-                        <div class="text-[10px] font-black uppercase text-white leading-none">Conservador</div>
-                        <div class="text-[8px] font-bold text-brand-accent uppercase mt-1">▲ Baixo Risco</div>
-                    </div>
-                </div>
-            </div>
-            <button class="w-full bg-[#8b5cf6] text-white font-black py-4 rounded-xl text-[10px] uppercase italic tracking-widest btn-action">▶ Iniciar Robô</button>
-        </aside>
-
-        <main class="flex-1 flex flex-col bg-[#010404] relative">
-            <div class="h-9 border-b border-brand-border flex items-center justify-between px-4 bg-brand-panel/40">
-                <div class="flex items-center gap-4 text-[9px] font-bold text-gray-500 uppercase">
-                    <span class="text-brand-accent border-b border-brand-accent h-full flex items-center">Candlestick</span>
-                    <span class="hover:text-white cursor-pointer">Dígitos</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="flex bg-black rounded p-0.5 border border-brand-border">
-                        <button class="px-2 py-0.5 text-[8px] font-bold text-brand-accent bg-brand-accent/10 rounded">1m</button>
-                        <button class="px-2 py-0.5 text-[8px] font-bold text-gray-500">5m</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex-1 relative flex">
-                <div class="w-10 border-r border-brand-border flex flex-col items-center py-4 gap-4 bg-brand-panel/20 text-gray-500">
-                    <button class="hover:text-brand-accent transition">✛</button>
-                    <button class="hover:text-brand-accent transition">╱</button>
-                    <button class="hover:text-brand-accent transition">✎</button>
-                    <button class="hover:text-brand-accent transition">T</button>
-                </div>
-
-                <div class="flex-1 relative flex flex-col">
-                    <div class="absolute top-4 left-6 z-10">
-                        <h2 class="text-[11px] font-bold text-gray-400 uppercase">Volatility 100 Index · <span class="text-white">Deriv</span></h2>
-                        <div class="mt-1 flex items-baseline gap-2">
-                            <span class="text-2xl font-black italic text-white neon-text">754.5201</span>
-                            <span class="text-brand-accent font-bold text-[9px] tracking-widest">+0.1300 (+0.02%)</span>
-                        </div>
-                    </div>
-
-                    <div class="flex-1 w-full flex items-end justify-around px-12 pb-20 opacity-80">
-                        <div class="flex flex-col items-center group cursor-pointer"><div class="w-[1px] h-16 bg-gray-700"></div><div class="w-4 h-24 bg-deriv-green rounded-sm candle" style="--h: 96px"></div></div>
-                        <div class="flex flex-col items-center group cursor-pointer"><div class="w-[1px] h-12 bg-gray-700"></div><div class="w-4 h-16 bg-deriv-red rounded-sm candle" style="--h: 64px"></div></div>
-                        <div class="flex flex-col items-center group relative cursor-pointer">
-                            <div class="w-[1px] h-32 bg-gray-700"></div><div class="w-4 h-40 bg-deriv-green rounded-sm candle" style="--h: 160px"></div>
-                            <div class="absolute -right-[1000px] top-1/2 w-[2000px] border-t border-dashed border-brand-accent/40 price-line-anim"></div>
-                        </div>
-                    </div>
-
-                    <div class="absolute right-0 top-0 h-full w-12 border-l border-brand-border bg-black/40 flex flex-col justify-between py-10 text-[8px] text-gray-500 font-mono">
-                        <span>755.20</span><span>755.00</span><span>754.80</span><span>754.60</span>
-                        <span class="text-brand-accent font-bold bg-brand-accent/20 py-1 border-y border-brand-accent/30 text-center">754.52</span>
-                        <span>754.40</span><span>754.20</span><span>754.00</span>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <aside class="w-72 bg-brand-panel border-l border-brand-border p-4 shrink-0">
-            <div class="mb-6">
-                <h3 class="text-[10px] font-black text-gray-500 uppercase italic mb-1">Modo Manual</h3>
-                <p class="text-lg font-black text-white">$0 <span class="text-[10px] text-gray-500">(0%)</span></p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Tipo de Negociação</label>
-                    <div class="input-terminal text-brand-accent border-brand-accent/30 bg-brand-accent/5 text-center font-bold text-[10px] mt-1 italic">📈 Rise / Fall</div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[9px] font-bold text-gray-500 uppercase">Duração</label>
-                        <div class="input-terminal flex justify-between items-center mt-1"><button>-</button><span>1</span><button>+</button></div>
-                    </div>
-                    <div>
-                        <label class="opacity-0">.</label>
-                        <div class="input-terminal text-center">Ticks</div>
-                    </div>
-                </div>
-                <div class="space-y-3 pt-4">
-                    <button class="w-full bg-deriv-green hover:brightness-110 text-black p-4 rounded-xl flex justify-between items-center btn-action group">
-                        <div class="flex items-center gap-3"><span class="text-2xl font-black group-hover:scale-125 transition">↗</span><span class="text-[12px] font-black uppercase italic">Rise</span></div>
-                        <span class="text-[10px] font-black">1.85 USD</span>
-                    </button>
-                    <button class="w-full bg-deriv-red hover:brightness-110 text-white p-4 rounded-xl flex justify-between items-center btn-action group">
-                        <div class="flex items-center gap-3"><span class="text-2xl font-black group-hover:scale-125 transition">↘</span><span class="text-[11px] font-black uppercase italic">Fall</span></div>
-                        <span class="text-[10px] font-black">1.84 USD</span>
-                    </button>
-                </div>
-            </div>
-        </aside>
-    </div>
 </body>
 </html>
