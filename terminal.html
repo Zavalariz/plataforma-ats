@@ -13,10 +13,10 @@
         .glass-nav { background: rgba(5, 10, 10, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .sidebar { background: #080d0d; border-right: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
         .neon-green { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
-        /* Contenedor con altura forzada para que el gráfico no desaparezca */
         #chart-main { width: 100%; height: 100%; min-height: 400px; background: #050a0a; }
         .btn-action { transition: all 0.2s ease; font-weight: 800; font-style: italic; text-transform: uppercase; }
         input, select { background: #0c1414 !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
+        .bg-neon-green { background: #00ffa3; box-shadow: 0 0 20px rgba(0, 255, 163, 0.2); }
     </style>
 </head>
 <body x-data="terminalLogic()" class="h-screen flex flex-col">
@@ -28,16 +28,16 @@
                 <span class="text-xs font-black italic uppercase tracking-tighter">Elite <span class="neon-green">Terminal</span></span>
             </div>
             <nav class="flex gap-6 text-[9px] font-bold uppercase tracking-widest text-gray-500">
-                <a href="dashboard.html" class="hover:text-white transition">Dashboard</a>
+                <button @click="goBack" class="hover:text-white transition">Dashboard</button>
                 <span class="text-white border-b border-[#00ffa3] pb-1">Operar</span>
             </nav>
         </div>
         <div class="flex items-center gap-4">
             <div class="text-right">
                 <div class="text-[7px] text-gray-500 font-bold uppercase">Cuenta Real</div>
-                <div class="text-white font-bold text-sm leading-none">$<span x-text="balance">4,779.87</span></div>
+                <div class="text-white font-bold text-sm leading-none">$<span x-text="balance">Cargando...</span></div>
             </div>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white">RS</div>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 border border-white/10 flex items-center justify-center text-[10px] font-bold">RS</div>
         </div>
     </header>
 
@@ -67,13 +67,13 @@
                     <span class="text-[10px] font-bold">$1k</span>
                 </div>
             </div>
-            <button class="mt-auto w-full bg-[#8b5cf6] text-white py-4 rounded-xl font-black text-xs uppercase italic shadow-lg shadow-purple-500/20">▶ Iniciar Robô</button>
+            <button class="mt-auto w-full bg-[#8b5cf6] text-white py-4 rounded-xl font-black text-xs uppercase italic">▶ Iniciar Robô</button>
         </aside>
 
         <main class="flex-1 flex flex-col bg-[#050a0a] relative">
-            <div class="h-10 border-b border-white/5 flex items-center px-6 gap-4 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+            <div class="h-10 border-b border-white/5 flex items-center px-6 gap-4 text-[9px] font-bold uppercase tracking-widest">
                 <span class="text-[#00ffa3] border-b border-[#00ffa3]">Candlestick</span>
-                <span>Dígitos</span>
+                <span class="text-gray-600">Dígitos</span>
             </div>
             <div class="flex-1 relative overflow-hidden">
                 <div id="chart-main"></div>
@@ -92,110 +92,99 @@
             <div class="space-y-4">
                 <button @click="executeTrade('call')" class="w-full bg-[#00ffa3] text-black py-5 rounded-2xl flex flex-col items-center btn-action shadow-lg shadow-emerald-500/20">
                     <span class="text-sm">↗ RISE</span>
-                    <span class="text-[9px] opacity-70">Payout: 95%</span>
+                    <span class="text-[9px] opacity-70">PAYOUT: 95%</span>
                 </button>
                 <button @click="executeTrade('put')" class="w-full bg-[#ff3355] text-white py-5 rounded-2xl flex flex-col items-center btn-action shadow-lg shadow-red-500/20">
                     <span class="text-sm">↘ FALL</span>
-                    <span class="text-[9px] opacity-70">Payout: 95%</span>
+                    <span class="text-[9px] opacity-70">PAYOUT: 95%</span>
                 </button>
             </div>
             <div class="mt-4">
                 <label class="text-[8px] font-bold text-gray-500 uppercase mb-2 block text-center">Duração</label>
-                <div class="flex items-center bg-[#0c1414] rounded-lg border border-white/10 overflow-hidden">
-                    <button class="px-4 py-3 hover:bg-white/5">-</button>
+                <div class="flex items-center bg-[#0c1414] rounded-lg border border-white/10">
+                    <button class="px-4 py-3">-</button>
                     <input type="text" value="1" class="w-full text-center bg-transparent border-none text-xs font-bold text-white">
-                    <button class="px-4 py-3 hover:bg-white/5">+</button>
+                    <button class="px-4 py-3">+</button>
                 </div>
             </div>
         </aside>
     </div>
 
     <script>
-    function terminalLogic() {
-        return {
-            balance: 'Cargando...',
-            currentPrice: '---',
-            priceColor: 'text-white',
-            socket: null,
-            lineSeries: null,
+        function terminalLogic() {
+            return {
+                balance: 'Cargando...',
+                currentPrice: '---',
+                priceColor: 'text-white',
+                lineSeries: null,
+                socket: null,
 
-            init() {
-                this.setupChart();
-                this.connect();
-            },
+                init() {
+                    this.setupChart();
+                    this.connectDeriv();
+                },
 
-            setupChart() {
-                const chart = LightweightCharts.createChart(document.getElementById('chart-main'), {
-                    layout: { background: { color: '#050a0a' }, textColor: '#d1d5db' },
-                    grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255,255,255,0.03)' } },
-                    timeScale: { borderColor: 'rgba(255,255,255,0.05)', timeVisible: true },
-                    rightPriceScale: { borderColor: 'rgba(255,255,255,0.05)' },
-                });
+                goBack() { window.location.href = 'dashboard.html' + window.location.search; },
 
-                this.lineSeries = chart.addAreaSeries({
-                    lineColor: '#00ffa3',
-                    topColor: 'rgba(0, 255, 163, 0.2)',
-                    bottomColor: 'rgba(0, 255, 163, 0)',
-                    lineWidth: 2,
-                });
-
-                window.addEventListener('resize', () => {
-                    chart.applyOptions({ 
-                        width: document.getElementById('chart-main').clientWidth,
-                        height: document.getElementById('chart-main').clientHeight 
+                setupChart() {
+                    const container = document.getElementById('chart-main');
+                    const chart = LightweightCharts.createChart(container, {
+                        layout: { background: { color: '#050a0a' }, textColor: '#555' },
+                        grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255,255,255,0.03)' } },
+                        timeScale: { visible: true, borderColor: 'rgba(255,255,255,0.05)' },
+                        rightPriceScale: { borderColor: 'rgba(255,255,255,0.05)' },
                     });
-                });
-            },
 
-            connect() {
-                // 1. Extraer token de la URL (Sandra Elizabeth)
-                const params = new URLSearchParams(window.location.search);
-                const token = params.get('token1');
+                    this.lineSeries = chart.addAreaSeries({
+                        lineColor: '#00ffa3',
+                        topColor: 'rgba(0, 255, 163, 0.2)',
+                        bottomColor: 'rgba(0, 255, 163, 0)',
+                        lineWidth: 2,
+                    });
 
-                if (!token) {
-                    this.balance = "ERROR: Sin Token";
-                    console.error("No se encontró el token en la URL");
-                    return;
+                    new ResizeObserver(() => {
+                        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+                    }).observe(container);
+                },
+
+                connectDeriv() {
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token1'); // Captura el token de Sandra Elizabeth
+
+                    if (!token) {
+                        this.balance = "TOKEN ERROR";
+                        return;
+                    }
+
+                    this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
+
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": token }));
+                    };
+
+                    this.socket.onmessage = (msg) => {
+                        const data = JSON.parse(msg.data);
+                        if (data.msg_type === 'authorize') {
+                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                            this.socket.send(JSON.stringify({ "ticks": "R_100" }));
+                        }
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        }
+                        if (data.tick) {
+                            const price = data.tick.quote;
+                            this.priceColor = price > parseFloat(this.currentPrice) ? 'text-[#00ffa3]' : 'text-red-500';
+                            this.currentPrice = price.toFixed(4);
+                            this.lineSeries.update({ time: data.tick.epoch, value: price });
+                        }
+                    };
+                },
+
+                executeTrade(type) {
+                    alert('Ejecutando orden en cuenta de Sandra: ' + type);
                 }
-
-                this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-
-                this.socket.onopen = () => {
-                    // 2. Autorizar con el token real
-                    this.socket.send(JSON.stringify({ "authorize": token }));
-                };
-
-                this.socket.onmessage = (msg) => {
-                    const data = JSON.parse(msg.data);
-
-                    // 3. Cuando autoriza, pedir el balance real y los ticks
-                    if (data.msg_type === 'authorize') {
-                        this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                        this.socket.send(JSON.stringify({ "ticks": "R_100" }));
-                    }
-
-                    // 4. Actualizar Balance en Tiempo Real
-                    if (data.msg_type === 'balance') {
-                        this.balance = data.balance.balance.toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                    }
-
-                    // 5. Actualizar Gráfico y Precio
-                    if (data.msg_type === 'tick') {
-                        const price = data.tick.quote;
-                        this.priceColor = price > parseFloat(this.currentPrice) ? 'text-[#00ffa3]' : 'text-[#ff3355]';
-                        this.currentPrice = price.toFixed(4);
-                        this.lineSeries.update({
-                            time: data.tick.epoch,
-                            value: price
-                        });
-                    }
-                };
             }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
