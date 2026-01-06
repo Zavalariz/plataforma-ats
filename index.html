@@ -81,26 +81,6 @@
         </main>
     </div>
 
-    <div x-show="currentView === 'login'" x-cloak class="min-h-screen flex flex-col items-center justify-center p-6 relative z-10">
-        <div class="flex items-center gap-3 mb-10 fade-in">
-            <div class="w-12 h-12 rounded-xl bg-brand-accent flex items-center justify-center font-black text-black">ATS</div>
-            <span class="text-2xl font-extrabold uppercase text-white italic">Academia <span class="text-brand-accent">Solidario</span></span>
-        </div>
-        <div class="glass w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 rounded-[40px] overflow-hidden shadow-2xl fade-in">
-            <div class="p-16 flex flex-col items-center justify-center text-center border-r border-brand-border">
-                <h2 class="text-2xl font-extrabold mb-6 uppercase tracking-tighter">Tu plataforma <br>automatizada</h2>
-                <p class="text-gray-500 mb-8 text-sm italic">Crea tu cuenta en el bróker para comenzar hoy mismo.</p>
-                <a href="https://track.deriv.com/_t_m_X_1L2Z0W_1/1/" target="_blank" class="btn-action bg-blue-600 px-12 py-4 rounded-xl font-bold text-white text-xs inline-block uppercase">Abrir Cuenta Broker</a>
-            </div>
-            <div class="p-16 flex flex-col items-center justify-center text-center bg-white/[0.02]">
-                <h2 class="text-2xl font-extrabold mb-6 italic uppercase tracking-tighter">Acceso Directo</h2>
-                <p class="text-gray-500 mb-8 text-sm italic">Usa tu cuenta de Google o correo para entrar.</p>
-                <a href="registro.html" class="btn-action border-2 border-brand-accent text-brand-accent px-12 py-4 rounded-xl font-bold text-xs uppercase tracking-widest inline-block">Autenticar</a>
-            </div>
-        </div>
-        <button @click="currentView = 'landing'" class="mt-8 text-[10px] text-gray-500 uppercase font-bold tracking-widest">← Volver al inicio</button>
-    </div>
-
     <div x-show="currentView === 'app'" x-cloak class="h-screen flex flex-col relative z-10 overflow-hidden">
         <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
             <div class="flex items-center gap-6">
@@ -108,12 +88,13 @@
                 <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
                     <a href="#" class="text-brand-accent">Inicio</a>
                     <a href="#" @click="currentView = 'terminal'" class="hover:text-white transition">Operar</a>
+                    <button @click="logout()" class="hover:text-red-500 transition">Salir</button>
                 </nav>
             </div>
             <div class="flex items-center gap-4">
                 <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
                     <div class="text-[8px] text-gray-500 font-bold uppercase">Balance Real</div>
-                    <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
+                    <div id="user-balance-header" class="text-brand-accent font-mono font-bold text-sm">$ 0.00</div>
                 </div>
             </div>
         </header>
@@ -122,9 +103,9 @@
             <div class="max-w-7xl mx-auto space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden">
-                        <h2 class="text-3xl font-black uppercase italic mb-2">Libera el potencial con <br><span class="text-brand-accent">Solidario Signals</span></h2>
+                        <h2 class="text-3xl font-black uppercase italic mb-2">Libera el potencial con <br><span id="user-name-welcome" class="text-brand-accent">Solidario Signals</span></h2>
                         <p class="text-gray-500 text-sm mb-6">Acceso premium para apalancar tus operaciones.</p>
-                        <button class="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase btn-action">SABER MÁS</button>
+                        <button @click="currentView = 'terminal'" class="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase btn-action">ENTRAR A OPERAR</button>
                     </div>
                     <div class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center group cursor-pointer hover:border-brand-accent/50 transition" @click="currentView = 'terminal'">
                         <div class="text-4xl mb-4">📈</div>
@@ -155,7 +136,7 @@
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-brand-accent flex items-center justify-center text-black font-bold text-xs">RS</div>
                             <div>
-                                <div class="text-[10px] font-black uppercase">Riky Sady</div>
+                                <div id="user-name-ranking" class="text-[10px] font-black uppercase">Cargando...</div>
                                 <div class="text-brand-accent font-bold text-[10px]">+57% 🏆</div>
                             </div>
                         </div>
@@ -182,7 +163,7 @@
                 <div class="bg-black/40 border border-brand-border px-3 py-1 rounded-lg flex items-center gap-3">
                     <div class="text-right">
                         <span class="text-[7px] text-gray-500 font-bold uppercase block leading-none">Conta real</span>
-                        <span class="text-white font-mono font-bold text-xs">$ 4,779.87</span>
+                        <span id="user-balance-terminal" class="text-white font-mono font-bold text-xs">$ 0.00</span>
                     </div>
                 </div>
             </div>
@@ -235,21 +216,12 @@
                         <span class="text-[9px] font-bold text-brand-accent border-b border-brand-accent h-full flex items-center uppercase cursor-pointer">Candlestick</span>
                         <span class="text-[9px] font-bold text-gray-500 uppercase cursor-pointer hover:text-white">Dígitos</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="flex bg-black rounded p-0.5 border border-brand-border">
-                            <button class="px-2 py-0.5 text-[8px] font-bold text-brand-accent bg-brand-accent/10 rounded">1m</button>
-                            <button class="px-2 py-0.5 text-[8px] font-bold text-gray-500">5m</button>
-                        </div>
-                        <button class="text-gray-500 hover:text-white px-2"><span class="text-[10px]">Indicators</span></button>
-                    </div>
                 </div>
                 
                 <div class="flex-1 relative flex">
                     <div class="w-10 border-r border-brand-border flex flex-col items-center py-4 gap-4 bg-brand-panel/20">
                         <button class="text-gray-500 hover:text-brand-accent text-xs">✛</button>
                         <button class="text-gray-500 hover:text-brand-accent text-xs">╱</button>
-                        <button class="text-gray-500 hover:text-brand-accent text-xs">✎</button>
-                        <button class="text-gray-500 hover:text-brand-accent text-xs">T</button>
                     </div>
 
                     <div class="flex-1 relative flex flex-col">
@@ -257,28 +229,12 @@
                             <div class="flex items-center gap-2"><h2 class="text-[11px] font-bold text-gray-400 uppercase">Volatility 100 Index · <span class="text-white">Deriv</span></h2></div>
                             <div class="mt-1 flex items-baseline gap-2">
                                 <span class="text-2xl font-black italic text-white neon-text">754.5201</span>
-                                <span class="text-brand-accent font-bold text-[9px] tracking-widest">+0.1300 (+0.02%)</span>
-                            </div>
-                            <div class="text-[8px] text-gray-500 font-mono mt-1 space-x-2">
-                                <span>O <span class="text-brand-accent">754.39</span></span>
-                                <span>H <span class="text-brand-accent">754.58</span></span>
-                                <span>L <span class="text-deriv-red">754.19</span></span>
                             </div>
                         </div>
 
                         <div class="flex-1 w-full flex items-end justify-around px-12 pb-20 opacity-80">
-                            <div class="flex flex-col items-center group cursor-pointer"><div class="w-0.5 h-16 bg-gray-600"></div><div class="w-3 h-20 bg-deriv-green rounded-sm group-hover:brightness-125 transition"></div></div>
-                            <div class="flex flex-col items-center group cursor-pointer"><div class="w-0.5 h-12 bg-gray-600"></div><div class="w-3 h-14 bg-deriv-red rounded-sm group-hover:brightness-125 transition"></div></div>
-                            <div class="flex flex-col items-center group cursor-pointer relative">
-                                <div class="w-0.5 h-32 bg-gray-600"></div><div class="w-3 h-40 bg-deriv-green rounded-sm group-hover:brightness-125 transition"></div>
-                                <div class="absolute -right-[1000px] top-1/2 w-[2000px] border-t border-dashed border-brand-accent/30 price-line-anim"></div>
-                            </div>
-                        </div>
-
-                        <div class="absolute right-0 top-0 h-full w-12 border-l border-brand-border bg-black/40 flex flex-col justify-between py-10 text-[8px] text-gray-500 font-mono">
-                            <span>755.20</span><span>755.00</span><span>754.80</span><span>754.60</span>
-                            <span class="text-brand-accent font-bold bg-brand-accent/10 py-1">754.52</span>
-                            <span>754.40</span><span>754.20</span><span>754.00</span>
+                            <div class="flex flex-col items-center"><div class="w-0.5 h-16 bg-gray-600"></div><div class="w-3 h-20 bg-deriv-green rounded-sm"></div></div>
+                            <div class="flex flex-col items-center"><div class="w-0.5 h-12 bg-gray-600"></div><div class="w-3 h-14 bg-deriv-red rounded-sm"></div></div>
                         </div>
                     </div>
                 </div>
@@ -290,40 +246,64 @@
                     <p class="text-lg font-black text-white">$0 <span class="text-[10px] text-gray-500">(0%)</span></p>
                 </div>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Tipo de Negociação</label>
-                        <div class="input-terminal text-brand-accent border-brand-accent/30 bg-brand-accent/5 text-center font-bold text-[10px] mt-1">📈 Rise / Fall</div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[9px] font-bold text-gray-500 uppercase ml-1">Duração</label>
-                            <div class="input-terminal flex justify-between items-center mt-1"><button class="text-gray-600">-</button><span class="font-bold text-[10px]">1</span><button class="text-gray-600">+</button></div>
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-transparent uppercase opacity-0">.</label>
-                            <div class="input-terminal text-center font-bold text-[10px] mt-1">Ticks</div>
-                        </div>
-                    </div>
-                    <div class="space-y-3 pt-4">
-                        <button class="w-full bg-deriv-green hover:brightness-110 text-black p-4 rounded-xl flex justify-between items-center transition btn-action group">
-                            <div class="flex items-center gap-3"><span class="text-2xl font-black group-hover:scale-125 transition">↗</span><span class="text-[11px] font-black uppercase italic">Rise</span></div>
-                            <span class="text-[10px] font-black">1.85 USD</span>
-                        </button>
-                        <button class="w-full bg-deriv-red hover:brightness-110 text-white p-4 rounded-xl flex justify-between items-center transition btn-action group">
-                            <div class="flex items-center gap-3"><span class="text-2xl font-black group-hover:scale-125 transition">↘</span><span class="text-[11px] font-black uppercase italic">Fall</span></div>
-                            <span class="text-[10px] font-black">1.84 USD</span>
-                        </button>
-                    </div>
+                    <button class="w-full bg-deriv-green hover:brightness-110 text-black p-4 rounded-xl flex justify-between items-center transition btn-action group">
+                        <span class="text-[11px] font-black uppercase italic">Rise</span>
+                        <span class="text-[10px] font-black">1.85 USD</span>
+                    </button>
+                    <button class="w-full bg-deriv-red hover:brightness-110 text-white p-4 rounded-xl flex justify-between items-center transition btn-action group">
+                        <span class="text-[11px] font-black uppercase italic">Fall</span>
+                        <span class="text-[10px] font-black">1.84 USD</span>
+                    </button>
                 </div>
             </aside>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNtlSyXjFCmdd1xPTzrYpJVK2wGGzzqCE",
+            authDomain: "plataforma-ats.firebaseapp.com",
+            projectId: "plataforma-ats",
+            storageBucket: "plataforma-ats.firebasestorage.app",
+            messagingSenderId: "179964433440",
+            appId: "1:179964433440:web:a1b6d7e847692ad5da1845"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         function tradingApp() {
             return {
                 currentView: 'landing',
-                initApp() { this.initParticles(); this.initScrollReveal(); },
+                initApp() { 
+                    this.initParticles(); 
+                    this.initScrollReveal(); 
+                    this.checkSession();
+                },
+                checkSession() {
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            db.collection("usuarios").doc(user.uid).get().then(doc => {
+                                if (doc.exists) {
+                                    const data = doc.data();
+                                    document.getElementById("user-name-welcome").innerText = data.nombre;
+                                    document.getElementById("user-name-ranking").innerText = data.nombre;
+                                    const balanceStr = "$" + data.balance.toLocaleString();
+                                    document.getElementById("user-balance-header").innerText = balanceStr;
+                                    document.getElementById("user-balance-terminal").innerText = balanceStr;
+                                    this.currentView = 'app';
+                                }
+                            });
+                        } else {
+                            this.currentView = 'landing';
+                        }
+                    });
+                },
+                logout() { auth.signOut().then(() => { window.location.reload(); }); },
                 initScrollReveal() {
                     const observer = new IntersectionObserver((entries) => {
                         entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
