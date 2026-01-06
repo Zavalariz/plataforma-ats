@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Terminal | Operativa Avanzada</title>
+    <title>ATS Elite Terminal | Operativa Real</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -11,11 +11,11 @@
     <style>
         body { background-color: #050a0a; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow: hidden; }
         .glass-nav { background: rgba(5, 10, 10, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .sidebar { background: #080d0d; border-right: 1px solid rgba(255,255,255,0.05); }
+        .sidebar { background: #080d0d; border-right: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
         .neon-green { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
-        .bg-neon-green { background: #00ffa3; box-shadow: 0 0 20px rgba(0, 255, 163, 0.2); }
+        /* Contenedor con altura forzada para que el gráfico no desaparezca */
+        #chart-main { width: 100%; height: 100%; min-height: 400px; background: #050a0a; }
         .btn-action { transition: all 0.2s ease; font-weight: 800; font-style: italic; text-transform: uppercase; }
-        #chart-main { width: 100%; height: 100%; }
         input, select { background: #0c1414 !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; }
     </style>
 </head>
@@ -29,8 +29,7 @@
             </div>
             <nav class="flex gap-6 text-[9px] font-bold uppercase tracking-widest text-gray-500">
                 <a href="dashboard.html" class="hover:text-white transition">Dashboard</a>
-                <a href="#" class="text-white border-b border-neon-green pb-1">Operar</a>
-                <a href="#" class="hover:text-white transition opacity-50">Turbo Signals <span class="text-red-500 text-[7px] ml-1">OFF</span></a>
+                <span class="text-white border-b border-[#00ffa3] pb-1">Operar</span>
             </nav>
         </div>
         <div class="flex items-center gap-4">
@@ -38,7 +37,7 @@
                 <div class="text-[7px] text-gray-500 font-bold uppercase">Cuenta Real</div>
                 <div class="text-white font-bold text-sm leading-none">$<span x-text="balance">4,779.87</span></div>
             </div>
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 border border-white/10 flex items-center justify-center text-[10px] font-bold">RS</div>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-700 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white">RS</div>
         </div>
     </header>
 
@@ -48,77 +47,64 @@
                 <h4 class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-4">Configurações da IA</h4>
                 <div class="text-xl font-bold">$0 <span class="text-[10px] text-gray-500 font-normal">(0%)</span></div>
             </div>
-
             <div>
                 <label class="text-[8px] font-bold text-gray-500 uppercase mb-2 block">Mercado</label>
                 <select class="w-full p-3 rounded-lg text-xs font-bold outline-none">
                     <option>Volatility 100 Index</option>
                 </select>
             </div>
-
             <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="text-[7px] font-bold text-gray-500 uppercase mb-1 block">Quantia</label>
-                    <div class="bg-[#0c1414] p-2 rounded text-center text-[10px] font-bold border border-white/5">$1</div>
+                <div class="bg-[#0c1414] p-2 rounded border border-white/5 text-center">
+                    <span class="text-[7px] text-gray-500 uppercase block">Quantia</span>
+                    <span class="text-[10px] font-bold">$1</span>
                 </div>
-                <div>
-                    <label class="text-[7px] font-bold text-gray-500 uppercase mb-1 block">Meta</label>
-                    <div class="bg-[#0c1414] p-2 rounded text-center text-[10px] font-bold border border-white/5">$20</div>
+                <div class="bg-[#0c1414] p-2 rounded border border-white/5 text-center">
+                    <span class="text-[7px] text-gray-500 uppercase block">Meta</span>
+                    <span class="text-[10px] font-bold">$20</span>
                 </div>
-                <div>
-                    <label class="text-[7px] font-bold text-gray-500 uppercase mb-1 block">Perda</label>
-                    <div class="bg-[#0c1414] p-2 rounded text-center text-[10px] font-bold border border-white/5">$1k</div>
+                <div class="bg-[#0c1414] p-2 rounded border border-white/5 text-center">
+                    <span class="text-[7px] text-gray-500 uppercase block">Perda</span>
+                    <span class="text-[10px] font-bold">$1k</span>
                 </div>
             </div>
-
-            <div class="mt-auto">
-                <button class="w-full bg-[#8b5cf6] text-white py-4 rounded-xl font-black text-xs uppercase italic shadow-lg shadow-purple-500/20 hover:scale-105 transition">
-                    ▶ Iniciar Robô
-                </button>
-            </div>
+            <button class="mt-auto w-full bg-[#8b5cf6] text-white py-4 rounded-xl font-black text-xs uppercase italic shadow-lg shadow-purple-500/20">▶ Iniciar Robô</button>
         </aside>
 
         <main class="flex-1 flex flex-col bg-[#050a0a] relative">
-            <div class="h-10 border-b border-white/5 flex items-center px-6 gap-4 text-[9px] font-bold uppercase tracking-widest">
-                <span class="text-neon-green cursor-pointer">Candlestick</span>
-                <span class="text-gray-600 cursor-pointer">Dígitos</span>
+            <div class="h-10 border-b border-white/5 flex items-center px-6 gap-4 text-[9px] font-bold uppercase tracking-widest text-gray-400">
+                <span class="text-[#00ffa3] border-b border-[#00ffa3]">Candlestick</span>
+                <span>Dígitos</span>
             </div>
-            
-            <div class="flex-1 relative">
+            <div class="flex-1 relative overflow-hidden">
                 <div id="chart-main"></div>
-                <div class="absolute top-8 left-8">
-                    <div class="text-[10px] font-bold text-gray-500">VOLATILITY 100 INDEX · <span class="text-white">DERIV</span></div>
-                    <div class="text-3xl font-black italic tracking-tighter" :class="priceColor" x-text="currentPrice">754.5201</div>
+                <div class="absolute top-6 left-6 z-20">
+                    <div class="text-[10px] font-bold text-gray-500 uppercase">Volatility 100 Index</div>
+                    <div class="text-3xl font-black italic tracking-tighter" :class="priceColor" x-text="currentPrice">---</div>
                 </div>
             </div>
         </main>
 
         <aside class="w-72 sidebar p-6 flex flex-col gap-8">
-            <div>
-                <h4 class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-4">Modo Manual</h4>
-                <div class="text-xl font-bold">$0 <span class="text-[10px] text-gray-500 font-normal">(0%)</span></div>
+            <div class="text-center">
+                <h4 class="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-2">Modo Manual</h4>
+                <div class="text-2xl font-black">$0 <span class="text-xs text-gray-500 font-normal">(0%)</span></div>
             </div>
-
             <div class="space-y-4">
-                <button class="w-full bg-neon-green text-black py-5 rounded-2xl flex flex-col items-center justify-center btn-action shadow-lg shadow-emerald-500/20">
+                <button @click="executeTrade('call')" class="w-full bg-[#00ffa3] text-black py-5 rounded-2xl flex flex-col items-center btn-action shadow-lg shadow-emerald-500/20">
                     <span class="text-sm">↗ RISE</span>
-                    <span class="text-[9px] opacity-70">1.85 USD</span>
+                    <span class="text-[9px] opacity-70">Payout: 95%</span>
                 </button>
-                <button class="w-full bg-[#ff3355] text-white py-5 rounded-2xl flex flex-col items-center justify-center btn-action shadow-lg shadow-red-500/20">
+                <button @click="executeTrade('put')" class="w-full bg-[#ff3355] text-white py-5 rounded-2xl flex flex-col items-center btn-action shadow-lg shadow-red-500/20">
                     <span class="text-sm">↘ FALL</span>
-                    <span class="text-[9px] opacity-70">1.84 USD</span>
+                    <span class="text-[9px] opacity-70">Payout: 95%</span>
                 </button>
             </div>
-
             <div class="mt-4">
                 <label class="text-[8px] font-bold text-gray-500 uppercase mb-2 block text-center">Duração</label>
-                <div class="flex items-center gap-2">
-                    <div class="flex-1 flex items-center bg-[#0c1414] rounded-lg border border-white/5 overflow-hidden">
-                        <button class="px-3 py-2 hover:bg-white/5">-</button>
-                        <input type="text" value="1" class="w-full text-center bg-transparent border-none text-xs font-bold">
-                        <button class="px-3 py-2 hover:bg-white/5">+</button>
-                    </div>
-                    <div class="bg-[#0c1414] px-4 py-2 rounded-lg text-[10px] font-bold border border-white/5">Ticks</div>
+                <div class="flex items-center bg-[#0c1414] rounded-lg border border-white/10 overflow-hidden">
+                    <button class="px-4 py-3 hover:bg-white/5">-</button>
+                    <input type="text" value="1" class="w-full text-center bg-transparent border-none text-xs font-bold text-white">
+                    <button class="px-4 py-3 hover:bg-white/5">+</button>
                 </div>
             </div>
         </aside>
@@ -128,23 +114,26 @@
         function terminalLogic() {
             return {
                 balance: '4,779.87',
-                currentPrice: '754.5201',
+                currentPrice: 'Cargando...',
                 priceColor: 'text-white',
                 lineSeries: null,
+                socket: null,
 
                 init() {
-                    this.setupChart();
-                    this.connectDeriv();
+                    // Timeout para asegurar que el div #chart-main exista en el DOM
+                    setTimeout(() => {
+                        this.setupChart();
+                        this.connectDeriv();
+                    }, 500);
                 },
 
                 setupChart() {
-                    const chart = LightweightCharts.createChart(document.getElementById('chart-main'), {
-                        layout: { background: { color: '#050a0a' }, textColor: '#333' },
+                    const container = document.getElementById('chart-main');
+                    const chart = LightweightCharts.createChart(container, {
+                        layout: { background: { color: '#050a0a' }, textColor: '#555' },
                         grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255,255,255,0.03)' } },
-                        timeScale: { visible: false },
-                        rightPriceScale: { borderColor: 'transparent' },
-                        handleScroll: true,
-                        handleScale: true,
+                        timeScale: { visible: true, borderColor: 'rgba(255,255,255,0.05)' },
+                        rightPriceScale: { borderColor: 'rgba(255,255,255,0.05)' },
                     });
 
                     this.lineSeries = chart.addAreaSeries({
@@ -153,29 +142,42 @@
                         bottomColor: 'rgba(0, 255, 163, 0.0)',
                         lineWidth: 2,
                     });
+
+                    // Ajuste automático si cambias el tamaño de la ventana
+                    new ResizeObserver(() => {
+                        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+                    }).observe(container);
                 },
 
                 connectDeriv() {
-                    const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    
-                    ws.onopen = () => {
-                        ws.send(JSON.stringify({ ticks: "R_100" }));
-                        // Aquí podrías enviar el authorize con tu token real
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token1');
+                    this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
+
+                    this.socket.onopen = () => {
+                        if(token) this.socket.send(JSON.stringify({ "authorize": token }));
+                        this.socket.send(JSON.stringify({ "ticks": "R_100" }));
                     };
 
-                    ws.onmessage = (msg) => {
+                    this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         if (data.tick) {
-                            const newPrice = data.tick.quote;
-                            this.priceColor = newPrice > this.currentPrice ? 'text-neon-green' : 'text-red-500';
-                            this.currentPrice = newPrice.toFixed(4);
-                            
-                            this.lineSeries.update({
-                                time: data.tick.epoch,
-                                value: newPrice
-                            });
+                            const price = data.tick.quote;
+                            this.priceColor = price > parseFloat(this.currentPrice) ? 'text-[#00ffa3]' : 'text-red-500';
+                            this.currentPrice = price.toFixed(4);
+                            this.lineSeries.update({ time: data.tick.epoch, value: price });
+                        }
+                        if (data.msg_type === 'authorize') {
+                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                        }
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2});
                         }
                     };
+                },
+
+                executeTrade(type) {
+                    alert('Ejecutando operación ' + type + ' en Volatility 100...');
                 }
             }
         }
