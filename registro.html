@@ -9,44 +9,44 @@
     <style>
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
-        .input-field { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 12px; padding: 12px; outline: none; transition: all 0.3s; }
+        .input-field { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 12px; padding: 12px; outline: none; width: 100%; transition: all 0.3s; }
         .input-field:focus { border-color: #00ffa3; box-shadow: 0 0 10px rgba(0, 255, 163, 0.1); }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="glass p-10 rounded-[40px] w-full max-w-md shadow-2xl">
-        <div class="text-center mb-8">
+    <div class="glass p-10 rounded-[40px] w-full max-w-md shadow-2xl text-center">
+        <div class="mb-8">
             <div class="w-12 h-12 rounded-2xl bg-[#00ffa3] flex items-center justify-center font-black text-black mx-auto mb-4">ATS</div>
-            <h1 class="text-3xl font-black uppercase italic">Crear Cuenta</h1>
-            <p class="text-gray-500 text-sm mt-2">Únete a la plataforma de trading elite</p>
+            <h1 class="text-3xl font-black uppercase italic">CREAR CUENTA</h1>
+            <p class="text-gray-500 text-sm mt-2 uppercase font-bold tracking-widest">Únete a la plataforma de trading elite</p>
         </div>
 
-        <form id="registroForm" class="space-y-5">
+        <form id="registroForm" class="space-y-5 text-left">
             <div>
                 <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nombre Completo</label>
-                <input type="text" id="nombre" class="input-field w-full mt-1" placeholder="Ej. Riky Zavala" required>
+                <input type="text" id="nombre" class="input-field mt-1" placeholder="Ej. Riky Zavala" required>
             </div>
             <div>
                 <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Correo Electrónico</label>
-                <input type="email" id="email" class="input-field w-full mt-1" placeholder="correo@ejemplo.com" required>
+                <input type="email" id="email" class="input-field mt-1" placeholder="correo@ejemplo.com" required>
             </div>
             <div>
                 <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Contraseña</label>
-                <input type="password" id="password" class="input-field w-full mt-1" placeholder="••••••••" required>
+                <input type="password" id="password" class="input-field mt-1" placeholder="••••••••" required>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest transition shadow-lg">
+            <button type="submit" class="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest transition shadow-lg">
                 Registrarse con Correo
             </button>
         </form>
 
         <div class="relative my-8">
             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-800"></div></div>
-            <div class="relative flex justify-center text-[10px] uppercase"><span class="bg-[#0a0f0e] px-2 text-gray-500 font-bold">O también</span></div>
+            <div class="relative flex justify-center text-[10px] uppercase"><span class="bg-[#020606] px-2 text-gray-500 font-bold italic">O también</span></div>
         </div>
 
-        <button id="googleBtn" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest flex items-center justify-center gap-3 transition hover:bg-gray-200 shadow-lg">
+        <button id="googleBtn" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest flex items-center justify-center gap-3 transition hover:bg-gray-200">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Continuar con Google
         </button>
 
@@ -60,6 +60,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // CONFIGURACIÓN VERIFICADA
         const firebaseConfig = {
             apiKey: "AIzaSyDNtlSyXjFCmdd1xPTzrYpJVK2wGGzzqCE",
             authDomain: "plataforma-ats.firebaseapp.com",
@@ -72,7 +73,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- REGISTRO CON CORREO ---
+        // REGISTRO CORREO
         document.getElementById('registroForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nombre = document.getElementById('nombre').value;
@@ -88,30 +89,24 @@
                     creado: new Date()
                 });
                 alert("Bienvenido " + nombre);
-                // REDIRECCIÓN FORZADA AL DASHBOARD
-                window.location.replace("dashboard.html");
+                window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error: " + error.message);
             }
         });
 
-        // --- REGISTRO CON GOOGLE ---
+        // REGISTRO GOOGLE
         document.getElementById('googleBtn').addEventListener('click', async () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             try {
                 const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                
-                // Guardar si es nuevo usuario
-                await db.collection('usuarios').doc(user.uid).set({
-                    nombre: user.displayName,
-                    email: user.email,
+                await db.collection('usuarios').doc(result.user.uid).set({
+                    nombre: result.user.displayName,
+                    email: result.user.email,
                     balance: 0
                 }, { merge: true });
-
-                alert("Bienvenido " + user.displayName);
-                // REDIRECCIÓN FORZADA AL DASHBOARD
-                window.location.replace("dashboard.html");
+                alert("Bienvenido " + result.user.displayName);
+                window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error con Google: " + error.message);
             }
