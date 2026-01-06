@@ -264,6 +264,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // CONFIGURACIÓN OFICIAL
         const firebaseConfig = {
             apiKey: "AIzaSyDNtlSyXjFCmdd1xPTzrYpJVK2wGGzzqCE",
             authDomain: "plataforma-ats.firebaseapp.com",
@@ -275,61 +276,100 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
+    
         function tradingApp() {
             return {
-                currentView: 'landing',
+                currentView: 'landing', // Estado inicial
+                
                 initApp() { 
                     this.initParticles(); 
                     this.initScrollReveal(); 
                     this.checkSession();
                 },
+    
                 checkSession() {
+                    // Escuchamos el cambio de estado de autenticación
                     auth.onAuthStateChanged(user => {
                         if (user) {
+                            // Si hay usuario, buscamos sus datos en Firestore
                             db.collection("usuarios").doc(user.uid).get().then(doc => {
                                 if (doc.exists) {
                                     const data = doc.data();
+                                    // Inyectamos los datos en el DOM
                                     document.getElementById("user-name-welcome").innerText = data.nombre;
                                     document.getElementById("user-name-ranking").innerText = data.nombre;
+                                    
                                     const balanceStr = "$" + data.balance.toLocaleString();
                                     document.getElementById("user-balance-header").innerText = balanceStr;
                                     document.getElementById("user-balance-terminal").innerText = balanceStr;
+                                    
+                                    // CAMBIO CLAVE: Cambiamos la vista al Dashboard (app) automáticamente
                                     this.currentView = 'app';
                                 }
+                            }).catch(error => {
+                                console.error("Error obteniendo datos:", error);
                             });
                         } else {
+                            // Si no hay sesión, nos quedamos en el landing
                             this.currentView = 'landing';
                         }
                     });
                 },
-                logout() { auth.signOut().then(() => { window.location.reload(); }); },
+    
+                logout() {
+                    auth.signOut().then(() => {
+                        this.currentView = 'landing';
+                        window.location.reload(); // Recarga para limpiar estados
+                    });
+                },
+    
                 initScrollReveal() {
                     const observer = new IntersectionObserver((entries) => {
-                        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+                        entries.forEach(entry => { 
+                            if (entry.isIntersecting) entry.target.classList.add('active'); 
+                        });
                     }, { threshold: 0.1 });
                     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
                 },
+    
                 initParticles() {
                     const canvas = document.getElementById('bgCanvas');
                     if(!canvas) return;
                     const ctx = canvas.getContext('2d');
                     let particles = [];
-                    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-                    window.onresize = resize; resize();
+                    const resize = () => { 
+                        canvas.width = window.innerWidth; 
+                        canvas.height = window.innerHeight; 
+                    };
+                    window.onresize = resize; 
+                    resize();
+    
                     class Particle {
                         constructor() {
-                            this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-                            this.size = Math.random() * 1.5; this.speedX = (Math.random() - 0.5) * 0.4; this.speedY = (Math.random() - 0.5) * 0.4;
+                            this.x = Math.random() * canvas.width; 
+                            this.y = Math.random() * canvas.height;
+                            this.size = Math.random() * 1.5; 
+                            this.speedX = (Math.random() - 0.5) * 0.4; 
+                            this.speedY = (Math.random() - 0.5) * 0.4;
                         }
                         update() {
-                            this.x += this.speedX; this.y += this.speedY;
-                            if (this.x > canvas.width) this.x = 0; if (this.y > canvas.height) this.y = 0;
-                            if (this.x < 0) this.x = canvas.width; if (this.y < 0) this.y = canvas.height;
+                            this.x += this.speedX; 
+                            this.y += this.speedY;
+                            if (this.x > canvas.width) this.x = 0; 
+                            if (this.y > canvas.height) this.y = 0;
+                            if (this.x < 0) this.x = canvas.width; 
+                            if (this.y < 0) this.y = canvas.height;
                         }
-                        draw() { ctx.fillStyle = 'rgba(0, 255, 163, 0.3)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+                        draw() { 
+                            ctx.fillStyle = 'rgba(0, 255, 163, 0.3)'; 
+                            ctx.beginPath(); 
+                            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+                            ctx.fill(); 
+                        }
                     }
+    
                     for(let i=0; i<70; i++) particles.push(new Particle());
+    
                     function animate() {
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         particles.forEach(p => { p.update(); p.draw(); });
