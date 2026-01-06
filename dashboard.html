@@ -113,12 +113,14 @@
                     this.connectToDeriv();
                 },
 
-                // FUNCIÓN CLAVE: Envía el token activo a la terminal
+                // FUNCIÓN CORREGIDA: Ahora envía todos los tokens disponibles en la URL
                 goToTerminal() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1'); 
-                    if (token) {
-                        window.location.href = `terminal.html?token1=${token}`;
+                    const allParams = params.toString(); // Convierte todos los tokens (token1, token2, etc.) en texto
+                    
+                    if (params.get('token1')) {
+                        // Enviamos la cadena completa de parámetros a la terminal
+                        window.location.href = `terminal.html?${allParams}`;
                     } else {
                         alert("Error: Inicia sesión en Deriv primero.");
                     }
@@ -160,12 +162,16 @@
                     this.accountType = type;
                     const params = new URLSearchParams(window.location.search);
                     let targetToken = '';
+                    
+                    // Lógica para encontrar el token correcto basado en la lista de cuentas autorizadas
                     this.allAccounts.forEach((acc, index) => {
-                        if (type === 'real' && !acc.is_virtual) targetToken = params.get('token' + (index + 1));
-                        if (type === 'demo' && acc.is_virtual) targetToken = params.get('token' + (index + 1));
+                        const tokenIndex = index + 1;
+                        if (type === 'real' && !acc.is_virtual) targetToken = params.get('token' + tokenIndex);
+                        if (type === 'demo' && acc.is_virtual) targetToken = params.get('token' + tokenIndex);
                     });
 
                     if (targetToken && this.socket) {
+                        // Cambia la sesión activa para actualizar balance e ID en pantalla
                         this.socket.send(JSON.stringify({ "authorize": targetToken }));
                     }
                 }
