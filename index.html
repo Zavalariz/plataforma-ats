@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+pero espera en el index html no teniamos el dashboard este es codigo que tenemos <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -323,6 +323,16 @@
         function tradingApp() {
             return {
                 currentView: 'landing',
+                initApp() { 
+                    this.initParticles(); 
+                    this.initScrollReveal();
+                    
+                    // Nueva lógica para leer el aviso del registro
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('view') === 'app') {
+                        this.currentView = 'app';
+                    }
+                },
                 initApp() { this.initParticles(); this.initScrollReveal(); },
                 initScrollReveal() {
                     const observer = new IntersectionObserver((entries) => {
