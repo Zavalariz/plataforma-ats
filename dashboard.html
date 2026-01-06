@@ -34,8 +34,8 @@
                 <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-brand-accent">Pro</span></span>
             </div>
             <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                <a href="dashboard.html" class="text-brand-accent">Inicio</a>
-                <a href="terminal.html" class="hover:text-white transition">Operar</a>
+                <a href="#" class="text-brand-accent">Inicio</a>
+                <button @click="goToTerminal()" class="hover:text-white transition uppercase font-bold">Operar</button>
             </nav>
         </div>
 
@@ -74,7 +74,9 @@
                         Gestionando cuenta <span class="text-white font-bold" x-text="currentAccountID"></span>. 
                         Tu capital está siendo monitoreado por algoritmos de alta frecuencia.
                     </p>
-                    <a href="terminal.html" class="inline-block bg-brand-accent text-black px-10 py-4 rounded-xl font-black text-[11px] uppercase italic hover:scale-105 transition shadow-lg shadow-brand-accent/20">Abrir Terminal de Trading</a>
+                    <button @click="goToTerminal()" class="inline-block bg-brand-accent text-black px-10 py-4 rounded-xl font-black text-[11px] uppercase italic hover:scale-105 transition shadow-lg shadow-brand-accent/20">
+                        Abrir Terminal de Trading
+                    </button>
                 </div>
             </div>
 
@@ -111,6 +113,17 @@
                     this.connectToDeriv();
                 },
 
+                // FUNCIÓN CLAVE: Envía el token activo a la terminal
+                goToTerminal() {
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token1'); 
+                    if (token) {
+                        window.location.href = `terminal.html?token1=${token}`;
+                    } else {
+                        alert("Error: Inicia sesión en Deriv primero.");
+                    }
+                },
+
                 connectToDeriv() {
                     const params = new URLSearchParams(window.location.search);
                     const token1 = params.get('token1');
@@ -134,8 +147,6 @@
                             this.userName = data.authorize.fullname;
                             this.allAccounts = data.authorize.account_list;
                             this.currentAccountID = data.authorize.loginid;
-                            
-                            // Suscribirse al balance de la cuenta actual autorizada
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
@@ -148,20 +159,13 @@
                 switchAccount(type) {
                     this.accountType = type;
                     const params = new URLSearchParams(window.location.search);
-                    
-                    // Deriv envía token1, token2, etc. en el mismo orden que la lista de cuentas
                     let targetToken = '';
                     this.allAccounts.forEach((acc, index) => {
-                        if (type === 'real' && !acc.is_virtual) {
-                            targetToken = params.get('token' + (index + 1));
-                        }
-                        if (type === 'demo' && acc.is_virtual) {
-                            targetToken = params.get('token' + (index + 1));
-                        }
+                        if (type === 'real' && !acc.is_virtual) targetToken = params.get('token' + (index + 1));
+                        if (type === 'demo' && acc.is_virtual) targetToken = params.get('token' + (index + 1));
                     });
 
                     if (targetToken && this.socket) {
-                        // Re-autorizamos con el token de la cuenta elegida para obtener su balance real
                         this.socket.send(JSON.stringify({ "authorize": targetToken }));
                     }
                 }
