@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Terminal | Market Live</title>
+    <title>ATS Elite Terminal | Live Market</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -11,51 +11,65 @@
     <style>
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
-        #chart { width: 100%; height: 400px; }
+        .neon-border { border: 1px solid rgba(0, 255, 163, 0.2); box-shadow: 0 0 20px rgba(0, 255, 163, 0.05); }
+        #chart-container { width: 100%; height: 450px; background: #020606; border-radius: 24px; overflow: hidden; }
     </style>
 </head>
 <body x-data="terminalLogic()">
 
-    <header class="h-16 glass border-b border-[#14211e] flex justify-between items-center px-8">
-        <div class="flex items-center gap-4">
-            <a href="dashboard.html" class="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest">← Volver</a>
-            <div class="h-4 w-[1px] bg-gray-800"></div>
-            <span class="text-[10px] font-black italic uppercase">Market: <span class="text-[#00ffa3]">Volatility 100 (1s)</span></span>
+    <header class="h-20 glass border-b border-[#14211e] flex justify-between items-center px-10">
+        <div class="flex items-center gap-6">
+            <button onclick="window.history.back()" class="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-[#00ffa3] transition">← Volver al Dashboard</button>
+            <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-[#14211e]">
+                <div class="w-2 h-2 rounded-full bg-[#00ffa3] animate-pulse"></div>
+                <span class="text-[9px] font-bold uppercase text-[#00ffa3]">Market: Volatility 100 (1s)</span>
+            </div>
         </div>
+
         <div class="flex items-center gap-4">
-            <div class="text-right">
-                <div class="text-[8px] text-gray-500 font-bold uppercase" x-text="'Balance ' + accountType"></div>
-                <div class="text-[#00ffa3] font-mono font-bold text-sm italic">$<span x-text="balance">0.00</span></div>
+            <div class="bg-[#0a0f0e] px-5 py-2 rounded-xl border border-[#14211e] text-right">
+                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Balance en Tiempo Real</div>
+                <div class="text-[#00ffa3] font-mono font-bold text-lg italic">$<span x-text="balance">0.00</span></div>
             </div>
         </div>
     </header>
 
-    <main class="p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <main class="p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div class="lg:col-span-3 space-y-6">
-            <div class="glass rounded-[32px] p-6 overflow-hidden">
-                <div id="chart"></div>
+            <div class="glass p-2 rounded-[32px] neon-border">
+                <div id="chart-container"></div>
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
-                <button @click="executeTrade('buy')" class="bg-[#00ffa3] text-black font-black py-6 rounded-2xl uppercase italic text-sm hover:scale-[1.02] transition shadow-lg shadow-[#00ffa3]/20">Compra (Rise)</button>
-                <button @click="executeTrade('sell')" class="bg-[#ff4444] text-white font-black py-6 rounded-2xl uppercase italic text-sm hover:scale-[1.02] transition shadow-lg shadow-red-500/20">Venta (Fall)</button>
+            <div class="grid grid-cols-2 gap-6">
+                <button class="bg-[#00ffa3] text-black font-black py-5 rounded-[20px] uppercase italic text-sm hover:scale-[1.02] transition shadow-[0_0_30px_rgba(0,255,163,0.2)]">COMPRA (RISE)</button>
+                <button class="bg-[#ff4444] text-white font-black py-5 rounded-[20px] uppercase italic text-sm hover:scale-[1.02] transition shadow-[0_0_30px_rgba(255,68,68,0.2)]">VENTA (FALL)</button>
             </div>
         </div>
 
         <div class="space-y-6">
-            <div class="glass rounded-[32px] p-6">
-                <h3 class="text-[10px] font-black uppercase text-gray-500 mb-4 tracking-widest">Configuración</h3>
-                <div class="space-y-4">
+            <div class="glass rounded-[32px] p-8 border border-[#14211e]">
+                <h3 class="text-[11px] font-black uppercase text-gray-400 mb-6 tracking-[0.2em]">Configuración</h3>
+                
+                <div class="space-y-6">
                     <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Inversión (USD)</label>
-                        <input type="number" x-model="stake" class="w-full bg-black border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00ffa3]">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Inversión (USD)</label>
+                        <input type="number" value="10" class="w-full bg-black border border-[#14211e] rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-[#00ffa3] transition font-bold text-white">
                     </div>
+                    
                     <div>
-                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Duración (Ticks)</label>
-                        <select class="w-full bg-black border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">Duración (Ticks)</label>
+                        <select class="w-full bg-black border border-[#14211e] rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-[#00ffa3] transition font-bold text-white appearance-none">
                             <option>5 Ticks</option>
                             <option>10 Ticks</option>
+                            <option>15 Ticks</option>
                         </select>
+                    </div>
+
+                    <div class="pt-4 border-t border-[#14211e]">
+                        <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                            <span class="text-gray-500">Retorno (95%)</span>
+                            <span class="text-[#00ffa3]">+$19.50</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,37 +80,45 @@
         function terminalLogic() {
             return {
                 balance: '0.00',
-                accountType: 'Real',
-                stake: 10,
                 socket: null,
                 lineSeries: null,
 
                 init() {
-                    this.initChart();
-                    this.connectMarket();
+                    // Esperar a que el DOM esté listo para el gráfico
+                    setTimeout(() => this.initChart(), 100);
+                    this.connectDeriv();
                 },
 
                 initChart() {
-                    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-                        layout: { backgroundColor: 'transparent', textColor: '#666' },
+                    const container = document.getElementById('chart-container');
+                    const chart = LightweightCharts.createChart(container, {
+                        layout: { backgroundColor: '#020606', textColor: '#555' },
                         grid: { vertLines: { color: '#0a0f0e' }, horzLines: { color: '#0a0f0e' } },
-                        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                        rightPriceScale: { borderColor: '#14211e' },
-                        timeScale: { borderColor: '#14211e', timeVisible: true, secondsVisible: true }
+                        timeScale: { borderColor: '#14211e', timeVisible: true, secondsVisible: true },
+                        rightPriceScale: { borderColor: '#14211e' }
                     });
-                    this.lineSeries = chart.addLineSeries({ color: '#00ffa3', lineWidth: 2 });
+                    this.lineSeries = chart.addLineSeries({ 
+                        color: '#00ffa3', 
+                        lineWidth: 3,
+                        priceLineVisible: true,
+                        lastValueVisible: true
+                    });
+
+                    // Ajustar gráfico al tamaño del contenedor
+                    window.addEventListener('resize', () => {
+                        chart.applyOptions({ width: container.clientWidth });
+                    });
                 },
 
-                connectMarket() {
+                connectDeriv() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1');
+                    const token = params.get('token1'); // Recupera el token de Sandra Elizabeth
                     
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
 
                     this.socket.onopen = () => {
                         if(token) this.socket.send(JSON.stringify({ "authorize": token }));
-                        // Suscribirse a precios de Volatility 100
-                        this.socket.send(JSON.stringify({ "ticks": "R_100" }));
+                        this.socket.send(JSON.stringify({ "ticks": "R_100" })); // Suscripción a Volatility 100
                     };
 
                     this.socket.onmessage = (msg) => {
@@ -117,10 +139,6 @@
                             this.balance = data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2});
                         }
                     };
-                },
-
-                executeTrade(direction) {
-                    alert(`Ejecutando ${direction} de $${this.stake} en mercado real...`);
                 }
             }
         }
