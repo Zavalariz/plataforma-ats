@@ -7,13 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
-    
     <style>
-        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; scroll-behavior: smooth; }
+        [x-cloak] { display: none !important; }
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; scroll-behavior: smooth; overflow-x: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .brand-accent { color: #00ffa3; }
         .bg-brand-accent { background-color: #00ffa3; }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .floating { animation: float 3s ease-in-out infinite; }
     </style>
 </head>
 <body x-data="landingApp()" x-init="init()">
@@ -26,27 +30,49 @@
         <a href="registro.html" class="text-xs font-bold uppercase tracking-widest brand-accent border border-brand-accent/30 px-6 py-2 rounded-full hover:bg-brand-accent hover:text-black transition">Mi Cuenta</a>
     </nav>
 
-    <main class="flex flex-col items-center px-6 pt-16 relative z-10 text-center">
-        <h1 class="text-5xl md:text-[100px] font-extrabold tracking-tighter leading-none italic mb-8 uppercase">
-            TRADING DE <br><span class="brand-accent neon-text">Nueva Era</span>
-        </h1>
-        <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 italic">
-            Tecnología algorítmica premium diseñada para maximizar tu potencial en mercados sintéticos.
-        </p>
-        <div class="flex flex-wrap justify-center gap-6 mb-24">
-            <a href="registro.html" class="bg-brand-accent px-10 py-5 rounded-2xl text-black font-black uppercase text-sm inline-block hover:scale-105 transition">
-                Acceso Plataforma
-            </a>
+    <main class="flex flex-col items-center px-6 pt-16 relative z-10">
+        <div class="text-center max-w-5xl">
+            <h1 class="text-5xl md:text-[100px] font-extrabold tracking-tighter leading-none italic mb-8 uppercase">TRADING DE <br><span class="brand-accent neon-text">Nueva Era</span></h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 italic">Tecnología algorítmica premium diseñada para maximizar tu potencial en mercados sintéticos.</p>
+            <div class="flex flex-wrap justify-center gap-6 mb-24">
+                <a href="registro.html" class="bg-brand-accent px-10 py-5 rounded-2xl text-black font-black uppercase text-sm inline-block hover:scale-105 transition">Acceso Plataforma</a>
+            </div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-6xl mb-20">
             <div class="glass p-8 rounded-[30px] border-l-4 border-l-brand-accent">
                 <div class="text-3xl font-black brand-accent font-mono">25,000+</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2">Traders</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Traders Activos</div>
             </div>
             <div class="glass p-8 rounded-[30px]">
                 <div class="text-3xl font-black text-white font-mono">98%</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2">Efectividad</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Efectividad</div>
+            </div>
+            <div class="glass p-8 rounded-[30px]">
+                <div class="text-3xl font-black brand-accent font-mono">$128M</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Capital Operado</div>
+            </div>
+            <div class="glass p-8 rounded-[30px]">
+                <div class="text-3xl font-black text-white font-mono">14ms</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Latencia API</div>
+            </div>
+        </div>
+
+        <div id="servicios" class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl pb-32">
+            <div class="glass p-10 rounded-[40px] reveal active">
+                <div class="text-4xl mb-6 floating">📊</div>
+                <h3 class="text-xl font-black mb-4 uppercase italic">Análisis en Vivo</h3>
+                <p class="text-gray-400 text-sm">Gráficos de alta fidelidad con indicadores premium optimizados.</p>
+            </div>
+            <div class="glass p-10 rounded-[40px] reveal active">
+                <div class="text-4xl mb-6 floating">🤖</div>
+                <h3 class="text-xl font-black mb-4 uppercase italic">Bots Inteligentes</h3>
+                <p class="text-gray-400 text-sm">Ejecución automática con gestión de riesgo integrada.</p>
+            </div>
+            <div class="glass p-10 rounded-[40px] reveal active">
+                <div class="text-4xl mb-6 floating">🎓</div>
+                <h3 class="text-xl font-black mb-4 uppercase italic">Academia Elite</h3>
+                <p class="text-gray-400 text-sm">Aprende estrategias de acción del precio con expertos.</p>
             </div>
         </div>
     </main>
@@ -68,11 +94,9 @@
         function landingApp() {
             return {
                 init() {
-                    // Verificamos si ya hay una sesión activa
+                    // Solo redirigir si el usuario ya está autenticado
                     firebase.auth().onAuthStateChanged(user => {
                         if (user) {
-                            // SI HAY USUARIO: Lo mandamos directo al dashboard
-                            console.log("Usuario detectado, redirigiendo...");
                             window.location.href = "dashboard.html";
                         }
                     });
