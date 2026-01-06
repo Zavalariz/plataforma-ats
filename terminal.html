@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Elite | Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' }, deriv: { green: '#00ffad', red: '#ff4444' } } } }
+        }
+    </script>
+    <style>
+        body { background-color: #000; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        .input-terminal { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 8px; padding: 10px; font-size: 11px; outline: none; width: 100%; }
+        .price-line-anim { animation: scan 2s linear infinite; }
+        @keyframes scan { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+        .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+    <header class="h-14 bg-brand-panel border-b border-brand-border flex justify-between items-center px-4">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded bg-white flex items-center justify-center font-black text-black text-[10px]">ATS</div>
+                <span class="font-bold text-xs uppercase italic">ATS <span class="text-brand-accent">Elite Terminal</span></span>
+            </div>
+            <nav class="flex gap-6 text-[10px] font-bold uppercase tracking-widest ml-4">
+                <a href="dashboard.html" class="text-gray-500 hover:text-white transition">Dashboard</a>
+                <span class="text-brand-accent border-b-2 border-brand-accent pb-1">Operar</span>
+            </nav>
+        </div>
+        <div class="bg-black/40 border border-brand-border px-3 py-1 rounded-lg">
+            <span class="text-[7px] text-gray-500 font-bold uppercase block leading-none text-right">Conta real</span>
+            <span class="text-white font-mono font-bold text-xs">$ 4,779.87</span>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        <aside class="w-72 bg-brand-panel border-r border-brand-border p-4 flex flex-col">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase italic mb-6">Configurações IA</h3>
+            <div class="space-y-4 flex-1">
+                <div><label class="text-[9px] text-gray-500 font-bold uppercase ml-1">Mercado</label>
+                <div class="input-terminal font-bold text-[10px]">📊 Volatility 100 Index</div></div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div><label class="text-[8px] text-gray-500 font-bold">Quantia</label><input type="text" class="input-terminal text-center" value="$ 1"></div>
+                    <div><label class="text-[8px] text-gray-500 font-bold">Meta</label><input type="text" class="input-terminal text-center" value="$ 20"></div>
+                </div>
+            </div>
+            <button class="w-full bg-[#8b5cf6] text-white font-black py-4 rounded-xl text-[10px] uppercase italic">▶ Iniciar Robô</button>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-[#010404] relative">
+            <div class="h-9 border-b border-brand-border flex items-center justify-between px-4 bg-brand-panel/40">
+                <div class="flex items-center gap-4 text-[9px] font-bold text-gray-500 uppercase">
+                    <span class="text-brand-accent border-b border-brand-accent">Candlestick</span>
+                    <span class="hover:text-white">Dígitos</span>
+                </div>
+            </div>
+            <div class="flex-1 relative flex">
+                <div class="w-10 border-r border-brand-border flex flex-col items-center py-4 gap-4 bg-brand-panel/20 text-gray-500">
+                    <span>✛</span><span>╱</span><span>✎</span><span>T</span>
+                </div>
+                <div class="flex-1 relative flex flex-col">
+                    <div class="absolute top-4 left-6">
+                        <span class="text-[11px] font-bold text-gray-400 uppercase">Volatility 100 Index</span>
+                        <div class="text-2xl font-black italic text-white neon-text">754.5201</div>
+                    </div>
+                    <div class="flex-1 flex items-end justify-around px-12 pb-20 opacity-80">
+                        <div class="flex flex-col items-center"><div class="w-[1px] h-16 bg-gray-700"></div><div class="w-4 h-24 bg-deriv-green rounded-sm"></div></div>
+                        <div class="flex flex-col items-center"><div class="w-[1px] h-12 bg-gray-700"></div><div class="w-4 h-16 bg-deriv-red rounded-sm"></div></div>
+                        <div class="flex flex-col items-center relative">
+                            <div class="w-[1px] h-32 bg-gray-700"></div><div class="w-4 h-40 bg-deriv-green rounded-sm"></div>
+                            <div class="absolute -right-[1000px] top-1/2 w-[2000px] border-t border-dashed border-brand-accent/40 price-line-anim"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="w-72 bg-brand-panel border-l border-brand-border p-4">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase italic mb-6">Modo Manual</h3>
+            <div class="space-y-4">
+                <button class="w-full bg-deriv-green text-black p-4 rounded-xl flex justify-between font-black uppercase text-xs italic">
+                    <span>↗ Rise</span><span>1.85 USD</span>
+                </button>
+                <button class="w-full bg-deriv-red text-white p-4 rounded-xl flex justify-between font-black uppercase text-xs italic">
+                    <span>↘ Fall</span><span>1.84 USD</span>
+                </button>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>
