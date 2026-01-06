@@ -8,12 +8,14 @@
     <style>
         body { background: #060909; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
         .neon-accent { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
-        iframe { border: none; width: 100%; height: 100%; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+        /* Ajuste para que el gráfico ocupe todo el espacio y oculte elementos innecesarios */
+        .chart-container { position: relative; width: 100%; height: 100%; background: #000; }
+        iframe { border: none; width: 100%; height: calc(100% + 50px); margin-top: -50px; filter: invert(1) hue-rotate(180deg) brightness(0.8); }
     </style>
 </head>
 <body x-data="terminalLogic()" class="h-screen flex flex-col">
 
-    <header class="h-16 border-b border-white/10 flex justify-between items-center px-8 bg-[#0a0f0e]">
+    <header class="h-16 border-b border-white/10 flex justify-between items-center px-8 bg-[#0a0f0e] z-50">
         <div class="flex items-center gap-4">
             <div class="bg-emerald-500 text-black px-2 py-0.5 rounded text-[9px] font-black uppercase">En Vivo</div>
             <span class="font-bold tracking-tighter text-sm uppercase italic">ATS <span class="neon-accent">Elite Terminal</span></span>
@@ -22,22 +24,22 @@
         <div class="flex items-center gap-6">
             <div class="text-right">
                 <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest">Balance Cuenta Real</p>
-                <p class="neon-accent font-mono font-bold text-lg leading-none" x-text="'$' + formatBalance(balance)">$Cargando...</p>
+                <p class="neon-accent font-mono font-bold text-lg leading-none" x-text="balance === 0 ? '$ Conectando...' : '$' + formatBalance(balance)"></p>
             </div>
-            <button @click="window.location.href='dashboard.html' + window.location.search" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-white/5 transition">VOLVER</button>
+            <button @click="goBack()" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-white/5 transition">VOLVER</button>
         </div>
     </header>
 
     <div class="flex flex-1">
-        <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6">
+        <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6 z-50">
             <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo</label>
-                <p class="text-xs font-bold italic">Volatility 100 Index (1s)</p>
+                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo Seleccionado</label>
+                <p class="text-xs font-bold italic text-white">Volatility 100 Index (1s)</p>
             </div>
 
             <div class="space-y-4">
                 <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                    <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Inversión</label>
+                    <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Inversión (USD)</label>
                     <div class="flex items-center">
                         <span class="text-gray-500 mr-2 text-sm">$</span>
                         <input type="number" x-model="stake" class="bg-transparent text-lg font-bold w-full focus:outline-none neon-accent">
@@ -46,12 +48,12 @@
             </div>
 
             <div class="mt-auto space-y-3">
-                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-xs transition transform active:scale-95 shadow-lg shadow-emerald-500/10">EJECUTAR COMPRA (RISE)</button>
-                <button class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-xs transition transform active:scale-95">EJECUTAR VENTA (FALL)</button>
+                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-xs transition transform active:scale-95">COMPRA (RISE)</button>
+                <button class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-xs transition transform active:scale-95">VENTA (FALL)</button>
             </div>
         </aside>
 
-        <main class="flex-1 bg-black overflow-hidden relative">
+        <main class="flex-1 chart-container">
             <iframe src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
         </main>
     </div>
@@ -67,9 +69,14 @@
                     this.connectDeriv();
                 },
 
+                goBack() {
+                    const currentUrl = window.location.href;
+                    const params = currentUrl.split('?')[1] || '';
+                    window.location.href = 'dashboard.html?' + params;
+                },
+
                 formatBalance(val) {
-                    if (!val || val === 0) return '---';
-                    return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 },
 
                 connectDeriv() {
@@ -77,10 +84,11 @@
                     const token = params.get('token1'); 
                     
                     if (!token) {
-                        console.error("No token found in URL");
+                        console.error("Token no encontrado en URL");
                         return;
                     }
 
+                    // Forzamos conexión limpia al WebSocket de Deriv
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -89,12 +97,23 @@
 
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
+                        
                         if (data.msg_type === 'authorize') {
+                            // Suscripción al balance con actualizaciones en tiempo real
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
+
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance;
                         }
+
+                        if (data.error) {
+                            console.error("Error de Deriv:", data.error.message);
+                        }
+                    };
+
+                    this.socket.onclose = () => {
+                        setTimeout(() => this.connectDeriv(), 3000); // Reintento automático
                     };
                 }
             }
