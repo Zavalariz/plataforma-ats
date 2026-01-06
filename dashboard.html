@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Terminal - Operaciones</title>
+    <title>ATS Elite Terminal | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -19,22 +20,24 @@
             }
         }
     </script>
+
     <style>
         [x-cloak] { display: none !important; }
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .input-terminal { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 8px; padding: 10px; font-size: 11px; outline: none; width: 100%; transition: all 0.3s; }
-        .input-terminal:focus { border-color: #00ffa3; box-shadow: 0 0 10px rgba(0, 255, 163, 0.1); }
-        
-        /* Animación de Velas */
-        @keyframes candle-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-        .candle { animation: candle-grow 0.5s ease-out forwards; transform-origin: bottom; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 255, 163, 0.2); }
+        .input-terminal { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 8px; padding: 10px; font-size: 11px; outline: none; width: 100%; }
+        .price-line-anim { animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { opacity: 0.3; } 50% { opacity: 0.8; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body x-data="dashboardApp()">
 
-    <div x-show="currentView === 'app'" class="h-screen flex flex-col relative z-10">
+    <div x-show="currentView === 'app'" class="h-screen flex flex-col relative z-10 overflow-hidden fade-in">
         <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-3">
@@ -44,106 +47,143 @@
                 <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
                     <button @click="currentView = 'app'" class="text-brand-accent">Inicio</button>
                     <button @click="currentView = 'terminal'" class="hover:text-white transition">Operar</button>
-                    <button class="hover:text-white transition">Historial</button>
                 </nav>
             </div>
             <div class="flex items-center gap-4">
                 <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
-                    <div class="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">Balance Real</div>
+                    <div class="text-[8px] text-gray-500 font-bold uppercase">Balance Real</div>
                     <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
                 </div>
-                <button onclick="window.location.href='index.html'" class="text-[10px] text-gray-500 hover:text-red-400 font-bold uppercase transition">Salir</button>
+                <button onclick="window.location.href='index.html'" class="text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase ml-4">Salir</button>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-10">
             <div class="max-w-7xl mx-auto space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 glass p-10 rounded-[40px] flex flex-col justify-center min-h-[300px]">
-                        <h2 class="text-4xl font-black uppercase italic leading-none mb-4">Bienvenido al <br><span class="text-brand-accent neon-text italic">Centro de Control</span></h2>
-                        <p class="text-gray-500 text-sm max-w-md">Tu cuenta está vinculada con éxito. El capital actual disponible para trading de alta frecuencia es de $4,779.87 USD.</p>
+                    <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden">
+                        <h2 class="text-3xl font-black uppercase italic mb-2">Libera el potencial con <br><span class="text-brand-accent">Solidario Signals</span></h2>
+                        <p class="text-gray-500 text-sm mb-6">Acceso premium para apalancar tus operaciones.</p>
+                        <button class="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase btn-action">SABER MÁS</button>
                     </div>
-                    <div @click="currentView = 'terminal'" class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center cursor-pointer hover:border-brand-accent/40 transition-all group">
-                        <div class="w-20 h-20 rounded-full bg-brand-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition">
-                            <div class="text-4xl">📈</div>
+                    <div class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center group cursor-pointer hover:border-brand-accent/50 transition" @click="currentView = 'terminal'">
+                        <div class="text-4xl mb-4">📈</div>
+                        <h3 class="text-lg font-black uppercase italic mb-1">Negociación Manual</h3>
+                        <p class="text-[10px] text-gray-500 mb-4">Mejora tus habilidades en tiempo real.</p>
+                        <span class="text-brand-accent font-bold text-[9px] uppercase tracking-widest">Entrar a Terminal →</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass p-8 rounded-[40px] lg:col-span-2 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="text-4xl">🤖</span>
+                            <div>
+                                <h3 class="text-lg font-black uppercase italic">Bots Solidario IA</h3>
+                                <p class="text-xs text-gray-500">Automatiza tus estrategias con IA.</p>
+                            </div>
                         </div>
-                        <span class="text-brand-accent font-bold text-[10px] uppercase tracking-[0.2em]">Abrir Terminal →</span>
+                        <button class="border border-brand-accent text-brand-accent px-4 py-2 rounded-lg font-bold text-[9px] uppercase hover:bg-brand-accent hover:text-black transition">USAR BOTS IA</button>
+                    </div>
+                    <div class="glass p-8 rounded-[40px] text-center">
+                        <div class="text-[9px] text-gray-500 font-bold uppercase mb-2">Traders Online</div>
+                        <div class="text-3xl font-black font-mono">1,245</div>
+                        <div class="text-brand-accent font-bold text-[8px] uppercase mt-1">Señales IA Activas</div>
+                    </div>
+                    <div class="glass p-8 rounded-[40px] border-l-4 border-blue-500">
+                        <div class="text-[9px] text-gray-500 font-bold uppercase mb-3">Ranking 24h</div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-accent flex items-center justify-center text-black font-bold text-xs">RS</div>
+                            <div>
+                                <div class="text-[10px] font-black uppercase">Riky Sady</div>
+                                <div class="text-brand-accent font-bold text-[10px]">+57% 🏆</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div x-show="currentView === 'terminal'" x-cloak class="h-screen flex flex-col bg-black relative z-20">
+    <div x-show="currentView === 'terminal'" x-cloak class="h-screen flex flex-col bg-black relative z-20 overflow-hidden text-[#e2e8f0] fade-in">
         <header class="h-14 bg-brand-panel border-b border-brand-border flex justify-between items-center px-4 shrink-0">
-            <div class="flex items-center gap-4">
-                <button @click="currentView = 'app'" class="text-[10px] text-brand-accent font-bold uppercase tracking-widest flex items-center gap-2">
-                    <span class="text-lg">←</span> Volver
-                </button>
-                <div class="h-6 w-[1px] bg-brand-border"></div>
+            <div class="flex items-center gap-6">
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-deriv-green animate-pulse"></div>
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Servidor Activo</span>
+                    <div class="w-8 h-8 rounded bg-white flex items-center justify-center font-black text-black text-[10px]">ATS</div>
+                    <span class="font-bold text-xs tracking-tighter uppercase italic">ATS <span class="text-brand-accent">Elite Terminal</span></span>
                 </div>
+                <nav class="flex gap-6 text-[10px] font-bold uppercase tracking-widest ml-4">
+                    <button @click="currentView = 'app'" class="text-gray-500 hover:text-white transition">Dashboard</button>
+                    <button class="text-brand-accent border-b-2 border-brand-accent pb-1">Operar</button>
+                    <button class="text-gray-500 hover:text-white transition italic">Turbo Signals <span class="bg-red-500 text-white px-1 rounded text-[7px] ml-1">OFF</span></button>
+                </nav>
             </div>
-            <div class="bg-black/40 px-4 py-1.5 rounded-lg border border-brand-border">
+            <div class="bg-black/40 border border-brand-border px-3 py-1 rounded-lg">
+                <span class="text-[7px] text-gray-500 font-bold uppercase block leading-none text-right">Conta real</span>
                 <span class="text-white font-mono font-bold text-xs">$ 4,779.87</span>
             </div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <aside class="w-72 bg-brand-panel border-r border-brand-border p-6 flex flex-col gap-6 shrink-0">
-                <div>
-                    <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Mercado Activo</label>
-                    <div class="input-terminal flex items-center justify-between cursor-not-allowed">
-                        <span class="font-bold text-[10px]">Volatility 100 Index</span>
-                        <span class="text-brand-accent">▼</span>
-                    </div>
+            <aside class="w-72 bg-brand-panel border-r border-brand-border flex flex-col shrink-0 p-4">
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] italic mb-1">Configurações da IA</h3>
+                    <p class="text-lg font-black text-white">$0 <span class="text-[10px] text-gray-500">(0%)</span></p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-4 flex-1">
                     <div>
-                        <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Ticks</label>
-                        <input type="number" value="5" class="input-terminal text-center font-mono">
+                        <label class="text-[9px] font-bold text-gray-500 uppercase">Mercado</label>
+                        <div class="input-terminal flex justify-between items-center mt-1">
+                            <span class="text-[10px] font-bold">📊 Volatility 100 Index</span>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Inversión</label>
-                        <input type="text" value="$100.00" class="input-terminal text-center font-mono text-brand-accent">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="text-[8px] font-bold text-gray-500 uppercase">Quantia</label><input type="text" class="input-terminal text-center font-bold" value="$ 1"></div>
+                        <div><label class="text-[8px] font-bold text-gray-500 uppercase">Meta</label><input type="text" class="input-terminal text-center font-bold" value="$ 20"></div>
+                        <div><label class="text-[8px] font-bold text-gray-500 uppercase">Perda</label><input type="text" class="input-terminal text-center font-bold" value="$ 1k"></div>
                     </div>
                 </div>
-
-                <div class="mt-auto space-y-3">
-                    <button class="w-full bg-deriv-green hover:bg-opacity-80 text-black font-black py-4 rounded-xl transition-all uppercase italic text-sm">Rise</button>
-                    <button class="w-full bg-deriv-red hover:bg-opacity-80 text-white font-black py-4 rounded-xl transition-all uppercase italic text-sm">Fall</button>
-                </div>
+                <button class="w-full bg-[#8b5cf6] text-white font-black py-4 rounded-xl text-[10px] uppercase italic">▶ Iniciar Robô</button>
             </aside>
 
-            <main class="flex-1 relative bg-[radial-gradient(circle_at_center,_#0a0f0e_0%,_#020606_100%)]">
-                <div class="absolute top-8 left-8">
-                    <div class="text-4xl font-black italic text-white/10 uppercase select-none">ATS Terminal Pro</div>
-                </div>
-                
-                <div class="absolute inset-0 flex items-end justify-center gap-1 pb-32 px-20">
-                    <template x-for="i in 30">
-                        <div class="flex flex-col items-center flex-1 max-w-[12px]">
-                            <div class="w-[2px] h-4 bg-gray-800"></div>
-                            <div class="w-full rounded-sm candle" 
-                                 :style="`height: ${Math.random() * 150 + 20}px; background: ${Math.random() > 0.5 ? '#00ffad' : '#ff4444'}; opacity: ${Math.random() * 0.5 + 0.3}`">
-                            </div>
+            <main class="flex-1 flex flex-col bg-[#010404] relative">
+                <div class="flex-1 relative flex flex-col">
+                    <div class="absolute top-4 left-6 z-10">
+                        <span class="text-[11px] font-bold text-gray-400 uppercase">Volatility 100 Index · <span class="text-white">Deriv</span></span>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-2xl font-black italic text-white neon-text">754.5201</span>
+                            <span class="text-brand-accent font-bold text-[9px]">+0.1300 (+0.02%)</span>
                         </div>
-                    </template>
+                    </div>
+                    <div class="flex-1 w-full flex items-end justify-around px-12 pb-20 opacity-80">
+                        <div class="flex flex-col items-center"><div class="w-0.5 h-16 bg-gray-600"></div><div class="w-3 h-20 bg-deriv-green rounded-sm"></div></div>
+                        <div class="flex flex-col items-center"><div class="w-0.5 h-12 bg-gray-600"></div><div class="w-3 h-14 bg-deriv-red rounded-sm"></div></div>
+                        <div class="flex flex-col items-center relative">
+                            <div class="w-0.5 h-32 bg-gray-600"></div><div class="w-3 h-40 bg-deriv-green rounded-sm"></div>
+                            <div class="absolute -right-[1000px] top-1/2 w-[2000px] border-t border-dashed border-brand-accent/30 price-line-anim"></div>
+                        </div>
+                    </div>
                 </div>
             </main>
+
+            <aside class="w-72 bg-brand-panel border-l border-brand-border p-4">
+                <h3 class="text-[10px] font-black text-gray-500 uppercase mb-4 italic">Modo Manual</h3>
+                <div class="space-y-4">
+                    <button class="w-full bg-deriv-green text-black p-4 rounded-xl flex justify-between items-center font-black italic uppercase text-sm btn-action">
+                        <span>↗ Rise</span><span>1.85 USD</span>
+                    </button>
+                    <button class="w-full bg-deriv-red text-white p-4 rounded-xl flex justify-between items-center font-black italic uppercase text-sm btn-action">
+                        <span>↘ Fall</span><span>1.84 USD</span>
+                    </button>
+                </div>
+            </aside>
         </div>
     </div>
 
     <script>
         function dashboardApp() {
             return {
-                currentView: 'app',
-                init() {
-                    console.log("Dashboard ATS Elite cargado.");
-                }
+                currentView: 'app'
             }
         }
     </script>
