@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATS Elite Platform | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -23,11 +24,20 @@
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
         .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 255, 163, 0.2); }
-        .fade-in { animation: fadeIn 0.6s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Animación de pulso para el ranking de Riky */
+        .rank-pulse { animation: pulse-glow 2s infinite; }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.2); border-color: rgba(0, 255, 163, 0.2); }
+            50% { box-shadow: 0 0 20px 5px rgba(0, 255, 163, 0.1); border-color: rgba(0, 255, 163, 0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.2); border-color: rgba(0, 255, 163, 0.2); }
+        }
+
+        .notification-slide { animation: slideIn 0.5s ease-out forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
-<body class="fade-in">
+<body x-data="dashboardLogic()">
     <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-3">
@@ -42,7 +52,7 @@
         <div class="flex items-center gap-4">
             <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
                 <div class="text-[8px] text-gray-500 font-bold uppercase">Balance Real</div>
-                <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
+                <div class="text-brand-accent font-mono font-bold text-sm">$<span x-text="balance.toFixed(2)"></span></div>
             </div>
         </div>
     </header>
@@ -52,13 +62,12 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden flex flex-col justify-center">
                     <h2 class="text-4xl font-black uppercase italic leading-tight mb-2">Libera el potencial con <br><span class="text-brand-accent neon-text">Solidario Signals</span></h2>
-                    <p class="text-gray-500 text-sm mb-6 max-w-md">Acceso premium para apalancar tus operaciones con nuestra tecnología de alta frecuencia.</p>
+                    <p class="text-gray-500 text-sm mb-6 max-w-md">Tecnología de alta frecuencia operando ahora mismo.</p>
                     <button class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase btn-action w-fit">SABER MÁS</button>
                 </div>
                 <a href="terminal.html" class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center group btn-action">
                     <div class="text-5xl mb-4 group-hover:scale-110 transition">📈</div>
                     <h3 class="text-lg font-black uppercase italic mb-1">Negociación Manual</h3>
-                    <p class="text-[10px] text-gray-500 mb-4 px-6">Opera directamente en el mercado con herramientas profesionales.</p>
                     <span class="text-brand-accent font-bold text-[9px] uppercase tracking-widest">Entrar a Terminal →</span>
                 </a>
             </div>
@@ -69,28 +78,93 @@
                         <span class="text-5xl">🤖</span>
                         <div>
                             <h3 class="text-xl font-black uppercase italic">Bots Solidario IA</h3>
-                            <p class="text-xs text-gray-500">Automatiza tus estrategias con inteligencia artificial.</p>
+                            <p class="text-xs text-gray-500">Estado: <span class="text-brand-accent font-bold animate-pulse">Analizando Mercado...</span></p>
                         </div>
                     </div>
-                    <button class="border border-brand-accent text-brand-accent px-6 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-brand-accent hover:text-black transition">USAR BOTS IA</button>
+                    <button class="border border-brand-accent text-brand-accent px-6 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-brand-accent hover:text-black transition">CONFIGURAR IA</button>
                 </div>
+                
                 <div class="glass p-8 rounded-[40px] text-center flex flex-col justify-center">
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Traders Online</div>
-                    <div class="text-4xl font-black font-mono">1,245</div>
-                    <div class="text-brand-accent font-bold text-[8px] uppercase mt-2 tracking-widest">Señales IA Activas</div>
+                    <div class="text-4xl font-black font-mono text-white" x-text="tradersOnline">0</div>
+                    <div class="text-brand-accent font-bold text-[8px] uppercase mt-2 tracking-widest">En Tiempo Real</div>
                 </div>
-                <div class="glass p-8 rounded-[40px] border-l-4 border-blue-500 flex flex-col justify-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Ranking 24h</div>
+
+                <div class="glass p-8 rounded-[40px] rank-pulse border-l-4 border-brand-accent flex flex-col justify-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Tu Posición Actual</div>
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm">RS</div>
+                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm shadow-lg shadow-brand-accent/50">RS</div>
                         <div>
                             <div class="text-xs font-black uppercase tracking-tighter">RIKY SADY</div>
-                            <div class="text-brand-accent font-bold text-xs">+57% 🏆</div>
+                            <div class="text-brand-accent font-bold text-xs">+57.42% 🏆</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <div class="fixed bottom-6 right-6 w-80 space-y-4 z-50">
+        <template x-for="note in notifications" :key="note.id">
+            <div class="glass p-4 rounded-2xl border-l-4 border-brand-accent notification-slide flex items-center gap-4">
+                <div class="text-xl">💰</div>
+                <div>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase" x-text="note.title"></p>
+                    <p class="text-xs font-bold text-white" x-text="note.msg"></p>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+        function dashboardLogic() {
+            return {
+                balance: 0,
+                targetBalance: 4779.87,
+                tradersOnline: 0,
+                targetTraders: 1245,
+                notifications: [],
+                
+                init() {
+                    // Animación de Balance
+                    let balInterval = setInterval(() => {
+                        if (this.balance < this.targetBalance) {
+                            this.balance += 123.45;
+                        } else {
+                            this.balance = this.targetBalance;
+                            clearInterval(balInterval);
+                        }
+                    }, 30);
+
+                    // Animación Traders
+                    let traderInterval = setInterval(() => {
+                        if (this.tradersOnline < this.targetTraders) {
+                            this.tradersOnline += 15;
+                        } else {
+                            this.tradersOnline = this.targetTraders;
+                            clearInterval(traderInterval);
+                        }
+                    }, 20);
+
+                    // Sistema de notificaciones aleatorias
+                    setTimeout(() => this.addNotification("Bot Solidario", "Operación cerrada: +$14.20"), 3000);
+                    setTimeout(() => this.addNotification("Sistema", "Señal detectada en Volatility 100"), 7000);
+                    
+                    // Cambiar número de traders aleatoriamente para simular vida
+                    setInterval(() => {
+                        this.tradersOnline += Math.floor(Math.random() * 5) - 2;
+                    }, 4000);
+                },
+
+                addNotification(title, msg) {
+                    const id = Date.now();
+                    this.notifications.push({ id, title, msg });
+                    setTimeout(() => {
+                        this.notifications = this.notifications.filter(n => n.id !== id);
+                    }, 4000);
+                }
+            }
+        }
+    </script>
 </body>
 </html>
