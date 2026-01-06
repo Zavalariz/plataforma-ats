@@ -3,83 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite | Dashboard</title>
+    <title>ATS Elite Platform | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' } } } }
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' }
+                    }
+                }
+            }
         }
     </script>
     <style>
-        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .btn-action { transition: all 0.3s ease; cursor: pointer; }
+        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 255, 163, 0.2); }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
-    <div class="h-screen flex flex-col relative z-10 overflow-hidden">
-        <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs">ATS</div>
-                    <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-brand-accent">Pro</span></span>
-                </div>
-                <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                    <a href="dashboard.html" class="text-brand-accent">Inicio</a>
-                    <a href="terminal.html" class="hover:text-white transition">Operar</a>
-                </nav>
+<body class="fade-in">
+    <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs">ATS</div>
+                <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-brand-accent">Pro</span></span>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
-                    <div class="text-[8px] text-gray-500 font-bold uppercase">Balance Real</div>
-                    <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
-                </div>
+            <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                <a href="dashboard.html" class="text-brand-accent">Inicio</a>
+                <a href="terminal.html" class="hover:text-white transition">Operar</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
+                <div class="text-[8px] text-gray-500 font-bold uppercase">Balance Real</div>
+                <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <main class="flex-1 overflow-y-auto p-10">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden flex flex-col justify-center">
-                        <h2 class="text-4xl font-black uppercase italic mb-2">Libera el potencial con <br><span class="text-brand-accent neon-text">Solidario Signals</span></h2>
-                        <p class="text-gray-500 text-sm mb-6 max-w-md">Acceso premium para apalancar tus operaciones.</p>
-                        <button class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase btn-action w-fit">SABER MÁS</button>
-                    </div>
-                    <a href="terminal.html" class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center group btn-action">
-                        <div class="text-5xl mb-4 group-hover:scale-110 transition">📈</div>
-                        <h3 class="text-lg font-black uppercase italic mb-1">Negociación Manual</h3>
-                        <span class="text-brand-accent font-bold text-[9px] uppercase tracking-widest">Entrar a Terminal →</span>
-                    </a>
+    <main class="flex-1 overflow-y-auto p-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden flex flex-col justify-center">
+                    <h2 class="text-4xl font-black uppercase italic leading-tight mb-2">Libera el potencial con <br><span class="text-brand-accent neon-text">Solidario Signals</span></h2>
+                    <p class="text-gray-500 text-sm mb-6 max-w-md">Acceso premium para apalancar tus operaciones con nuestra tecnología de alta frecuencia.</p>
+                    <button class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase btn-action w-fit">SABER MÁS</button>
                 </div>
+                <a href="terminal.html" class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center group btn-action">
+                    <div class="text-5xl mb-4 group-hover:scale-110 transition">📈</div>
+                    <h3 class="text-lg font-black uppercase italic mb-1">Negociación Manual</h3>
+                    <p class="text-[10px] text-gray-500 mb-4 px-6">Opera directamente en el mercado con herramientas profesionales.</p>
+                    <span class="text-brand-accent font-bold text-[9px] uppercase tracking-widest">Entrar a Terminal →</span>
+                </a>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="glass p-8 rounded-[40px] lg:col-span-2 flex items-center justify-between">
-                        <div class="flex items-center gap-5">
-                            <span class="text-5xl">🤖</span>
-                            <div>
-                                <h3 class="text-xl font-black uppercase italic">Bots Solidario IA</h3>
-                                <p class="text-xs text-gray-500">Automatiza tus estrategias con IA.</p>
-                            </div>
-                        </div>
-                        <button class="border border-brand-accent text-brand-accent px-6 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-brand-accent hover:text-black transition">USAR BOTS IA</button>
-                    </div>
-                    <div class="glass p-8 rounded-[40px] border-l-4 border-blue-500 flex flex-col justify-center">
-                        <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Ranking 24h</div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm">RS</div>
-                            <div>
-                                <div class="text-xs font-black uppercase">RIKY SADY</div>
-                                <div class="text-brand-accent font-bold text-xs">+57% 🏆</div>
-                            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass p-8 rounded-[40px] lg:col-span-2 flex items-center justify-between group">
+                    <div class="flex items-center gap-5">
+                        <span class="text-5xl">🤖</span>
+                        <div>
+                            <h3 class="text-xl font-black uppercase italic">Bots Solidario IA</h3>
+                            <p class="text-xs text-gray-500">Automatiza tus estrategias con inteligencia artificial.</p>
                         </div>
                     </div>
+                    <button class="border border-brand-accent text-brand-accent px-6 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-brand-accent hover:text-black transition">USAR BOTS IA</button>
+                </div>
+                <div class="glass p-8 rounded-[40px] text-center flex flex-col justify-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Traders Online</div>
+                    <div class="text-4xl font-black font-mono">1,245</div>
+                    <div class="text-brand-accent font-bold text-[8px] uppercase mt-2 tracking-widest">Señales IA Activas</div>
+                </div>
+                <div class="glass p-8 rounded-[40px] border-l-4 border-blue-500 flex flex-col justify-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Ranking 24h</div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm">RS</div>
+                        <div>
+                            <div class="text-xs font-black uppercase tracking-tighter">RIKY SADY</div>
+                            <div class="text-brand-accent font-bold text-xs">+57% 🏆</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 </body>
 </html>
