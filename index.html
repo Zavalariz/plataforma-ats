@@ -8,43 +8,71 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' } } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' },
+                        deriv: { green: '#00ffad', red: '#ff4444' }
+                    }
+                }
+            }
+        }
     </script>
     <style>
-        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        [x-cloak] { display: none !important; }
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; scroll-behavior: smooth; overflow-x: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 255, 163, 0.2); }
+        .floating { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
     </style>
 </head>
-<body x-data="landingApp()" x-init="initApp()">
+<body x-data="tradingApp()" x-init="initApp()">
     <canvas id="bgCanvas" class="fixed inset-0 -z-10 opacity-40"></canvas>
-    
-    <nav class="h-24 flex justify-between items-center px-10 md:px-20 relative z-50">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-brand-accent flex items-center justify-center font-extrabold text-black">ATS</div>
-            <span class="text-xl font-extrabold uppercase">Academia <span class="text-brand-accent">Trader Solidario</span></span>
-        </div>
-        <a href="registro.html" class="text-xs font-bold uppercase text-brand-accent border border-brand-accent/30 px-6 py-2 rounded-full hover:bg-brand-accent hover:text-black transition">Entrar</a>
-    </nav>
 
-    <main class="flex flex-col items-center px-6 pt-16 relative z-10">
-        <div class="text-center max-w-5xl">
-            <h1 class="text-5xl md:text-[100px] font-extrabold tracking-tighter leading-none italic mb-8 uppercase">TRADING DE <br><span class="text-brand-accent neon-text">Nueva Era</span></h1>
-            <p class="text-gray-400 text-lg mb-12 italic">Tecnología algorítmica premium para mercados sintéticos.</p>
-            <a href="registro.html" class="bg-brand-accent px-10 py-5 rounded-2xl text-black font-black uppercase text-sm inline-block shadow-lg shadow-green-500/20">Acceso Plataforma</a>
-        </div>
+    <div class="fade-in">
+        <nav class="h-24 flex justify-between items-center px-10 md:px-20 relative z-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-accent flex items-center justify-center font-extrabold text-black shadow-lg">ATS</div>
+                <span class="text-xl font-extrabold tracking-tight uppercase">Academia <span class="text-brand-accent">Trader Solidario</span></span>
+            </div>
+            <a href="registro.html" class="text-xs font-bold uppercase tracking-widest text-brand-accent border border-brand-accent/30 px-6 py-2 rounded-full hover:bg-brand-accent hover:text-black transition">Mi Cuenta</a>
+        </nav>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl py-32">
-            <div class="glass p-10 rounded-[40px] reveal text-center"><div class="text-4xl mb-4">📊</div><h3 class="font-black uppercase italic">Análisis Vivo</h3></div>
-            <div class="glass p-10 rounded-[40px] reveal text-center"><div class="text-4xl mb-4">🤖</div><h3 class="font-black uppercase italic">Bots IA</h3></div>
-            <div class="glass p-10 rounded-[40px] reveal text-center"><div class="text-4xl mb-4">🎓</div><h3 class="font-black uppercase italic">Academia</h3></div>
-        </div>
-    </main>
+        <main class="flex flex-col items-center px-6 pt-16 relative z-10">
+            <div class="text-center max-w-5xl">
+                <h1 class="text-5xl md:text-[100px] font-extrabold tracking-tighter leading-none italic mb-8 uppercase">TRADING DE <br><span class="text-brand-accent neon-text">Nueva Era</span></h1>
+                <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 italic">Tecnología algorítmica premium diseñada para maximizar tu potencial en mercados sintéticos.</p>
+                <div class="flex flex-wrap justify-center gap-6 mb-24">
+                    <a href="registro.html" class="btn-action bg-brand-accent px-10 py-5 rounded-2xl text-black font-black uppercase text-sm inline-block">Acceso Plataforma</a>
+                    <button onclick="document.getElementById('servicios').scrollIntoView({behavior: 'smooth'})" class="btn-action border border-brand-border px-10 py-5 rounded-2xl text-white font-bold text-sm hover:bg-white/5">Ver Soluciones</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-6xl mb-20">
+                <div class="glass p-8 rounded-[30px] border-l-4 border-l-brand-accent"><div class="text-3xl font-black text-brand-accent font-mono">25,000+</div><div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Traders Activos</div></div>
+                <div class="glass p-8 rounded-[30px]"><div class="text-3xl font-black text-white font-mono">98%</div><div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Efectividad</div></div>
+                <div class="glass p-8 rounded-[30px]"><div class="text-3xl font-black text-brand-accent font-mono">$128M</div><div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Capital Operado</div></div>
+                <div class="glass p-8 rounded-[30px]"><div class="text-3xl font-black text-white font-mono">14ms</div><div class="text-[10px] text-gray-500 uppercase font-bold mt-2 tracking-widest">Latencia API</div></div>
+            </div>
+
+            <div id="servicios" class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl pb-32">
+                <div class="glass p-10 rounded-[40px] reveal group"><div class="text-4xl mb-6 floating">📊</div><h3 class="text-xl font-black mb-4 uppercase italic">Análisis en Vivo</h3><p class="text-gray-400 text-sm">Gráficos de alta fidelidad con indicadores premium optimizados.</p></div>
+                <div class="glass p-10 rounded-[40px] reveal group" style="transition-delay: 0.1s"><div class="text-4xl mb-6 floating" style="animation-delay: 0.5s">🤖</div><h3 class="text-xl font-black mb-4 uppercase italic">Bots Inteligentes</h3><p class="text-gray-400 text-sm">Ejecución automática con gestión de riesgo integrada.</p></div>
+                <div class="glass p-10 rounded-[40px] reveal group" style="transition-delay: 0.2s"><div class="text-4xl mb-6 floating" style="animation-delay: 1s">🎓</div><h3 class="text-xl font-black mb-4 uppercase italic">Academia Elite</h3><p class="text-gray-400 text-sm">Aprende estrategias de acción del precio con expertos.</p></div>
+            </div>
+        </main>
+    </div>
 
     <script>
-        function landingApp() {
+        function tradingApp() {
             return {
                 initApp() { this.initParticles(); this.initScrollReveal(); },
                 initScrollReveal() {
@@ -61,7 +89,7 @@
                     window.onresize = resize; resize();
                     class Particle {
                         constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speedX = (Math.random() - 0.5) * 0.4; this.speedY = (Math.random() - 0.5) * 0.4; }
-                        update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width) this.x = 0; if (this.y > canvas.height) this.y = 0; }
+                        update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width) this.x = 0; if (this.y > canvas.height) this.y = 0; if (this.x < 0) this.x = canvas.width; if (this.y < 0) this.y = canvas.height; }
                         draw() { ctx.fillStyle = 'rgba(0, 255, 163, 0.3)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
                     }
                     for(let i=0; i<70; i++) particles.push(new Particle());
@@ -72,4 +100,5 @@
         }
     </script>
 </body>
+</html>
 </html>
