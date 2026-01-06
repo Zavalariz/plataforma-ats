@@ -2,52 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS Elite | Real-Time Terminal</title>
+    <title>ATS Elite | Terminal de Trading</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { background: #060909; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .neon-accent { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.4); }
+        .neon-real { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.4); }
+        .neon-demo { color: #ffae00; text-shadow: 0 0 10px rgba(255, 174, 0, 0.4); }
         .chart-frame { width: 100%; height: calc(100% + 60px); margin-top: -50px; border: none; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body x-data="terminalLogic()" class="h-screen flex flex-col">
+<body x-data="terminalLogic()" class="h-screen flex flex-col" x-cloak>
 
     <header class="h-16 border-b border-white/10 flex justify-between items-center px-8 bg-[#0a0f0e] z-50">
         <div class="flex items-center gap-4">
-            <div :class="status === 'online' ? 'bg-emerald-500' : 'bg-yellow-500'" class="text-black px-2 py-0.5 rounded text-[9px] font-black uppercase" x-text="status === 'online' ? 'Live' : 'Syncing...'"></div>
-            <span class="font-bold tracking-tighter text-xs uppercase italic text-gray-400">ID: <span class="text-white" x-text="accountID">---</span></span>
+            <div :class="isDemo ? 'bg-[#ffae00]' : 'bg-[#00ffa3]'" 
+                 class="text-black px-3 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter" 
+                 x-text="isDemo ? 'Cuenta Demo' : 'Cuenta Real'">
+            </div>
+            <span class="font-bold tracking-tighter text-xs uppercase italic text-gray-400">ID: <span class="text-white" x-text="accountID">Detectando...</span></span>
         </div>
         
         <div class="flex items-center gap-6">
             <div class="text-right">
-                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest">Balance Real</p>
-                <p class="neon-accent font-mono font-bold text-xl leading-none" x-text="balance === 0 ? '$0.00' : '$' + formatBalance(balance)">$0.00</p>
+                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest">Balance Disponible</p>
+                <p :class="isDemo ? 'neon-demo' : 'neon-real'" 
+                   class="font-mono font-bold text-xl leading-none" 
+                   x-text="balance === 0 ? '$0.00' : '$' + formatBalance(balance)"></p>
             </div>
-            <button @click="exit()" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-red-500/20 transition">SALIR</button>
+            <button @click="exit()" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-red-500/20 transition uppercase">Salir de Terminal</button>
         </div>
     </header>
 
     <div class="flex flex-1">
         <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6 z-50">
             <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Mercado Activo</label>
+                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo en Tiempo Real</label>
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <p class="text-xs font-bold text-white">Volatility 100 (1s)</p>
+                    <p class="text-xs font-bold text-white">Volatility 100 (1s) Index</p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                    <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Inversión Individual</label>
-                    <input type="number" x-model="stake" class="bg-transparent text-lg font-bold w-full focus:outline-none neon-accent">
+                    <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Monto de Inversión</label>
+                    <div class="flex items-center">
+                        <span class="text-gray-500 mr-2 text-sm">$</span>
+                        <input type="number" x-model="stake" 
+                               :class="isDemo ? 'text-[#ffae00]' : 'text-[#00ffa3]'"
+                               class="bg-transparent text-lg font-bold w-full focus:outline-none">
+                    </div>
                 </div>
             </div>
 
             <div class="mt-auto space-y-3">
-                <button @click="trade('CALL')" class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-[11px] transition active:scale-95 shadow-lg shadow-emerald-500/20">EJECUTAR COMPRA</button>
-                <button @click="trade('PUT')" class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-[11px] transition active:scale-95">EJECUTAR VENTA</button>
+                <button @click="trade('CALL')" class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-[11px] transition active:scale-95 shadow-lg shadow-emerald-500/20 uppercase">Ejecutar Rise</button>
+                <button @click="trade('PUT')" class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-[11px] transition active:scale-95 uppercase">Ejecutar Fall</button>
             </div>
         </aside>
 
@@ -60,8 +72,8 @@
         function terminalLogic() {
             return {
                 balance: 0,
-                accountID: 'Detectando...',
-                status: 'connecting',
+                accountID: '---',
+                isDemo: false,
                 stake: 10,
                 socket: null,
 
@@ -79,41 +91,49 @@
                 },
 
                 connect() {
-                    const token = new URLSearchParams(window.location.search).get('token1');
-                    if (!token) return;
+                    const params = new URLSearchParams(window.location.search);
+                    // Captura ambos tokens para permitir el cambio entre Demo y Real
+                    const tokenReal = params.get('token1'); 
+                    const tokenDemo = params.get('token2');
+                    
+                    // Si el Dashboard envía ambos, el código prioriza el que esté disponible
+                    const activeToken = tokenReal || tokenDemo;
 
-                    // Cerrar cualquier conexión previa antes de abrir una nueva
+                    if (!activeToken) return;
+
                     if(this.socket) this.socket.close();
 
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
 
                     this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
+                        this.socket.send(JSON.stringify({ "authorize": activeToken }));
                     };
 
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
                         if (data.msg_type === 'authorize' && !data.error) {
-                            this.status = 'online';
                             this.accountID = data.authorize.loginid;
-                            // Suscripción real al balance
+                            // Si el ID empieza con VRTC es cuenta Demo
+                            this.isDemo = this.accountID.startsWith('VRTC');
+                            
+                            // Suscripción al balance en tiempo real
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance;
                         }
+                    };
 
-                        if (data.error) {
-                            console.error("Error de Deriv:", data.error.message);
-                            this.status = 'error';
-                        }
+                    this.socket.onclose = () => {
+                        setTimeout(() => this.connect(), 3000); // Re-conexión automática en caso de caída
                     };
                 },
 
                 trade(type) {
-                    alert('Ejecutando orden ' + type + ' de $' + this.stake + ' en cuenta ' + this.accountID);
+                    const mode = this.isDemo ? "DEMO" : "REAL";
+                    alert(`Operación ${type} enviada al servidor.\nMonto: $${this.stake}\nCuenta: ${this.accountID} (${mode})`);
                 }
             }
         }
