@@ -2,68 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS Elite | Professional Terminal</title>
+    <title>ATS Elite Terminal | Sistema Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { background: #060909; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .tradingview-widget-container { height: 100% !important; width: 100% !important; }
-        .neon-border { box-shadow: 0 0 15px rgba(0, 255, 163, 0.15); border: 1px solid rgba(0, 255, 163, 0.2); }
+        .neon-accent { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
+        iframe { border: none; width: 100%; height: 100%; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
     </style>
 </head>
 <body x-data="terminalLogic()" class="h-screen flex flex-col">
 
     <header class="h-16 border-b border-white/10 flex justify-between items-center px-8 bg-[#0a0f0e]">
         <div class="flex items-center gap-4">
-            <div class="bg-emerald-500 text-black px-2 py-1 rounded text-[10px] font-black uppercase">Live</div>
-            <span class="font-bold tracking-tighter text-sm uppercase italic">ATS <span class="text-emerald-400">Elite Terminal</span></span>
+            <div class="bg-emerald-500 text-black px-2 py-0.5 rounded text-[9px] font-black uppercase">En Vivo</div>
+            <span class="font-bold tracking-tighter text-sm uppercase italic">ATS <span class="neon-accent">Elite Terminal</span></span>
         </div>
         
         <div class="flex items-center gap-6">
             <div class="text-right">
-                <p class="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Balance de Cuenta</p>
-                <p class="text-emerald-400 font-mono font-bold text-lg" x-text="'$' + formatBalance(balance)">$0.00</p>
+                <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest">Balance Cuenta Real</p>
+                <p class="neon-accent font-mono font-bold text-lg leading-none" x-text="'$' + formatBalance(balance)">$Cargando...</p>
             </div>
-            <button @click="window.location.href='dashboard.html'" class="text-[10px] border border-white/10 px-4 py-2 rounded-lg hover:bg-white/5 transition uppercase font-bold text-gray-400">Volver</button>
+            <button @click="window.location.href='dashboard.html' + window.location.search" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-white/5 transition">VOLVER</button>
         </div>
     </header>
 
     <div class="flex flex-1">
-        <aside class="w-80 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6">
-            <div>
-                <label class="text-[10px] text-gray-500 font-bold uppercase block mb-3">Activo Seleccionado</label>
-                <div class="bg-black/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
-                    <span class="text-xs font-bold">Volatility 100 (1s)</span>
-                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                </div>
+        <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6">
+            <div class="bg-black/40 p-4 rounded-xl border border-white/5">
+                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo</label>
+                <p class="text-xs font-bold italic">Volatility 100 Index (1s)</p>
             </div>
 
             <div class="space-y-4">
-                <div class="bg-black/20 p-4 rounded-xl border border-white/5">
-                    <label class="text-[9px] text-gray-500 font-bold uppercase block mb-2">Inversión (USD)</label>
-                    <input type="number" x-model="stake" class="bg-transparent text-xl font-bold w-full focus:outline-none text-emerald-400">
-                </div>
-                <div class="bg-black/20 p-4 rounded-xl border border-white/5">
-                    <label class="text-[9px] text-gray-500 font-bold uppercase block mb-2">Duración (Ticks)</label>
-                    <select class="bg-transparent text-sm font-bold w-full focus:outline-none">
-                        <option class="bg-[#0a0f0e]">5 Ticks</option>
-                        <option class="bg-[#0a0f0e]">10 Ticks</option>
-                    </select>
+                <div class="bg-black/40 p-4 rounded-xl border border-white/5">
+                    <label class="text-[9px] text-gray-400 font-bold uppercase block mb-1">Inversión</label>
+                    <div class="flex items-center">
+                        <span class="text-gray-500 mr-2 text-sm">$</span>
+                        <input type="number" x-model="stake" class="bg-transparent text-lg font-bold w-full focus:outline-none neon-accent">
+                    </div>
                 </div>
             </div>
 
             <div class="mt-auto space-y-3">
-                <button class="w-full bg-emerald-500 hover:bg-emerald-400 text-black py-5 rounded-2xl font-black italic text-sm transition transform active:scale-95 shadow-lg shadow-emerald-500/10">COMPRA (RISE)</button>
-                <button class="w-full bg-red-500 hover:bg-red-400 text-white py-5 rounded-2xl font-black italic text-sm transition transform active:scale-95 shadow-lg shadow-red-500/10">VENTA (FALL)</button>
+                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-xs transition transform active:scale-95 shadow-lg shadow-emerald-500/10">EJECUTAR COMPRA (RISE)</button>
+                <button class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-xs transition transform active:scale-95">EJECUTAR VENTA (FALL)</button>
             </div>
         </aside>
 
-        <main class="flex-1 bg-black relative">
-            <div id="tradingview_widget" class="h-full w-full"></div>
+        <main class="flex-1 bg-black overflow-hidden relative">
+            <iframe src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
         </main>
     </div>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         function terminalLogic() {
             return {
@@ -72,35 +64,22 @@
                 socket: null,
 
                 init() {
-                    this.loadChart();
                     this.connectDeriv();
                 },
 
-                loadChart() {
-                    new TradingView.widget({
-                        "autosize": true,
-                        "symbol": "DERIV:VOL100", // Simbolo real de Deriv
-                        "interval": "1",
-                        "timezone": "Etc/UTC",
-                        "theme": "dark",
-                        "style": "1",
-                        "locale": "es",
-                        "toolbar_bg": "#f1f3f6",
-                        "enable_publishing": false,
-                        "hide_side_toolbar": false,
-                        "allow_symbol_change": true,
-                        "container_id": "tradingview_widget"
-                    });
-                },
-
                 formatBalance(val) {
+                    if (!val || val === 0) return '---';
                     return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
                 },
 
                 connectDeriv() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1');
-                    if (!token) return;
+                    const token = params.get('token1'); 
+                    
+                    if (!token) {
+                        console.error("No token found in URL");
+                        return;
+                    }
 
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
