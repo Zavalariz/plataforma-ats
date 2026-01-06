@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Platform | Dashboard Multi-Account</title>
+    <title>ATS Elite Platform | Dashboard Multi-Account Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .btn-switch { transition: all 0.3s ease; font-[800] italic uppercase tracking-tighter text-[10px]; }
+        .btn-switch { transition: all 0.3s ease; font-weight: 800; font-style: italic; text-transform: uppercase; font-size: 10px; letter-spacing: -0.025em; }
     </style>
 </head>
 <body x-data="dashboardLogic()">
@@ -49,7 +49,7 @@
                     class="btn-switch px-4 py-1.5 rounded-lg">Demo</button>
             </div>
 
-            <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right min-w-[140px]">
+            <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right min-w-[160px]">
                 <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">
                     Balance <span x-text="accountType" class="text-brand-accent"></span> (<span x-text="currentAccountID"></span>)
                 </div>
@@ -79,7 +79,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass p-8 rounded-[40px] text-center">
+                <div class="glass p-8 rounded-[40px] text-center border border-brand-border">
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Estado de Cuenta</div>
                     <div class="text-xl font-black text-white uppercase italic" x-text="accountType === 'real' ? '🛡️ Protegida' : '🧪 Práctica'"></div>
                 </div>
@@ -87,7 +87,7 @@
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Rendimiento Estimado</div>
                     <div class="text-3xl font-black text-brand-accent">+12.4%</div>
                 </div>
-                <div class="glass p-8 rounded-[40px] text-center">
+                <div class="glass p-8 rounded-[40px] text-center border border-brand-border">
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Señales Activas</div>
                     <div class="text-xl font-black text-white italic">R_100 / R_50</div>
                 </div>
@@ -113,17 +113,17 @@
 
                 connectToDeriv() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1');
+                    const token1 = params.get('token1');
                     
-                    if (!token) {
-                        this.userName = "Token no encontrado";
+                    if (!token1) {
+                        this.userName = "Sesión no detectada";
                         return;
                     }
 
                     this.socket = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${this.appId}`);
 
                     this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
+                        this.socket.send(JSON.stringify({ "authorize": token1 }));
                     };
 
                     this.socket.onmessage = (msg) => {
@@ -133,18 +133,13 @@
                             this.isConnected = true;
                             this.userName = data.authorize.fullname;
                             this.allAccounts = data.authorize.account_list;
+                            this.currentAccountID = data.authorize.loginid;
                             
-                            // Establecer cuenta real por defecto al iniciar
-                            const realAcc = this.allAccounts.find(acc => !acc.is_virtual);
-                            this.currentAccountID = realAcc ? realAcc.loginid : data.authorize.loginid;
-                            
-                            // Suscribirse al balance de la cuenta actual
+                            // Suscribirse al balance de la cuenta actual autorizada
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
                         if (data.msg_type === 'balance') {
-                            // Solo actualizamos el balance si la cuenta que envía el dato es la que tenemos seleccionada
-                            // Nota: En flujos simples de un solo token, Deriv envía el balance de la cuenta autorizada.
                             this.balance = data.balance.balance;
                         }
                     };
@@ -152,17 +147,22 @@
 
                 switchAccount(type) {
                     this.accountType = type;
-                    const target = this.allAccounts.find(acc => 
-                        type === 'real' ? !acc.is_virtual : acc.is_virtual
-                    );
+                    const params = new URLSearchParams(window.location.search);
+                    
+                    // Deriv envía token1, token2, etc. en el mismo orden que la lista de cuentas
+                    let targetToken = '';
+                    this.allAccounts.forEach((acc, index) => {
+                        if (type === 'real' && !acc.is_virtual) {
+                            targetToken = params.get('token' + (index + 1));
+                        }
+                        if (type === 'demo' && acc.is_virtual) {
+                            targetToken = params.get('token' + (index + 1));
+                        }
+                    });
 
-                    if (target) {
-                        this.currentAccountID = target.loginid;
-                        // Para cambiar el balance real en pantalla, en un entorno profesional
-                        // se haría un re-log con el token específico de esa cuenta.
-                        // Por ahora, simulamos el cambio visual para el cliente.
-                        this.balance = type === 'demo' ? 10000.00 : this.balance; 
-                        console.log("Cambiando visualmente a: " + target.loginid);
+                    if (targetToken && this.socket) {
+                        // Re-autorizamos con el token de la cuenta elegida para obtener su balance real
+                        this.socket.send(JSON.stringify({ "authorize": targetToken }));
                     }
                 }
             }
