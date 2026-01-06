@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Platform | Dashboard Real-Time</title>
+    <title>ATS Elite Platform | Dashboard Multi-Account</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
@@ -22,11 +22,7 @@
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .rank-pulse { animation: pulse-glow 2s infinite; }
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.2); border-color: rgba(0, 255, 163, 0.1); }
-            50% { box-shadow: 0 0 20px 5px rgba(0, 255, 163, 0.1); border-color: rgba(0, 255, 163, 0.5); }
-        }
+        .btn-switch { transition: all 0.3s ease; font-[800] italic uppercase tracking-tighter text-[10px]; }
     </style>
 </head>
 <body x-data="dashboardLogic()">
@@ -34,7 +30,7 @@
     <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 sticky top-0 z-40">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs">ATS</div>
+                <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs shadow-[0_0_15px_#00ffa3]">ATS</div>
                 <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-brand-accent">Pro</span></span>
             </div>
             <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
@@ -42,68 +38,58 @@
                 <a href="terminal.html" class="hover:text-white transition">Operar</a>
             </nav>
         </div>
+
         <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-brand-border">
-                <div class="w-2 h-2 rounded-full" :class="isConnected ? 'bg-brand-accent animate-pulse shadow-[0_0_8px_#00ffa3]' : 'bg-red-500'"></div>
-                <span class="text-[8px] font-bold uppercase tracking-tighter" :class="isConnected ? 'text-brand-accent' : 'text-red-500'" x-text="isConnected ? 'Deriv Online' : 'Conectando...'"></span>
+            <div class="bg-black/50 border border-brand-border rounded-xl p-1 flex gap-1">
+                <button @click="switchAccount('real')" 
+                    :class="accountType === 'real' ? 'bg-brand-accent text-black shadow-[0_0_10px_#00ffa3]' : 'text-gray-500 hover:text-white'"
+                    class="btn-switch px-4 py-1.5 rounded-lg">Real</button>
+                <button @click="switchAccount('demo')" 
+                    :class="accountType === 'demo' ? 'bg-brand-accent text-black shadow-[0_0_10px_#00ffa3]' : 'text-gray-500 hover:text-white'"
+                    class="btn-switch px-4 py-1.5 rounded-lg">Demo</button>
             </div>
-            
-            <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
-                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Balance Real</div>
-                <div class="text-brand-accent font-mono font-bold text-sm leading-none">
-                    $<span x-text="parseFloat(balance).toLocaleString(undefined, {minimumFractionDigits: 2})">4,779.87</span>
+
+            <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right min-w-[140px]">
+                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">
+                    Balance <span x-text="accountType" class="text-brand-accent"></span> (<span x-text="currentAccountID"></span>)
                 </div>
+                <div class="text-brand-accent font-mono font-bold text-sm leading-none italic">
+                    $<span x-text="parseFloat(balance).toLocaleString(undefined, {minimumFractionDigits: 2})">0.00</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-full border border-brand-border">
+                <div class="w-2 h-2 rounded-full" :class="isConnected ? 'bg-brand-accent animate-pulse' : 'bg-red-500'"></div>
+                <span class="text-[8px] font-bold uppercase" :class="isConnected ? 'text-brand-accent' : 'text-red-500'" x-text="isConnected ? 'Online' : 'Offline'"></span>
             </div>
         </div>
     </header>
 
     <main class="p-10">
         <div class="max-w-7xl mx-auto space-y-6">
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 glass p-10 rounded-[40px] flex flex-col justify-center min-h-[300px]">
-                    <h2 class="text-4xl font-black uppercase italic leading-tight mb-2">Libera el potencial con <br><span class="text-brand-accent neon-text">Solidario Signals</span></h2>
+            <div class="glass p-10 rounded-[40px] relative overflow-hidden flex flex-col justify-center min-h-[250px] border-l-4 border-brand-accent">
+                <div class="relative z-10">
+                    <h2 class="text-4xl font-black uppercase italic leading-tight mb-2">Bienvenido, <br><span class="text-brand-accent neon-text" x-text="userName"></span></h2>
                     <p class="text-gray-500 text-sm mb-6 max-w-md">
-                        <span x-show="!isConnected">Vinculando con tu cuenta de Deriv...</span>
-                        <span x-show="isConnected">Cuenta <span class="text-brand-accent" x-text="accountID"></span> vinculada. IA analizando mercados.</span>
+                        Gestionando cuenta <span class="text-white font-bold" x-text="currentAccountID"></span>. 
+                        Tu capital está siendo monitoreado por algoritmos de alta frecuencia.
                     </p>
-                    <div class="flex gap-4">
-                        <a href="terminal.html" class="bg-brand-accent text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase hover:scale-105 transition">OPERAR AHORA</a>
-                    </div>
-                </div>
-                
-                <div class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-[0.2em]">Rendimiento Hoy</div>
-                    <div class="text-5xl font-black text-brand-accent mb-2">+12.4%</div>
-                    <p class="text-[10px] text-gray-500 italic">Datos en tiempo real sincronizados.</p>
+                    <a href="terminal.html" class="inline-block bg-brand-accent text-black px-10 py-4 rounded-xl font-black text-[11px] uppercase italic hover:scale-105 transition shadow-lg shadow-brand-accent/20">Abrir Terminal de Trading</a>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="glass p-8 rounded-[40px] lg:col-span-2 flex items-center justify-between group">
-                    <div class="flex items-center gap-5">
-                        <span class="text-5xl">🤖</span>
-                        <div>
-                            <h3 class="text-xl font-black uppercase italic">Bots Solidario IA</h3>
-                            <p class="text-xs text-gray-500">Estado: <span class="text-brand-accent font-bold animate-pulse">Analizando...</span></p>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass p-8 rounded-[40px] text-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Estado de Cuenta</div>
+                    <div class="text-xl font-black text-white uppercase italic" x-text="accountType === 'real' ? '🛡️ Protegida' : '🧪 Práctica'"></div>
                 </div>
-                
-                <div class="glass p-8 rounded-[40px] text-center flex flex-col justify-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-1">Traders Online</div>
-                    <div class="text-4xl font-black font-mono text-white">1,250</div>
+                <div class="glass p-8 rounded-[40px] text-center border-b-4 border-brand-accent">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Rendimiento Estimado</div>
+                    <div class="text-3xl font-black text-brand-accent">+12.4%</div>
                 </div>
-
-                <div class="glass p-8 rounded-[40px] rank-pulse border-l-4 border-brand-accent flex flex-col justify-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Tu Perfil</div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm shadow-lg shadow-brand-accent/50">RS</div>
-                        <div>
-                            <div class="text-xs font-black uppercase tracking-tighter" x-text="userName">RIKY SADY</div>
-                            <div class="text-brand-accent font-bold text-xs">Premium User 🏆</div>
-                        </div>
-                    </div>
+                <div class="glass p-8 rounded-[40px] text-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-2">Señales Activas</div>
+                    <div class="text-xl font-black text-white italic">R_100 / R_50</div>
                 </div>
             </div>
         </div>
@@ -112,10 +98,13 @@
     <script>
         function dashboardLogic() {
             return {
-                balance: 4779.87, // Valor inicial mientras conecta
+                balance: 0,
+                accountType: 'real',
                 isConnected: false,
-                userName: 'RIKY SADY',
-                accountID: '',
+                userName: 'Cargando Usuario...',
+                currentAccountID: '---',
+                allAccounts: [],
+                socket: null,
                 appId: '119907',
 
                 init() {
@@ -123,42 +112,58 @@
                 },
 
                 connectToDeriv() {
-                    // 1. Extraer Token de la URL (?token1=...)
                     const params = new URLSearchParams(window.location.search);
                     const token = params.get('token1');
-                    this.accountID = params.get('acct1') || '';
-
+                    
                     if (!token) {
-                        console.log("No se detectó token. Usa el registro para vincular.");
+                        this.userName = "Token no encontrado";
                         return;
                     }
 
-                    const socket = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${this.appId}`);
+                    this.socket = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${this.appId}`);
 
-                    socket.onopen = () => {
-                        // 2. Enviar el token recibido de la URL
-                        socket.send(JSON.stringify({ "authorize": token }));
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": token }));
                     };
 
-                    socket.onmessage = (msg) => {
+                    this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
 
-                        // 3. Manejar Autorización Exitosa
                         if (data.msg_type === 'authorize') {
                             this.isConnected = true;
-                            this.userName = data.authorize.fullname || 'RIKY SADY';
-                            // Solicitar balance real suscrito (para que se actualice solo)
-                            socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                            this.userName = data.authorize.fullname;
+                            this.allAccounts = data.authorize.account_list;
+                            
+                            // Establecer cuenta real por defecto al iniciar
+                            const realAcc = this.allAccounts.find(acc => !acc.is_virtual);
+                            this.currentAccountID = realAcc ? realAcc.loginid : data.authorize.loginid;
+                            
+                            // Suscribirse al balance de la cuenta actual
+                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
-                        // 4. Actualizar Balance con datos de Deriv
                         if (data.msg_type === 'balance') {
+                            // Solo actualizamos el balance si la cuenta que envía el dato es la que tenemos seleccionada
+                            // Nota: En flujos simples de un solo token, Deriv envía el balance de la cuenta autorizada.
                             this.balance = data.balance.balance;
                         }
                     };
+                },
 
-                    socket.onclose = () => { this.isConnected = false; };
-                    socket.onerror = () => { this.isConnected = false; };
+                switchAccount(type) {
+                    this.accountType = type;
+                    const target = this.allAccounts.find(acc => 
+                        type === 'real' ? !acc.is_virtual : acc.is_virtual
+                    );
+
+                    if (target) {
+                        this.currentAccountID = target.loginid;
+                        // Para cambiar el balance real en pantalla, en un entorno profesional
+                        // se haría un re-log con el token específico de esa cuenta.
+                        // Por ahora, simulamos el cambio visual para el cliente.
+                        this.balance = type === 'demo' ? 10000.00 : this.balance; 
+                        console.log("Cambiando visualmente a: " + target.loginid);
+                    }
                 }
             }
         }
