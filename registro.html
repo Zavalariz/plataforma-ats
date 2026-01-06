@@ -5,46 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - Academia Trader Solidario</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020606; }
+        .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
+        .brand-shadow { box-shadow: 0 0 20px rgba(0, 255, 163, 0.1); }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+<body class="text-white min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-gray-800 rounded-2xl p-8 shadow-2xl border border-gray-700">
+    <div class="max-w-md w-full glass rounded-[32px] p-8 brand-shadow">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-500">Crear Cuenta</h1>
-            <p class="text-gray-400 mt-2">Únete a la plataforma ATS</p>
+            <div class="inline-flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-[#00ffa3] flex items-center justify-center font-black text-black text-xs shadow-[0_0_15px_#00ffa3]">ATS</div>
+                <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-[#00ffa3]">Pro</span></span>
+            </div>
+            <h1 class="text-2xl font-black uppercase italic">Crear Cuenta</h1>
+            <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mt-1">Únete a la élite del trading</p>
+        </div>
+
+        <div class="mb-6">
+            <a href="https://oauth.deriv.com/oauth2/authorize?app_id=119907&l=es&brand=deriv" 
+               class="w-full flex items-center justify-center bg-[#ff4444] hover:bg-[#ff5555] text-white font-black py-4 rounded-xl transition duration-300 text-[11px] uppercase tracking-widest italic shadow-lg shadow-red-500/20">
+                <span class="mr-2 text-base">🔴</span> Registrarse con Deriv (Recomendado)
+            </a>
+            <p class="text-[8px] text-gray-600 text-center mt-2 uppercase font-bold italic tracking-tighter">Vincula tu saldo de $4,779.87 automáticamente</p>
+        </div>
+
+        <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-brand-border"></div></div>
+            <div class="relative flex justify-center text-[8px] uppercase font-black"><span class="px-3 bg-[#0a0f0e] text-gray-500 tracking-widest">O métodos tradicionales</span></div>
         </div>
 
         <form id="registroForm" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium mb-1 text-gray-300">Nombre Completo</label>
-                <input type="text" id="nombre" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500" placeholder="Ej. Riky Zavala" required>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">Nombre Completo</label>
+                <input type="text" id="nombre" class="w-full bg-[#0a0f0e] border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00ffa3] transition" placeholder="RIKY ZAVALA" required>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1 text-gray-300">Correo Electrónico</label>
-                <input type="email" id="email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500" placeholder="correo@ejemplo.com" required>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">Correo Electrónico</label>
+                <input type="email" id="email" class="w-full bg-[#0a0f0e] border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00ffa3] transition" placeholder="CORREO@EJEMPLO.COM" required>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1 text-gray-300">Contraseña</label>
-                <input type="password" id="password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500" placeholder="••••••••" required>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">Contraseña</label>
+                <input type="password" id="password" class="w-full bg-[#0a0f0e] border border-[#14211e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#00ffa3] transition" placeholder="••••••••" required>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300">
+            <button type="submit" class="w-full bg-[#14211e] hover:bg-[#1a2b27] border border-[#00ffa3]/20 text-[#00ffa3] font-black py-4 rounded-xl transition duration-300 text-[10px] uppercase tracking-widest italic">
                 Registrarse con Correo
             </button>
         </form>
 
-        <div class="relative my-6">
-            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div>
-            <div class="relative flex justify-center text-sm"><span class="px-2 bg-gray-800 text-gray-400">O también</span></div>
+        <div class="mt-4">
+            <button onclick="registroConGoogle()" class="w-full flex items-center justify-center bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 transition duration-300 text-[10px] uppercase tracking-widest italic">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-4 h-4 mr-2">
+                Continuar con Google
+            </button>
         </div>
 
-        <button onclick="registroConGoogle()" class="w-full flex items-center justify-center bg-white text-gray-700 font-bold py-3 rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-300">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
-            Continuar con Google
-        </button>
-
-        <p class="text-center text-gray-500 text-sm mt-6">
-            ¿Ya tienes cuenta? <a href="index.html" class="text-blue-500 hover:underline">Inicia sesión</a>
+        <p class="text-center text-gray-500 text-[10px] font-bold uppercase mt-8 tracking-widest">
+            ¿Ya tienes cuenta? <a href="index.html" class="text-[#00ffa3] hover:underline">Inicia sesión</a>
         </p>
     </div>
 
@@ -53,7 +73,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Tus credenciales de Firebase (Manteniendo la que marcaste como nueva)
         const firebaseConfig = {
             apiKey: "AIzaSyDTjfbJjlFxmTI8JnbikfJT89txXlXZcgQ",
             authDomain: "plataforma-ats.firebaseapp.com",
@@ -64,41 +83,32 @@
             measurementId: "G-1MK1H8W4GK"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // 1. Registro con Google
         async function registroConGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             try {
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
-                
-                // Guardar en Firestore Database
                 await db.collection("usuarios").doc(user.uid).set({
                     nombre: user.displayName,
                     email: user.email,
                     balance: 10000,
                     fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-
-                alert("Bienvenido " + user.displayName);
-                // REDIRECCIÓN AL NUEVO DASHBOARD
                 window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error con Google: " + error.message);
             }
         }
 
-        // 2. Registro con Correo Tradicional
         document.getElementById('registroForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nombre = document.getElementById('nombre').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
             try {
                 const cred = await auth.createUserWithEmailAndPassword(email, password);
                 await db.collection("usuarios").doc(cred.user.uid).set({
@@ -107,8 +117,6 @@
                     balance: 10000,
                     fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                alert("Cuenta creada con éxito");
-                // REDIRECCIÓN AL NUEVO DASHBOARD
                 window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error: " + error.message);
