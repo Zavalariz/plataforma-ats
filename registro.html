@@ -3,114 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro | Academia Trader Solidario</title>
+    <title>Registro | ATS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
-        .input-field { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 12px; padding: 12px; outline: none; width: 100%; transition: all 0.3s; }
-        .input-field:focus { border-color: #00ffa3; box-shadow: 0 0 10px rgba(0, 255, 163, 0.1); }
+        .input-field { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 12px; padding: 12px; width: 100%; outline: none; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
-
-    <div class="glass p-10 rounded-[40px] w-full max-w-md shadow-2xl text-center">
+    <div class="glass p-10 rounded-[40px] w-full max-w-md text-center">
         <div class="mb-8">
             <div class="w-12 h-12 rounded-2xl bg-[#00ffa3] flex items-center justify-center font-black text-black mx-auto mb-4">ATS</div>
-            <h1 class="text-3xl font-black uppercase italic">CREAR CUENTA</h1>
-            <p class="text-gray-500 text-sm mt-2 uppercase font-bold tracking-widest">Únete a la plataforma de trading elite</p>
+            <h1 class="text-3xl font-black uppercase italic italic">Crear Cuenta</h1>
         </div>
 
-        <form id="registroForm" class="space-y-5 text-left">
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Nombre Completo</label>
-                <input type="text" id="nombre" class="input-field mt-1" placeholder="Ej. Riky Zavala" required>
-            </div>
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Correo Electrónico</label>
-                <input type="email" id="email" class="input-field mt-1" placeholder="correo@ejemplo.com" required>
-            </div>
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-1">Contraseña</label>
-                <input type="password" id="password" class="input-field mt-1" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit" class="w-full bg-[#2563eb] hover:bg-blue-700 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest transition shadow-lg">
-                Registrarse con Correo
-            </button>
+        <form id="registroForm" class="space-y-4 text-left">
+            <div><label class="text-[10px] font-bold text-gray-500 uppercase">Nombre</label><input type="text" id="nombre" class="input-field" required></div>
+            <div><label class="text-[10px] font-bold text-gray-500 uppercase">Correo</label><input type="email" id="email" class="input-field" required></div>
+            <div><label class="text-[10px] font-bold text-gray-500 uppercase">Contraseña</label><input type="password" id="password" class="input-field" required></div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest mt-4">Registrarse</button>
         </form>
 
-        <div class="relative my-8">
-            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-800"></div></div>
-            <div class="relative flex justify-center text-[10px] uppercase"><span class="bg-[#020606] px-2 text-gray-500 font-bold italic">O también</span></div>
-        </div>
-
-        <button id="googleBtn" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest flex items-center justify-center gap-3 transition hover:bg-gray-200">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Continuar con Google
+        <button id="googleBtn" class="w-full bg-white text-black font-black py-4 rounded-xl uppercase text-xs tracking-widest mt-6 flex items-center justify-center gap-3">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google
         </button>
-
-        <p class="text-center text-[10px] text-gray-500 mt-6 uppercase font-bold">
-            ¿Ya tienes cuenta? <a href="#" class="text-[#00ffa3]">Inicia sesión</a>
-        </p>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-
     <script>
-        // CONFIGURACIÓN VERIFICADA
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNtlSyXjFCmdd1xPTzrYpJVK2wGGzzqCE",
-            authDomain: "plataforma-ats.firebaseapp.com",
-            projectId: "plataforma-ats",
-            storageBucket: "plataforma-ats.firebasestorage.app",
-            messagingSenderId: "179964433440",
-            appId: "1:179964433440:web:a1b6d7e847692ad5da1845"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyDNtlSyXjFCmdd1xPTzrYpJVK2wGGzzqCE", authDomain: "plataforma-ats.firebaseapp.com", projectId: "plataforma-ats", storageBucket: "plataforma-ats.firebasestorage.app", messagingSenderId: "179964433440", appId: "1:179964433440:web:a1b6d7e847692ad5da1845" };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // REGISTRO CORREO
-        document.getElementById('registroForm').addEventListener('submit', async (e) => {
+        
+        document.getElementById('registroForm').onsubmit = async (e) => {
             e.preventDefault();
-            const nombre = document.getElementById('nombre').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
+            const n = document.getElementById('nombre').value;
             try {
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                await db.collection('usuarios').doc(cred.user.uid).set({
-                    nombre: nombre,
-                    email: email,
-                    balance: 0,
-                    creado: new Date()
-                });
-                alert("Bienvenido " + nombre);
+                const c = await firebase.auth().createUserWithEmailAndPassword(document.getElementById('email').value, document.getElementById('password').value);
+                await firebase.firestore().collection('usuarios').doc(c.user.uid).set({ nombre: n, balance: 0 });
+                alert("Bienvenido " + n);
                 window.location.href = "dashboard.html";
-            } catch (error) {
-                alert("Error: " + error.message);
-            }
-        });
+            } catch (e) { alert(e.message); }
+        };
 
-        // REGISTRO GOOGLE
-        document.getElementById('googleBtn').addEventListener('click', async () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
+        document.getElementById('googleBtn').onclick = async () => {
             try {
-                const result = await auth.signInWithPopup(provider);
-                await db.collection('usuarios').doc(result.user.uid).set({
-                    nombre: result.user.displayName,
-                    email: result.user.email,
-                    balance: 0
-                }, { merge: true });
-                alert("Bienvenido " + result.user.displayName);
+                const r = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                await firebase.firestore().collection('usuarios').doc(r.user.uid).set({ nombre: r.user.displayName, balance: 0 }, { merge: true });
+                alert("Bienvenido " + r.user.displayName);
                 window.location.href = "dashboard.html";
-            } catch (error) {
-                alert("Error con Google: " + error.message);
-            }
-        });
+            } catch (e) { alert(e.message); }
+        };
     </script>
 </body>
 </html>
