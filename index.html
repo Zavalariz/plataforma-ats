@@ -323,15 +323,12 @@
         function tradingApp() {
             return {
                 currentView: 'landing',
-                initApp() { 
-                    this.initParticles(); 
-                    this.initScrollReveal();
-                    
-                    // Nueva lógica para leer el aviso del registro
-                    const urlParams = new URLSearchParams(window.location.search);
-                    if (urlParams.get('view') === 'app') {
-                        this.currentView = 'app';
-                    }
+                initApp() { this.initParticles(); this.initScrollReveal(); },
+                initScrollReveal() {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+                    }, { threshold: 0.1 });
+                    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
                 },
                 initParticles() {
                     const canvas = document.getElementById('bgCanvas');
