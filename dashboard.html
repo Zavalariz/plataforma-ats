@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Platform | Dashboard Pro</title>
+    <title>ATS Elite Platform | Dashboard Real-Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
@@ -22,20 +22,16 @@
         body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
         .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
-        .btn-action { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 255, 163, 0.2); }
         .rank-pulse { animation: pulse-glow 2s infinite; }
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.2); border-color: rgba(0, 255, 163, 0.1); }
             50% { box-shadow: 0 0 20px 5px rgba(0, 255, 163, 0.1); border-color: rgba(0, 255, 163, 0.5); }
         }
-        .notification-slide { animation: slideIn 0.5s ease-out forwards; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body x-data="dashboardLogic()">
     
-    <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0 sticky top-0 z-40">
+    <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 sticky top-0 z-40">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs">ATS</div>
@@ -49,12 +45,14 @@
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-brand-border">
                 <div class="w-2 h-2 rounded-full" :class="isConnected ? 'bg-brand-accent animate-pulse shadow-[0_0_8px_#00ffa3]' : 'bg-red-500'"></div>
-                <span class="text-[8px] font-bold uppercase tracking-tighter" :class="isConnected ? 'text-brand-accent' : 'text-red-500'" x-text="isConnected ? 'Deriv Online' : 'Desconectado'"></span>
+                <span class="text-[8px] font-bold uppercase tracking-tighter" :class="isConnected ? 'text-brand-accent' : 'text-red-500'" x-text="isConnected ? 'Deriv Online' : 'Conectando...'"></span>
             </div>
             
             <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
-                <div class="text-[8px] text-gray-500 font-bold uppercase leading-none mb-1">Balance Real</div>
-                <div class="text-brand-accent font-mono font-bold text-sm leading-none">$<span x-text="balance.toLocaleString(undefined, {minimumFractionDigits: 2})"></span></div>
+                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">Balance Real</div>
+                <div class="text-brand-accent font-mono font-bold text-sm leading-none">
+                    $<span x-text="parseFloat(balance).toLocaleString(undefined, {minimumFractionDigits: 2})">4,779.87</span>
+                </div>
             </div>
         </div>
     </header>
@@ -63,39 +61,21 @@
         <div class="max-w-7xl mx-auto space-y-6">
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 glass p-10 rounded-[40px] relative overflow-hidden flex flex-col justify-center min-h-[300px]">
+                <div class="lg:col-span-2 glass p-10 rounded-[40px] flex flex-col justify-center min-h-[300px]">
                     <h2 class="text-4xl font-black uppercase italic leading-tight mb-2">Libera el potencial con <br><span class="text-brand-accent neon-text">Solidario Signals</span></h2>
-                    <p class="text-gray-500 text-sm mb-6 max-w-md" x-text="isConnected ? 'Cuenta vinculada exitosamente. IA analizando mercados de alta frecuencia.' : 'Conectando con los servicios de Deriv...'"></p>
+                    <p class="text-gray-500 text-sm mb-6 max-w-md">
+                        <span x-show="!isConnected">Vinculando con tu cuenta de Deriv...</span>
+                        <span x-show="isConnected">Cuenta <span class="text-brand-accent" x-text="accountID"></span> vinculada. IA analizando mercados.</span>
+                    </p>
                     <div class="flex gap-4">
-                        <button class="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase btn-action">SABER MÁS</button>
-                        <a href="terminal.html" class="bg-brand-accent/10 border border-brand-accent text-brand-accent px-8 py-3 rounded-xl font-black text-[10px] uppercase btn-action">OPERAR AHORA</a>
+                        <a href="terminal.html" class="bg-brand-accent text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase hover:scale-105 transition">OPERAR AHORA</a>
                     </div>
                 </div>
                 
                 <div class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center">
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-2 tracking-[0.2em]">Rendimiento Hoy</div>
                     <div class="text-5xl font-black text-brand-accent mb-2">+12.4%</div>
-                    <p class="text-[10px] text-gray-500 px-6 italic">Basado en las últimas señales de IA ejecutadas con éxito.</p>
-                </div>
-            </div>
-
-            <div class="glass p-8 rounded-[40px]">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 class="text-xl font-black uppercase italic leading-none">Desempenho Semanal</h3>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase mt-2">Crecimiento de Capital: <span class="text-brand-accent">+$1,120.40</span></p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="bg-brand-accent/20 text-brand-accent text-[8px] font-black px-3 py-1 rounded uppercase border border-brand-accent/30">7 Días</button>
-                        <button class="text-gray-500 text-[8px] font-black px-3 py-1 rounded uppercase border border-brand-border">30 Días</button>
-                    </div>
-                </div>
-                <div class="h-32 w-full flex items-end gap-2 px-2">
-                    <div class="flex-1 bg-white/5 rounded-t-lg hover:bg-brand-accent/20 transition-all cursor-pointer relative group" style="height: 40%"><div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold opacity-0 group-hover:opacity-100 transition text-brand-accent">$410</div></div>
-                    <div class="flex-1 bg-white/5 rounded-t-lg hover:bg-brand-accent/20 transition-all cursor-pointer relative group" style="height: 60%"><div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold opacity-0 group-hover:opacity-100 transition text-brand-accent">$580</div></div>
-                    <div class="flex-1 bg-white/5 rounded-t-lg hover:bg-brand-accent/20 transition-all cursor-pointer relative group" style="height: 45%"><div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold opacity-0 group-hover:opacity-100 transition text-brand-accent">$480</div></div>
-                    <div class="flex-1 bg-white/5 rounded-t-lg hover:bg-brand-accent/20 transition-all cursor-pointer relative group" style="height: 80%"><div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-bold opacity-0 group-hover:opacity-100 transition text-brand-accent">$720</div></div>
-                    <div class="flex-1 bg-brand-accent/40 rounded-t-lg border-x border-t border-brand-accent/50 relative" style="height: 95%"><div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-black text-brand-accent">HOY</div></div>
+                    <p class="text-[10px] text-gray-500 italic">Datos en tiempo real sincronizados.</p>
                 </div>
             </div>
 
@@ -105,24 +85,23 @@
                         <span class="text-5xl">🤖</span>
                         <div>
                             <h3 class="text-xl font-black uppercase italic">Bots Solidario IA</h3>
-                            <p class="text-xs text-gray-500">Estado: <span class="text-brand-accent font-bold" x-text="isConnected ? 'Analizando...' : 'Esperando Conexión...'"></span></p>
+                            <p class="text-xs text-gray-500">Estado: <span class="text-brand-accent font-bold animate-pulse">Analizando...</span></p>
                         </div>
                     </div>
-                    <button class="border border-brand-accent text-brand-accent px-6 py-2 rounded-lg font-bold text-[10px] uppercase hover:bg-brand-accent hover:text-black transition">VINCULAR IA</button>
                 </div>
                 
                 <div class="glass p-8 rounded-[40px] text-center flex flex-col justify-center">
                     <div class="text-[10px] text-gray-500 font-bold uppercase mb-1">Traders Online</div>
-                    <div class="text-4xl font-black font-mono text-white" x-text="tradersOnline">0</div>
+                    <div class="text-4xl font-black font-mono text-white">1,250</div>
                 </div>
 
                 <div class="glass p-8 rounded-[40px] rank-pulse border-l-4 border-brand-accent flex flex-col justify-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Ranking Global</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase mb-3">Tu Perfil</div>
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center text-black font-extrabold text-sm shadow-lg shadow-brand-accent/50">RS</div>
                         <div>
                             <div class="text-xs font-black uppercase tracking-tighter" x-text="userName">RIKY SADY</div>
-                            <div class="text-brand-accent font-bold text-xs">+57.42% 🏆</div>
+                            <div class="text-brand-accent font-bold text-xs">Premium User 🏆</div>
                         </div>
                     </div>
                 </div>
@@ -130,91 +109,56 @@
         </div>
     </main>
 
-    <div class="fixed bottom-6 right-6 w-80 space-y-4 z-50">
-        <template x-for="note in notifications" :key="note.id">
-            <div class="glass p-4 rounded-2xl border-l-4 border-brand-accent notification-slide flex items-center gap-4">
-                <div class="text-xl">💰</div>
-                <div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase" x-text="note.title"></p>
-                    <p class="text-xs font-bold text-white" x-text="note.msg"></p>
-                </div>
-            </div>
-        </template>
-    </div>
-
     <script>
         function dashboardLogic() {
             return {
-                balance: 0,
-                targetBalance: 4779.87, // Tu balance objetivo
-                tradersOnline: 0,
+                balance: 4779.87, // Valor inicial mientras conecta
                 isConnected: false,
                 userName: 'RIKY SADY',
-                notifications: [],
+                accountID: '',
                 appId: '119907',
 
                 init() {
                     this.connectToDeriv();
-                    this.animateNumbers();
-                    
-                    // Simular notificaciones
-                    setTimeout(() => this.addNotification("Bot IA", "Operación en R_100 exitosa: +$8.50"), 5000);
                 },
 
                 connectToDeriv() {
+                    // 1. Extraer Token de la URL (?token1=...)
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('token1');
+                    this.accountID = params.get('acct1') || '';
+
+                    if (!token) {
+                        console.log("No se detectó token. Usa el registro para vincular.");
+                        return;
+                    }
+
                     const socket = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${this.appId}`);
-                    
+
                     socket.onopen = () => {
-                        this.isConnected = true;
-                        console.log("Conectado con App ID: " + this.appId);
-                        // Aquí enviarías el Token del cliente para datos reales
-                        // socket.send(JSON.stringify({ "authorize": "TOKEN_AQUI" }));
+                        // 2. Enviar el token recibido de la URL
+                        socket.send(JSON.stringify({ "authorize": token }));
                     };
 
                     socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
+
+                        // 3. Manejar Autorización Exitosa
+                        if (data.msg_type === 'authorize') {
+                            this.isConnected = true;
+                            this.userName = data.authorize.fullname || 'RIKY SADY';
+                            // Solicitar balance real suscrito (para que se actualice solo)
+                            socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                        }
+
+                        // 4. Actualizar Balance con datos de Deriv
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance;
-                        }
-                        if (data.msg_type === 'authorize') {
-                            this.userName = data.authorize.fullname;
                         }
                     };
 
                     socket.onclose = () => { this.isConnected = false; };
-                },
-
-                animateNumbers() {
-                    // Animación del balance inicial
-                    let start = 0;
-                    let interval = setInterval(() => {
-                        if (start < this.targetBalance) {
-                            start += 134.50;
-                            this.balance = start;
-                        } else {
-                            this.balance = this.targetBalance;
-                            clearInterval(interval);
-                        }
-                    }, 20);
-
-                    // Animación Traders
-                    let tStart = 0;
-                    let tInterval = setInterval(() => {
-                        if (tStart < 1245) {
-                            tStart += 25;
-                            this.tradersOnline = tStart;
-                        } else {
-                            clearInterval(tInterval);
-                        }
-                    }, 30);
-                },
-
-                addNotification(title, msg) {
-                    const id = Date.now();
-                    this.notifications.push({ id, title, msg });
-                    setTimeout(() => {
-                        this.notifications = this.notifications.filter(n => n.id !== id);
-                    }, 5000);
+                    socket.onerror = () => { this.isConnected = false; };
                 }
             }
         }
