@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Elite Terminal - Operaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' },
+                        deriv: { green: '#00ffad', red: '#ff4444' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow: hidden; }
+        .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
+        .neon-text { text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
+        .input-terminal { background: #0a0f0e; border: 1px solid #14211e; color: white; border-radius: 8px; padding: 10px; font-size: 11px; outline: none; width: 100%; transition: all 0.3s; }
+        .input-terminal:focus { border-color: #00ffa3; box-shadow: 0 0 10px rgba(0, 255, 163, 0.1); }
+        
+        /* Animación de Velas */
+        @keyframes candle-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        .candle { animation: candle-grow 0.5s ease-out forwards; transform-origin: bottom; }
+    </style>
+</head>
+<body x-data="dashboardApp()">
+
+    <div x-show="currentView === 'app'" class="h-screen flex flex-col relative z-10">
+        <header class="h-20 glass border-b border-brand-border flex justify-between items-center px-10 shrink-0">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-accent flex items-center justify-center font-black text-black text-xs">ATS</div>
+                    <span class="font-bold text-sm tracking-widest uppercase italic">Solidario <span class="text-brand-accent">Pro</span></span>
+                </div>
+                <nav class="hidden lg:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                    <button @click="currentView = 'app'" class="text-brand-accent">Inicio</button>
+                    <button @click="currentView = 'terminal'" class="hover:text-white transition">Operar</button>
+                    <button class="hover:text-white transition">Historial</button>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-brand-panel px-4 py-2 rounded-xl border border-brand-border text-right">
+                    <div class="text-[8px] text-gray-500 font-bold uppercase tracking-tighter">Balance Real</div>
+                    <div class="text-brand-accent font-mono font-bold text-sm">$4,779.87</div>
+                </div>
+                <button onclick="window.location.href='index.html'" class="text-[10px] text-gray-500 hover:text-red-400 font-bold uppercase transition">Salir</button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-10">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 glass p-10 rounded-[40px] flex flex-col justify-center min-h-[300px]">
+                        <h2 class="text-4xl font-black uppercase italic leading-none mb-4">Bienvenido al <br><span class="text-brand-accent neon-text italic">Centro de Control</span></h2>
+                        <p class="text-gray-500 text-sm max-w-md">Tu cuenta está vinculada con éxito. El capital actual disponible para trading de alta frecuencia es de $4,779.87 USD.</p>
+                    </div>
+                    <div @click="currentView = 'terminal'" class="glass p-10 rounded-[40px] flex flex-col items-center justify-center text-center cursor-pointer hover:border-brand-accent/40 transition-all group">
+                        <div class="w-20 h-20 rounded-full bg-brand-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                            <div class="text-4xl">📈</div>
+                        </div>
+                        <span class="text-brand-accent font-bold text-[10px] uppercase tracking-[0.2em]">Abrir Terminal →</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div x-show="currentView === 'terminal'" x-cloak class="h-screen flex flex-col bg-black relative z-20">
+        <header class="h-14 bg-brand-panel border-b border-brand-border flex justify-between items-center px-4 shrink-0">
+            <div class="flex items-center gap-4">
+                <button @click="currentView = 'app'" class="text-[10px] text-brand-accent font-bold uppercase tracking-widest flex items-center gap-2">
+                    <span class="text-lg">←</span> Volver
+                </button>
+                <div class="h-6 w-[1px] bg-brand-border"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-deriv-green animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Servidor Activo</span>
+                </div>
+            </div>
+            <div class="bg-black/40 px-4 py-1.5 rounded-lg border border-brand-border">
+                <span class="text-white font-mono font-bold text-xs">$ 4,779.87</span>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <aside class="w-72 bg-brand-panel border-r border-brand-border p-6 flex flex-col gap-6 shrink-0">
+                <div>
+                    <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Mercado Activo</label>
+                    <div class="input-terminal flex items-center justify-between cursor-not-allowed">
+                        <span class="font-bold text-[10px]">Volatility 100 Index</span>
+                        <span class="text-brand-accent">▼</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Ticks</label>
+                        <input type="number" value="5" class="input-terminal text-center font-mono">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black uppercase text-gray-500 tracking-widest block mb-2">Inversión</label>
+                        <input type="text" value="$100.00" class="input-terminal text-center font-mono text-brand-accent">
+                    </div>
+                </div>
+
+                <div class="mt-auto space-y-3">
+                    <button class="w-full bg-deriv-green hover:bg-opacity-80 text-black font-black py-4 rounded-xl transition-all uppercase italic text-sm">Rise</button>
+                    <button class="w-full bg-deriv-red hover:bg-opacity-80 text-white font-black py-4 rounded-xl transition-all uppercase italic text-sm">Fall</button>
+                </div>
+            </aside>
+
+            <main class="flex-1 relative bg-[radial-gradient(circle_at_center,_#0a0f0e_0%,_#020606_100%)]">
+                <div class="absolute top-8 left-8">
+                    <div class="text-4xl font-black italic text-white/10 uppercase select-none">ATS Terminal Pro</div>
+                </div>
+                
+                <div class="absolute inset-0 flex items-end justify-center gap-1 pb-32 px-20">
+                    <template x-for="i in 30">
+                        <div class="flex flex-col items-center flex-1 max-w-[12px]">
+                            <div class="w-[2px] h-4 bg-gray-800"></div>
+                            <div class="w-full rounded-sm candle" 
+                                 :style="`height: ${Math.random() * 150 + 20}px; background: ${Math.random() > 0.5 ? '#00ffad' : '#ff4444'}; opacity: ${Math.random() * 0.5 + 0.3}`">
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function dashboardApp() {
+            return {
+                currentView: 'app',
+                init() {
+                    console.log("Dashboard ATS Elite cargado.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
