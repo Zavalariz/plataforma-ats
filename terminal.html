@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS Elite | Terminal</title>
+    <title>ATS Elite | Terminal Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -18,7 +18,7 @@
         <div class="flex items-center gap-4">
             <div class="flex bg-black/50 p-1 rounded-lg border border-white/10">
                 <button @click="switchAccount('real')" 
-                        :class="!isDemo ? 'bg-emerald-500 text-black' : 'text-gray-500'"
+                        :class="!isDemo ? 'bg-emerald-500 text-black' : 'text-gray-400'"
                         class="px-3 py-1 rounded text-[9px] font-black uppercase transition-all">Real</button>
                 <button @click="switchAccount('demo')" 
                         :class="isDemo ? 'bg-amber-500 text-black' : 'text-gray-500'"
@@ -32,15 +32,18 @@
                 <p class="text-[8px] text-gray-500 uppercase font-black tracking-widest" x-text="isDemo ? 'Balance Demo' : 'Balance Real'"></p>
                 <p :class="isDemo ? 'neon-demo' : 'neon-real'" class="font-mono font-bold text-xl leading-none" x-text="'$' + formatBalance(balance)"></p>
             </div>
-            <button @click="window.location.href='dashboard.html' + window.location.search" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-white/5 transition">SALIR</button>
+            <button @click="exit()" class="text-[9px] border border-white/20 px-4 py-2 rounded font-bold hover:bg-white/5 transition">SALIR</button>
         </div>
     </header>
 
     <div class="flex flex-1">
         <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6 z-50">
             <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo en tiempo real</label>
-                <p class="text-xs font-bold text-white italic">Volatility 100 Index (1s)</p>
+                <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Estado del Mercado</label>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <p class="text-xs font-bold text-white italic">Volatility 100 Index (1s)</p>
+                </div>
             </div>
 
             <div class="space-y-4">
@@ -51,7 +54,7 @@
             </div>
 
             <div class="mt-auto space-y-3">
-                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-[11px] transition uppercase shadow-lg shadow-emerald-500/10">Ejecutar Rise</button>
+                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-[11px] transition uppercase">Ejecutar Rise</button>
                 <button class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-[11px] transition uppercase">Ejecutar Fall</button>
             </div>
         </aside>
@@ -71,30 +74,32 @@
                 socket: null,
 
                 init() {
-                    // Por defecto intenta conectar la Real
-                    this.connect('real');
+                    const params = new URLSearchParams(window.location.search);
+                    // Si solo hay token1, iniciamos en Real. Si solo hay token2, en Demo.
+                    if (params.get('token1')) this.connect('real');
+                    else if (params.get('token2')) this.connect('demo');
+                    else this.accountID = "SIN ACCESO";
                 },
 
                 formatBalance(val) {
                     return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
                 },
 
+                exit() { window.location.href = 'dashboard.html' + window.location.search; },
+
                 switchAccount(type) {
+                    const token = new URLSearchParams(window.location.search).get(type === 'real' ? 'token1' : 'token2');
+                    if (!token) {
+                        alert(`Error: El token de la cuenta ${type} no está en la URL.`);
+                        return;
+                    }
                     if (this.socket) this.socket.close();
                     this.balance = 0;
                     this.connect(type);
                 },
 
                 connect(type) {
-                    const params = new URLSearchParams(window.location.search);
-                    // IMPORTANTE: Asegúrate que el Dashboard envíe token1 (real) y token2 (demo)
-                    const token = type === 'real' ? params.get('token1') : params.get('token2');
-                    
-                    if (!token) {
-                        this.accountID = "Token no encontrado";
-                        return;
-                    }
-
+                    const token = new URLSearchParams(window.location.search).get(type === 'real' ? 'token1' : 'token2');
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
