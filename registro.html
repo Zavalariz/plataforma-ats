@@ -53,9 +53,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Tus credenciales de Firebase
+        // Tus credenciales de Firebase (Manteniendo la que marcaste como nueva)
         const firebaseConfig = {
-            apiKey: "AIzaSyDTjfbJjlFxmTI8JnbikfJT89txXlXZcgQ", // <--- Esta es la nueva
+            apiKey: "AIzaSyDTjfbJjlFxmTI8JnbikfJT89txXlXZcgQ",
             authDomain: "plataforma-ats.firebaseapp.com",
             projectId: "plataforma-ats",
             storageBucket: "plataforma-ats.firebasestorage.app",
@@ -85,7 +85,8 @@
                 }, { merge: true });
 
                 alert("Bienvenido " + user.displayName);
-                window.location.href = "index.html?view=app";
+                // REDIRECCIÓN AL NUEVO DASHBOARD
+                window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error con Google: " + error.message);
             }
@@ -107,7 +108,8 @@
                     fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 alert("Cuenta creada con éxito");
-                window.location.href = "index.html";
+                // REDIRECCIÓN AL NUEVO DASHBOARD
+                window.location.href = "dashboard.html";
             } catch (error) {
                 alert("Error: " + error.message);
             }
