@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIAS - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -298,7 +298,6 @@
                 },
     
                 connect(token) {
-                    // Conexión oficial a la API de Deriv
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -308,15 +307,12 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        // 1. Manejo de Autorización
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.status = 'Conectado';
-                            // Suscripción en tiempo real al balance
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        // 2. Recepción de Balance (Aquí es donde ocurre la magia de actualización)
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
@@ -324,31 +320,32 @@
                             });
                         }
     
-                        // 3. Confirmación de Recarga Virtual
-                        if (data.msg_type === 'topup_virtual' && !data.error) {
-                            this.status = '¡Recarga exitosa en servidor!';
+                        // Confirmación de compra exitosa
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = 'Orden ejecutada con éxito';
+                            this.markTradeOnChart(data.buy.contract_type);
                         }
     
-                        // Manejo de errores de la API
                         if (data.error) {
                             this.status = 'Error: ' + data.error.message;
                         }
                     };
                 },
     
-                switchAcc(type, val, id) {
-                    this.accountType = type;
-                    this.balance = val;
-                    this.showAccountMenu = false;
-                    this.status = "Cambiado a " + id;
+                // FUNCIÓN PARA MARCAR EN EL GRÁFICO
+                markTradeOnChart(type) {
+                    const chartFrame = document.getElementById('chart-frame');
+                    if (chartFrame && chartFrame.contentWindow) {
+                        // Enviamos un mensaje al iframe para que dibuje la línea (si el widget lo permite)
+                        // Como el widget de Deriv es cerrado, simulamos una alerta visual en el terminal
+                        console.log(`Operación ${type} marcada en el sistema`);
+                    }
                 },
     
-                // FUNCIÓN DE RECARGA REAL CONECTADA A DERIV
                 rechargeDemo() {
                     if (this.accountType === 'DEMO') {
                         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                             this.status = 'Solicitando recarga real...';
-                            // Comando oficial para resetear la cuenta demo a $10,000
                             this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
                             this.showAccountMenu = false;
                         }
@@ -359,7 +356,10 @@
     
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
+                    
+                    // Efecto visual inmediato de carga
+                    this.status = `Enviando ${type === 'CALL' ? 'Compra (Rise)' : 'Venta (Fall)'}...`;
+                    
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
