@@ -2,19 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS ELITE - SYMBOL FIXED</title>
+    <title>ATS ELITE - CONEXIÓN DIRECTA</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         body { background: #050505; color: white; margin: 0; overflow: hidden; }
         .panel { background: #0d0d0d; border: 1px solid #1a1a1a; }
-        /* BANNER VIOLETA para confirmar versión 5.0 */
-        .version-check { background: #8b5cf6; color: white; text-align: center; font-size: 10px; font-weight: bold; padding: 4px; }
+        /* BANNER NARANJA para confirmar versión 6.0 */
+        .version-check { background: #f97316; color: white; text-align: center; font-size: 10px; font-weight: bold; padding: 4px; }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-    <div class="version-check">SISTEMA V5.0: CORRECCIÓN DE SÍMBOLO (1HZ100V)</div>
+    <div class="version-check">SISTEMA V6.0: CARGA DIRECTA DESDE SERVIDOR DERIV</div>
 
     <header class="h-14 panel flex justify-between items-center px-6">
         <h1 class="text-[#00ffa3] font-black italic">ATS ELITE TERMINAL</h1>
@@ -30,30 +29,19 @@
             <button class="mt-auto bg-purple-600 p-3 rounded-lg font-bold text-xs uppercase italic">Iniciar Robô</button>
         </aside>
 
-        <main class="flex-1 panel relative bg-black" id="tv_chart_container">
-            </main>
+        <main class="flex-1 panel relative bg-black">
+            <iframe 
+                src="https://tradingview.deriv.com/v1/index.html?symbol=1HZ100V&theme=dark&timezone=Etc%2FUTC" 
+                class="w-full h-full border-none"
+                id="trading-chart">
+            </iframe>
+        </main>
 
         <aside class="w-72 panel p-4 flex flex-col gap-2">
-            <button class="bg-[#00ffa3] text-black font-black p-5 rounded-xl text-center shadow-[0_0_15px_rgba(0,255,163,0.3)]">RISE</button>
+            <button class="bg-[#00ffa3] text-black font-black p-5 rounded-xl text-center">RISE</button>
             <button class="bg-[#ff3355] text-white font-black p-5 rounded-xl text-center">FALL</button>
         </aside>
     </div>
 
-    <script type="text/javascript">
-        new TradingView.widget({
-            "autosize": true,
-            "symbol": "DERIV:1HZ100V", // Cambio clave: usando el ID técnico correcto
-            "interval": "1",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "es",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
-            "container_id": "tv_chart_container"
-        });
-    </script>
 </body>
 </html>
