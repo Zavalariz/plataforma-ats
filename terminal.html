@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELITES - TERMINAL PRO</title>
+    <title>ATS ELIT - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; color-scheme: dark; }
         .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
         .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 600; width: 100%; color: white; outline: none; }
         .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
         .sub-text { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.2; }
         .infinity-label { font-size: 10px; color: #4b5563; font-weight: 600; margin-top: 2px; }
         
-        /* Controles +/- */
         .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
         .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        /* Gráfico Dark */
+        /* Gráfico Dark - FIX */
         .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
-        #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; filter: contrast(1.1) brightness(0.8); }
+        #chart-frame { 
+            width: 100%; 
+            height: calc(100% + 100px); 
+            margin-top: -50px; 
+            border: none; 
+            filter: invert(1) hue-rotate(180deg) contrast(1.2) brightness(0.9); /* Truco infalible para forzar modo oscuro si el tema falla */
+            background: #000;
+        }
 
-        /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
         .switch.active { background: rgba(0, 255, 163, 0.2); }
         .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
         .switch.active .dot { left: 19px; background: #00ffa3; }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
-        
         .btn-buy { transition: all 0.2s; }
         .btn-buy:active { transform: scale(0.96); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
     </style>
 </head>
 <body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen">
@@ -50,20 +54,25 @@
                 <a href="#">Registros</a>
             </nav>
         </div>
+        
         <div class="flex items-center gap-4">
-            <div class="text-right px-3 py-1 bg-black rounded border border-white/5">
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
-                <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
-            </div>
+            <button @click="switchAccount()" class="group flex items-center gap-3 px-3 py-1 bg-black rounded border border-white/10 hover:border-[#7c3aed] transition-all">
+                <div class="text-right">
+                    <p class="text-[9px] font-bold uppercase" :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'">
+                        Cuenta <span x-text="accountType"></span>
+                    </p>
+                    <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+                </div>
+                <span class="material-icons-round text-gray-500 group-hover:text-[#7c3aed] text-sm">swap_horiz</span>
+            </button>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden p-1 gap-1">
-        
         <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div>
                 <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
-                <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
+                <p class="text-[#00ffa3] font-bold text-xs" x-text="'$' + (isBotRunning ? 'En curso...' : '0 (0%)')"></p>
             </div>
 
             <div class="space-y-3">
@@ -89,25 +98,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="label-turbo">Cuantía inicial $</label>
-                    <input type="number" x-model="stake" class="input-turbo">
-                    <p class="infinity-label">Infinity% del saldo</p>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Lucro objetivo $</label>
-                    <input type="number" value="10" class="input-turbo">
-                    <p class="infinity-label">Infinity% del saldo</p>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Límite de pérdida $</label>
-                    <div class="relative">
-                        <input type="number" value="50" class="input-turbo">
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">settings</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="label-turbo">Cuantía inicial $</label>
+                        <input type="number" x-model="stake" class="input-turbo">
                     </div>
-                    <p class="infinity-label">Infinity% del saldo</p>
+                    <div>
+                        <label class="label-turbo">Meta $</label>
+                        <input type="number" value="10" class="input-turbo">
+                    </div>
                 </div>
 
                 <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[#222]">
@@ -115,11 +114,10 @@
                         <span class="material-icons-round text-yellow-500">warning</span>
                         <div class="leading-tight">
                             <p class="text-[10px] font-black uppercase text-white">Gestión de riesgo</p>
-                            <p class="text-[10px] text-green-500 font-bold">Conservador / Bajo riesgo</p>
-                            <p class="text-[9px] text-gray-500">Valor recomendado: mín. $50</p>
+                            <p class="text-[10px] text-green-500 font-bold">Conservador</p>
                         </div>
                     </div>
-                    <span class="material-icons-round text-gray-600">chevron_right</span>
+                    <span class="material-icons-round text-gray-600 text-sm">chevron_right</span>
                 </div>
             </div>
 
@@ -144,46 +142,25 @@
 
         <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white">Modo manual</h3>
+                <h3 class="text-sm font-bold text-white uppercase">Modo manual</h3>
                 <div class="flex items-center gap-2" @click="agendar = !agendar">
                     <span class="text-[10px] font-bold text-gray-500 uppercase">Agendar</span>
                     <div class="switch" :class="agendar ? 'active' : ''"><div class="dot"></div></div>
                 </div>
             </div>
 
-            <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
-
             <div class="space-y-4">
                 <div>
-                    <label class="label-turbo">Mercado</label>
-                    <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Tipo de Negociación</label>
-                    <div class="relative">
-                        <select class="input-turbo pr-10"><option>Rise/Fall</option></select>
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">chevron_left</span>
+                    <label class="label-turbo">Duración (Ticks)</label>
+                    <div class="control-group">
+                        <button @click="ticks > 1 && ticks--" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                        <span x-text="ticks" class="font-bold text-sm"></span>
+                        <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                     </div>
                 </div>
 
                 <div>
-                    <div class="flex items-center gap-1 mb-1">
-                        <label class="label-turbo m-0">Duración</label>
-                        <span class="material-icons-round text-[12px] text-blue-400">info</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="control-group flex-1">
-                            <button @click="ticks > 1 && ticks--" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                            <span x-text="ticks" class="font-bold text-sm"></span>
-                            <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                        </div>
-                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-2 text-[10px] font-bold uppercase"><option>Ticks</option></select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Cuantía inicial</label>
+                    <label class="label-turbo">Inversión $</label>
                     <div class="control-group">
                         <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
                         <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
@@ -191,36 +168,34 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="label-turbo">Multiplicador de entrada</label>
-                    <div class="control-group">
-                        <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <span class="font-bold text-sm">Auto</span>
-                        <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                    </div>
-                </div>
-
                 <div class="flex flex-col gap-3 pt-2">
-                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-green-500/10">
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-5 rounded-xl flex items-center justify-between px-6 shadow-lg shadow-green-500/10">
                         <div class="text-left">
-                            <span class="block text-xl font-black italic">Rise</span>
-                            <span class="block text-[10px] font-bold opacity-60">85.00%</span>
+                            <span class="block text-2xl font-black italic uppercase">Rise</span>
+                            <span class="block text-[10px] font-bold opacity-60">Payout 85%</span>
                         </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
+                        <span class="text-xl font-black italic" x-text="'$' + (stake * 0.85).toFixed(2)"></span>
                     </button>
 
-                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-red-500/10">
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-5 rounded-xl flex items-center justify-between px-6 shadow-lg shadow-red-500/10">
                         <div class="text-left">
-                            <span class="block text-xl font-black italic">Fall</span>
-                            <span class="block text-[10px] font-bold opacity-60">84.00%</span>
+                            <span class="block text-2xl font-black italic uppercase">Fall</span>
+                            <span class="block text-[10px] font-bold opacity-60">Payout 84%</span>
                         </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
+                        <span class="text-xl font-black italic" x-text="'$' + (stake * 0.84).toFixed(2)"></span>
                     </button>
                 </div>
             </div>
             
-            <div class="mt-auto p-2 bg-white/5 rounded text-[9px] font-mono text-gray-500">
-                Estado: <span class="text-[#00ffa3]" x-text="status"></span>
+            <div class="mt-auto p-3 bg-white/5 rounded-lg border border-white/5 font-mono">
+                <div class="flex justify-between text-[10px] mb-1">
+                    <span class="text-gray-500">Status:</span>
+                    <span class="text-[#00ffa3] font-bold uppercase" x-text="status"></span>
+                </div>
+                <div class="flex justify-between text-[10px]">
+                    <span class="text-gray-500">Servidor:</span>
+                    <span class="text-white">Deriv v3.0</span>
+                </div>
             </div>
         </aside>
     </div>
@@ -230,39 +205,71 @@
             return {
                 agendar: false,
                 balance: '0.00',
-                accountType: 'CONECTANDO...',
+                accountType: 'CONECTANDO',
                 stake: 1.00,
                 ticks: 1,
                 isBotRunning: false,
-                status: 'Esperando conexión',
+                status: 'Iniciando',
                 socket: null,
+                tokenReal: '',
+                tokenDemo: '',
+                currentToken: '',
+
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1') || params.get('token2');
-                    if (token) this.connect(token);
-                    else this.status = 'Token no detectado';
+                    this.tokenReal = params.get('token1') || '';
+                    this.tokenDemo = params.get('token2') || '';
+                    
+                    // Empezar con el primer token que encuentre
+                    this.currentToken = this.tokenReal || this.tokenDemo;
+                    
+                    if (this.currentToken) this.connect(this.currentToken);
+                    else this.status = 'Sin Token';
                 },
+
                 connect(token) {
+                    if (this.socket) this.socket.close();
+                    this.status = 'Conectando...';
+                    
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
+                    
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": token }));
+                    };
+
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado';
+                            this.status = 'Online';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = '¡Operación Exitosa!';
+                            this.status = 'Orden Exitosa';
+                            setTimeout(() => this.status = 'Online', 3000);
                         }
                     };
                 },
+
+                switchAccount() {
+                    // Si estamos en real y hay token demo, cambiar a demo. Y viceversa.
+                    if (this.accountType === 'REAL' && this.tokenDemo) {
+                        this.currentToken = this.tokenDemo;
+                    } else if (this.accountType === 'DEMO' && this.tokenReal) {
+                        this.currentToken = this.tokenReal;
+                    } else {
+                        alert("No se encontró el otro token en la URL (token1 o token2)");
+                        return;
+                    }
+                    this.connect(this.currentToken);
+                },
+
                 executeTrade(type) {
-                    if (!this.socket) return;
-                    this.status = `Enviando ${type}...`;
+                    if (!this.socket || this.socket.readyState !== 1) return;
+                    this.status = 'Procesando...';
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
