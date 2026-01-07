@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELISS - TERMINAL PRO</title>
+    <title>ATS ELINW - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -299,74 +299,80 @@
     
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    
-                    this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
-                    };
-    
+                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
-                        
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.status = 'Conectado';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-    
                         if (data.msg_type === 'balance') {
-                            this.balance = data.balance.balance.toLocaleString('en-US', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2 
-                            });
+                            this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
-    
-                        // DETECTAR RESULTADO DE LA OPERACIÓN (PROFIT/LOSS)
-                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-                            const contract = data.proposal_open_contract;
-                            this.showTradeResult(contract.status, contract.profit);
-                        }
-    
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada con éxito';
-                            // Nos suscribimos al contrato para saber cuándo termina y ver el resultado
-                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
-                        }
-    
-                        if (data.error) {
-                            this.status = 'Error: ' + data.error.message;
+                            this.status = 'Orden abierta';
+                            // Dibujamos la línea visual al confirmar la compra
+                            this.drawTradeLine(data.buy.contract_type);
                         }
                     };
                 },
     
-                // FUNCIÓN PARA MOSTRAR RESULTADO VISUAL (Ya que no se puede dibujar en el iframe)
-                showTradeResult(status, profit) {
-                    const color = status === 'won' ? '#00ffa3' : '#ff3355';
-                    const text = status === 'won' ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
+                // ESTA FUNCIÓN DIBUJA LA LÍNEA SOBRE EL GRÁFICO
+                drawTradeLine(type) {
+                    const container = document.querySelector('.chart-container');
+                    const line = document.createElement('div');
+                    const color = type === 'CALL' ? '#00ffa3' : '#ff3355';
                     
-                    this.status = text;
+                    // Estilo de la línea (se posiciona en el medio del gráfico como referencia)
+                    line.style.cssText = `
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        top: 50%; 
+                        height: 2px;
+                        background: ${color};
+                        box-shadow: 0 0 10px ${color};
+                        z-index: 50;
+                        pointer-events: none;
+                    `;
                     
-                    // Creamos un aviso flotante temporal
-                    const toast = document.createElement('div');
-                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 1000; box-shadow: 0 0 20px ${color};`;
-                    toast.innerText = text;
-                    document.body.appendChild(toast);
+                    // Etiqueta de la línea
+                    const label = document.createElement('span');
+                    label.style.cssText = `
+                        position: absolute;
+                        right: 10px;
+                        top: -20px;
+                        background: ${color};
+                        color: black;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 10px;
+                        font-weight: bold;
+                    `;
+                    label.innerText = type === 'CALL' ? 'ENTRADA COMPRA' : 'ENTRADA VENTA';
                     
-                    setTimeout(() => toast.remove(), 3000);
+                    line.appendChild(label);
+                    container.appendChild(line);
+    
+                    // La línea se borra sola después de 5 segundos (o lo que duren tus ticks)
+                    setTimeout(() => {
+                        line.style.opacity = '0';
+                        line.style.transition = 'opacity 1s ease';
+                        setTimeout(() => line.remove(), 1000);
+                    }, 5000); 
                 },
     
                 rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                            this.showAccountMenu = false;
-                        }
+                    if (this.accountType === 'DEMO' && this.socket) {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                        this.showAccountMenu = false;
                     }
                 },
     
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Rise' : 'Fall'}...`;
-                    
+                    this.status = `Enviando ${type}...`;
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
