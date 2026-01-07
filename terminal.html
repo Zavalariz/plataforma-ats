@@ -2,31 +2,33 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS Elite | Terminal</title>
+    <title>ATS Elite Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #060808; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
-        .panel-side { background: #0a0f0e; border: 1px solid #14211e; border-radius: 12px; }
-        .input-dark { background: #111817; border: 1px solid #1c2b28; color: white; border-radius: 6px; font-weight: bold; text-align: center; }
-        .btn-neon { background: #00ffa3; color: #000; font-weight: 800; font-style: italic; transition: 0.2s; }
-        .btn-danger { background: #ff3355; color: #fff; font-weight: 800; font-style: italic; transition: 0.2s; }
-        #chart-canvas { width: 100%; height: 100%; }
-        /* Ocultar scrollbars */
-        ::-webkit-scrollbar { display: none; }
+        body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
+        .input-turbo { background: #1a1a1a; border: 1px solid #262626; border-radius: 4px; padding: 10px; font-size: 13px; font-weight: 600; width: 100%; color: white; }
+        .label-turbo { font-size: 10px; font-weight: 800; color: #888; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .sub-label { font-size: 9px; font-weight: 700; color: #4f46e5; margin-top: 2px; }
+        .btn-purple { background: #a855f7; color: white; font-weight: 800; font-style: italic; transition: 0.3s; }
+        .btn-green { background: #00ffa3; color: black; font-weight: 800; font-style: italic; }
+        .btn-red { background: #ff3355; color: white; font-weight: 800; font-style: italic; }
+        .status-box { background: #1a1a1a; border: 1px solid #262626; border-radius: 8px; padding: 12px; }
+        /* Ocultar el logo de deriv y frames innecesarios */
+        .chart-wrapper iframe { height: 100%; width: 100%; border: none; }
     </style>
 </head>
-<body x-data="terminalCore()" class="flex flex-col h-screen p-2 gap-2">
+<body x-data="terminalCore()" class="flex flex-col h-screen overflow-hidden">
 
-    <header class="h-14 bg-[#0a0f0e] border border-white/5 rounded-xl flex justify-between items-center px-6">
-        <div class="flex items-center gap-8">
+    <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6">
+        <div class="flex items-center gap-6">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-[#00ffa3] rounded flex items-center justify-center text-black font-black text-[10px]">ATS</div>
-                <span class="text-sm font-black italic tracking-tighter uppercase">ATS <span class="text-[#00ffa3]">Elite</span></span>
+                <span class="text-sm font-black italic tracking-tighter uppercase">ATS <span class="text-[#00ffa3]">Elite Terminal</span></span>
             </div>
-            <nav class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <nav class="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
                 <button class="text-[#00ffa3] border-b border-[#00ffa3]">Operar</button>
                 <button>Señales GPT</button>
                 <button>Registros</button>
@@ -37,90 +39,140 @@
                 <div class="text-[8px] text-gray-500 font-bold uppercase">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></div>
                 <div class="text-[#00ffa3] font-mono font-bold text-sm italic">$<span x-text="balance">0.00</span></div>
             </div>
-            <button @click="window.history.back()" class="bg-white/5 border border-white/10 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-white/10">Volver</button>
+            <button @click="window.history.back()" class="bg-white/5 border border-white/10 px-4 py-1.5 rounded text-[9px] font-bold uppercase">Volver</button>
         </div>
     </header>
 
-    <div class="flex flex-1 gap-2 overflow-hidden">
+    <div class="flex flex-1 overflow-hidden p-1 gap-1">
         
-        <aside class="w-72 panel-side p-4 flex flex-col gap-6">
+        <aside class="w-[280px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div>
-                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Configurações da IA</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[9px] text-gray-400 block mb-1 uppercase font-bold">Mercado</label>
-                        <select class="w-full input-dark p-2 text-xs outline-none focus:border-[#00ffa3]">
-                            <option>Volatility 100 Index</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-400 block mb-1 uppercase font-bold">Estratégia</label>
-                        <select class="w-full input-dark p-2 text-xs outline-none focus:border-[#00ffa3]">
-                            <option>Turbo Trade 1.1</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Quantia</label>
-                            <input type="text" x-model="stake" class="w-full input-dark p-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Meta</label>
-                            <input type="text" value="$20" class="w-full input-dark p-2 text-xs">
-                        </div>
-                        <div>
-                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Perda</label>
-                            <input type="text" value="$1k" class="w-full input-dark p-2 text-xs">
-                        </div>
-                    </div>
+                <h3 class="text-xs font-black mb-1 italic uppercase">Configurações da IA</h3>
+                <span class="text-xl font-black text-gray-400">$0 (0%)</span>
+            </div>
+
+            <div>
+                <label class="label-turbo">Mercado</label>
+                <select class="input-turbo"><option>Volatility 100 Index</option></select>
+            </div>
+
+            <div>
+                <label class="label-turbo">Estratégia</label>
+                <select class="input-turbo"><option>Turbo Trade 1.1</option></select>
+            </div>
+
+            <div>
+                <label class="label-turbo">Modo de Negociação</label>
+                <select class="input-turbo"><option>⚡ Veloz</option></select>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="label-turbo text-[8px]">Quantia</label>
+                    <input type="text" value="1" class="input-turbo text-center">
+                    <div class="sub-label">0.01% do saldo</div>
+                </div>
+                <div>
+                    <label class="label-turbo text-[8px]">Meta</label>
+                    <input type="text" value="20" class="input-turbo text-center">
+                    <div class="sub-label">0.20% do saldo</div>
+                </div>
+                <div>
+                    <label class="label-turbo text-[8px]">Perda</label>
+                    <input type="text" value="1000" class="input-turbo text-center">
+                    <div class="sub-label">10.00% do saldo</div>
                 </div>
             </div>
-            <button class="mt-auto bg-[#7c3aed] hover:bg-[#6d28d9] text-white py-4 rounded-xl font-black italic text-[11px] uppercase shadow-lg shadow-purple-500/20">
-                ▶ Iniciar Robô
+
+            <div class="status-box mt-2 flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500/10 rounded flex items-center justify-center border border-green-500/20">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <div>
+                    <div class="text-[9px] font-black text-green-500 uppercase tracking-tighter">Gerenciamento de risco</div>
+                    <div class="text-[11px] font-bold italic">🛡️ Conservador</div>
+                </div>
+            </div>
+
+            <button class="w-full btn-purple py-4 rounded-xl text-[11px] uppercase mt-auto flex items-center justify-center gap-2">
+                <span class="text-base">▶</span> Iniciar Robô
             </button>
         </aside>
 
-        <main class="flex-1 panel-side flex flex-col bg-black overflow-hidden">
-            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0a0f0e]">
-                <div class="flex gap-4 text-[9px] font-black uppercase italic">
-                    <button class="text-[#00ffa3] border-b border-[#00ffa3]">Gráfico</button>
+        <main class="flex-1 flex flex-col panel-turbo overflow-hidden relative">
+            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d]">
+                <div class="flex gap-6 text-[9px] font-black uppercase italic tracking-widest">
+                    <button class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Gráfico</button>
                     <button class="text-gray-500">Dígitos</button>
                     <button class="text-gray-500">Negociações</button>
+                    <button class="text-gray-500">Registros</button>
                 </div>
             </div>
-            <div id="chart-canvas" class="flex-1"></div>
+            <div class="flex-1 chart-wrapper">
+                <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_762ae&symbol=DERIV%3AR_100&interval=1&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Etc%2FUTC" class="w-full h-full"></iframe>
+            </div>
         </main>
 
-        <aside class="w-72 panel-side p-4 flex flex-col gap-6">
+        <aside class="w-[300px] panel-turbo p-4 flex flex-col gap-4">
             <div class="flex justify-between items-center">
-                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Modo Manual</h3>
-                <div class="w-8 h-4 bg-[#14211e] rounded-full relative"><div class="w-3 h-3 bg-white rounded-full absolute top-0.5 right-0.5"></div></div>
+                <h3 class="text-xs font-black italic uppercase">Modo manual</h3>
+                <div class="w-8 h-4 bg-white/10 rounded-full relative"><div class="w-3 h-3 bg-white rounded-full absolute top-0.5 right-0.5"></div></div>
+            </div>
+            
+            <span class="text-xl font-black text-gray-400">$0 (0%)</span>
+
+            <div>
+                <label class="label-turbo">Mercado</label>
+                <select class="input-turbo"><option>Volatility 100 Index</option></select>
             </div>
 
-            <div class="space-y-4">
-                <div class="text-center">
-                    <label class="text-[9px] text-gray-500 block mb-2 uppercase font-bold">Duração (Ticks)</label>
-                    <div class="flex items-center justify-between input-dark p-1">
-                        <button class="w-8 h-8 flex items-center justify-center font-bold" @click="ticks > 1 && ticks--">-</button>
-                        <span class="text-xs font-black" x-text="ticks">1</span>
-                        <button class="w-8 h-8 flex items-center justify-center font-bold" @click="ticks++">+</button>
+            <div>
+                <label class="label-turbo">Tipo de Negociação</label>
+                <div class="flex items-center justify-between input-turbo p-2">
+                    <span class="text-xs">↗↘ Rise/Fall</span>
+                    <svg class="w-3 h-3 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="label-turbo">Duração</label>
+                    <div class="flex items-center justify-between input-turbo gap-2">
+                        <button class="w-6 h-6 bg-white/5 rounded">-</button>
+                        <span>1</span>
+                        <button class="w-6 h-6 bg-white/5 rounded">+</button>
                     </div>
                 </div>
-
-                <div class="flex flex-col gap-2">
-                    <button @click="executeTrade('CALL')" class="w-full btn-neon py-5 rounded-xl flex flex-col items-center hover:brightness-110 active:scale-95">
-                        <span class="text-xs uppercase">↗ Rise</span>
-                        <span class="text-[9px] opacity-60">Payout: 95.00%</span>
-                    </button>
-                    <button @click="executeTrade('PUT')" class="w-full btn-danger py-5 rounded-xl flex flex-col items-center hover:brightness-110 active:scale-95">
-                        <span class="text-xs uppercase">↘ Fall</span>
-                        <span class="text-[9px] opacity-60">Payout: 95.00%</span>
-                    </button>
+                <div>
+                    <label class="label-turbo">&nbsp;</label>
+                    <select class="input-turbo"><option>Ticks</option></select>
                 </div>
             </div>
 
-            <div class="mt-auto bg-[#00ffa3]/5 border border-[#00ffa3]/10 p-4 rounded-xl flex items-center justify-center gap-3">
-                <span class="text-[10px] font-black italic text-[#00ffa3] uppercase">🛡️ Conservador</span>
+            <div>
+                <label class="label-turbo">Quantia inicial</label>
+                <div class="flex items-center justify-between input-turbo gap-2">
+                    <button class="w-6 h-6 bg-white/5 rounded">-</button>
+                    <span>1</span>
+                    <button class="w-6 h-6 bg-white/5 rounded">+</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 mt-2">
+                <button @click="trade('CALL')" class="w-full btn-green py-5 rounded-xl flex items-center justify-between px-6 group transition active:scale-95">
+                    <div class="flex items-center gap-3">
+                        <div class="text-xl">↗</div>
+                        <div class="text-left"><div class="text-[11px] uppercase">Rise</div></div>
+                    </div>
+                    <div class="text-right"><div class="text-[10px] font-bold">85.00%</div><div class="text-[8px] opacity-60">$1.85 USD</div></div>
+                </button>
+                <button @click="trade('PUT')" class="w-full btn-red py-5 rounded-xl flex items-center justify-between px-6 group transition active:scale-95">
+                    <div class="flex items-center gap-3">
+                        <div class="text-xl">↘</div>
+                        <div class="text-left"><div class="text-[11px] uppercase">Fall</div></div>
+                    </div>
+                    <div class="text-right"><div class="text-[10px] font-bold">84.00%</div><div class="text-[8px] opacity-60">$1.84 USD</div></div>
+                </button>
             </div>
         </aside>
     </div>
@@ -130,57 +182,31 @@
             return {
                 balance: '0.00',
                 accountType: 'REAL',
-                stake: '1',
-                ticks: 1,
                 socket: null,
-                token: '',
 
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    this.token = params.get('token1');
-                    this.initChart();
-                    if (this.token) this.connect();
+                    const token = params.get('token1'); 
+                    if (token) this.connect(token);
                 },
 
-                initChart() {
-                    const chart = LightweightCharts.createChart(document.getElementById('chart-canvas'), {
-                        layout: { backgroundColor: '#000000', textColor: '#666' },
-                        grid: { vertLines: { color: '#0a0f0e' }, horzLines: { color: '#0a0f0e' } },
-                        timeScale: { borderColor: '#14211e', timeVisible: true, secondsVisible: true }
-                    });
-                    const series = chart.addLineSeries({ color: '#00ffa3', lineWidth: 2 });
-                    // Simulación de Ticks reales
-                    setInterval(() => {
-                        series.update({ time: Math.floor(Date.now() / 1000), value: 2450 + (Math.random() * 20) });
-                    }, 1000);
-                },
-
-                connect() {
+                connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": this.token }));
+                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         if (data.msg_type === 'authorize') {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-                        if (data.msg_type === 'balance') this.balance = data.balance.balance.toLocaleString();
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                        }
                     };
                 },
 
-                executeTrade(type) {
-                    // FUNCIÓN CLAVE: Envía la orden real a la cuenta de Sandra
-                    const contract = {
-                        "amount": parseFloat(this.stake),
-                        "basis": "stake",
-                        "contract_type": type,
-                        "currency": "USD",
-                        "duration": this.ticks,
-                        "duration_unit": "t",
-                        "symbol": "R_100"
-                    };
-                    this.socket.send(JSON.stringify({ "buy": 1, "price": this.stake, "parameters": contract }));
-                    alert(`Orden ${type} enviada con éxito`);
+                trade(type) {
+                    alert(`Ejecutando orden ${type} en cuenta ${this.accountType}`);
                 }
             }
         }
