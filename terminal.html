@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIAD - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -297,17 +297,33 @@
                 },
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": token }));
+                    };
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
+                        
+                        // Manejo de la autorización
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.status = 'Conectado';
+                            // Suscribirse al balance para recibir actualizaciones en tiempo real
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
+    
+                        // RECEPCIÓN DE DATOS REALES DE DERIV
                         if (data.msg_type === 'balance') {
-                            // Solo actualiza si no acabamos de hacer una recarga manual
-                            this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                            this.balance = data.balance.balance.toLocaleString('en-US', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2 
+                            });
+                        }
+    
+                        // Confirmación de recarga exitosa
+                        if (data.msg_type === 'topup_virtual' && !data.error) {
+                            this.status = '¡Recarga exitosa en servidor!';
+                        } else if (data.error) {
+                            this.status = 'Error: ' + data.error.message;
                         }
                     };
                 },
@@ -317,24 +333,18 @@
                     this.showAccountMenu = false;
                     this.status = "Cambiado a " + id;
                 },
-                
-                // FUNCIÓN ACTUALIZADA Y CORREGIDA
+    
+                // FUNCIÓN DE RECARGA REAL (CONECTADA A DERIV)
                 rechargeDemo() {
                     if (this.accountType === 'DEMO') {
-                        // 1. Forzamos el valor visual a 10,000.00
-                        this.balance = "10,000.00"; 
-                        this.status = 'Cuenta demo restablecida';
-                        
-                        // 2. Cerramos el menú
-                        this.showAccountMenu = false;
-    
-                        // 3. Opcional: Enviamos la señal real a la API de Deriv para recargar
-                        // Esto hará que el servidor realmente nos devuelva los 10k
                         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                            this.status = 'Solicitando recarga...';
+                            // Este comando le dice a Deriv que restablezca los $10,000 reales
                             this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                            this.showAccountMenu = false;
                         }
                     } else {
-                        this.status = 'Cambie a cuenta demo para recargar';
+                        this.status = 'Solo disponible en cuenta demo';
                     }
                 },
     
