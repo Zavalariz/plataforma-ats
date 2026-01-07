@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELITE TERMINAL PRO</title>
+    <title>ATS ELITE - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -18,12 +18,12 @@
         
         /* Controles +/- */
         .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
-        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; }
+        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        /* Gráfico */
-        .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000; }
-        #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; }
+        /* Gráfico Dark */
+        .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
+        #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; filter: contrast(1.1) brightness(0.8); }
 
         /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
@@ -34,6 +34,9 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+        
+        .btn-buy { transition: all 0.2s; }
+        .btn-buy:active { transform: scale(0.96); }
     </style>
 </head>
 <body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen">
@@ -47,10 +50,10 @@
                 <a href="#">Registros</a>
             </nav>
         </div>
-        <div class="flex items-center gap-4 text-right">
-            <div>
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></p>
-                <p class="text-[#00ffa3] font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+        <div class="flex items-center gap-4">
+            <div class="text-right px-3 py-1 bg-black rounded border border-white/5">
+                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
+                <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
             </div>
         </div>
     </header>
@@ -107,7 +110,7 @@
                     <p class="infinity-label">Infinity% del saldo</p>
                 </div>
 
-                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[#222]">
+                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[#222]">
                     <div class="flex items-center gap-3">
                         <span class="material-icons-round text-yellow-500">warning</span>
                         <div class="leading-tight">
@@ -120,13 +123,13 @@
                 </div>
             </div>
 
-            <button class="w-full bg-[#7c3aed] py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto active:scale-95 transition-all shadow-lg shadow-purple-500/20">
-                <span class="material-icons-round">play_circle</span>
-                <span class="text-xs font-black uppercase tracking-widest">Iniciar Robot</span>
+            <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto active:scale-95 transition-all shadow-lg">
+                <span class="material-icons-round" x-text="isBotRunning ? 'stop' : 'play_circle'"></span>
+                <span class="text-xs font-black uppercase tracking-widest" x-text="isBotRunning ? 'Detener Robot' : 'Iniciar Robot'"></span>
             </button>
         </aside>
 
-        <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col">
+        <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col bg-black">
             <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d] z-10">
                 <div class="flex gap-6 text-[10px] font-black uppercase italic tracking-widest h-full items-center">
                     <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] h-full px-2">Gráfico</button>
@@ -198,7 +201,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2">
-                    <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all shadow-lg shadow-green-500/10">
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-green-500/10">
                         <div class="text-left">
                             <span class="block text-xl font-black italic">Rise</span>
                             <span class="block text-[10px] font-bold opacity-60">85.00%</span>
@@ -206,7 +209,7 @@
                         <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
                     </button>
 
-                    <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all shadow-lg shadow-red-500/10">
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-red-500/10">
                         <div class="text-left">
                             <span class="block text-xl font-black italic">Fall</span>
                             <span class="block text-[10px] font-bold opacity-60">84.00%</span>
@@ -214,6 +217,10 @@
                         <span class="text-base font-black italic" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
                     </button>
                 </div>
+            </div>
+            
+            <div class="mt-auto p-2 bg-white/5 rounded text-[9px] font-mono text-gray-500">
+                Estado: <span class="text-[#00ffa3]" x-text="status"></span>
             </div>
         </aside>
     </div>
@@ -223,14 +230,17 @@
             return {
                 agendar: false,
                 balance: '0.00',
-                accountType: 'DEMO',
+                accountType: 'CONECTANDO...',
                 stake: 1.00,
                 ticks: 1,
+                isBotRunning: false,
+                status: 'Esperando conexión',
                 socket: null,
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     const token = params.get('token1') || params.get('token2');
                     if (token) this.connect(token);
+                    else this.status = 'Token no detectado';
                 },
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
@@ -239,15 +249,33 @@
                         const data = JSON.parse(msg.data);
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
+                            this.status = 'Conectado';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = '¡Operación Exitosa!';
+                        }
                     };
                 },
-                trade(type) {
-                    console.log(`📡 Operación ${type} ejecutada con $${this.stake} a ${this.ticks} ticks.`);
+                executeTrade(type) {
+                    if (!this.socket) return;
+                    this.status = `Enviando ${type}...`;
+                    this.socket.send(JSON.stringify({
+                        "buy": 1,
+                        "price": parseFloat(this.stake),
+                        "parameters": {
+                            "amount": parseFloat(this.stake),
+                            "basis": "stake",
+                            "contract_type": type,
+                            "currency": "USD",
+                            "duration": parseInt(this.ticks),
+                            "duration_unit": "t",
+                            "symbol": "R_100"
+                        }
+                    }));
                 }
             }
         }
