@@ -102,7 +102,7 @@
                     <span class="text-xs font-bold text-[#00ffa3]">$ 9,990.00</span>
                 </div>
                 <div class="p-2 border-t border-white/5 bg-black/40">
-                    <button class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2">
+                    <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
                         <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
                     </button>
                 </div>
@@ -316,9 +316,18 @@
                     this.showAccountMenu = false;
                     this.status = "Cambiado a " + id;
                 },
+                // Nueva función para recargar balance demo
+                rechargeDemo() {
+                    if (this.accountType === 'DEMO') {
+                        this.balance = '9,990.00'; // Valor según tu captura
+                        this.status = 'Cuenta demo restablecida';
+                    } else {
+                        this.status = 'Cambie a cuenta demo para recargar';
+                    }
+                },
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = `Enviando ${type}...`;
+                    this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
