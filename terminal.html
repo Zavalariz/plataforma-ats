@@ -2,189 +2,159 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS ELITE - TERMINAL PROFESIONAL</title>
+    <title>ATS ELITE - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #0a0a0a; color: #eee; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        .panel-bg { background: #111111; border: 1px solid #1f1f1f; }
-        .input-box { background: #1c1c1c; border: 1px solid #2d2d2d; border-radius: 6px; padding: 10px; width: 100%; color: white; font-size: 14px; outline: none; transition: border 0.2s; }
-        .input-box:focus { border-color: #7c3aed; }
-        .label-text { color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .sub-label { color: #6366f1; font-size: 9px; font-weight: 600; margin-top: 2px; }
+        body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
+        .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; width: 100%; color: white; outline: none; }
+        .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
         
-        /* Ajuste de Gráfico */
-        .chart-wrapper { width: 100%; height: 100%; position: relative; background: #000; border-radius: 8px; overflow: hidden; }
-        #tradingview-chart { width: 100%; height: calc(100% + 100px); margin-top: -60px; border: none; }
+        /* Controles +/- */
+        .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; }
+        .btn-math { padding: 10px 15px; color: #7c3aed; transition: background 0.2s; }
+        .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        .btn-action { transition: all 0.2s; font-weight: 800; text-transform: uppercase; }
-        .btn-action:active { transform: scale(0.96); }
+        /* Toggle Agendar */
+        .toggle-bg { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; }
+        .toggle-dot { width: 12px; height: 12px; background: #9ca3af; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: all 0.3s; }
+        .active .toggle-dot { left: 19px; background: #00ffa3; }
+        .active .toggle-bg { background: rgba(0, 255, 163, 0.2); }
+
+        /* GRÁFICO */
+        .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000; }
+        #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; }
     </style>
 </head>
-<body x-data="atsTerminal()" x-init="init()" class="flex flex-col h-screen">
+<body x-data="terminalCore()" x-init="init()" class="flex flex-col h-screen overflow-hidden">
 
-    <header class="h-14 border-b border-white/5 flex justify-between items-center px-6 bg-[#0a0a0a]">
-        <div class="flex items-center gap-6">
-            <h1 class="text-[#00ffa3] font-black italic tracking-tighter text-xl">ATS <span class="text-white">ELITE</span></h1>
-            <nav class="flex gap-4 text-[11px] font-bold uppercase text-gray-400">
-                <a href="#" class="text-[#00ffa3]">Operar</a>
-                <a href="#" class="hover:text-white">Señales GPT</a>
-                <a href="#" class="hover:text-white">Registros</a>
-            </nav>
+    <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6">
+        <div class="flex items-center gap-2">
+            <span class="text-lg font-black italic tracking-tighter text-[#00ffa3]">ATS ELITE</span>
         </div>
         <div class="flex items-center gap-4">
             <div class="text-right">
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span class="text-[#00ffa3]" x-text="accountType"></span></p>
-                <p class="text-[#00ffa3] font-mono text-lg font-black">$<span x-text="balance">0.00</span></p>
+                <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></div>
+                <div class="text-[#00ffa3] font-mono font-bold text-lg">$<span x-text="balance">0.00</span></div>
             </div>
-            <button class="bg-white/5 border border-white/10 px-4 py-1.5 rounded text-[10px] font-bold hover:bg-white/10">VOLVER</button>
         </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden p-2 gap-2">
+    <div class="flex flex-1 overflow-hidden p-1 gap-1">
         
-        <aside class="w-[310px] panel-bg rounded-xl p-4 flex flex-col gap-4 overflow-y-auto">
-            <div>
-                <p class="label-text">Lucro Total</p>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-3xl font-black text-white">$<span x-text="profit">0.00</span></span>
-                    <span class="text-[10px] font-bold text-[#00ffa3]">Winrate: 0%</span>
-                </div>
-            </div>
+        <aside class="w-[300px] panel-turbo p-5 flex flex-col gap-4 overflow-y-auto opacity-80">
+            <h3 class="text-xs font-bold text-gray-500 uppercase italic">Configuración IA</h3>
+            </aside>
 
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-[#15201b] border border-green-900/30 p-3 rounded-lg text-center">
-                    <p class="text-[9px] font-black text-[#00ffa3] uppercase">Wins</p>
-                    <p class="text-xl font-black text-[#00ffa3]" x-text="wins">0</p>
-                </div>
-                <div class="bg-[#201517] border border-red-900/30 p-3 rounded-lg text-center">
-                    <p class="text-[9px] font-black text-[#ff3355] uppercase">Losses</p>
-                    <p class="text-xl font-black text-[#ff3355]" x-text="losses">0</p>
-                </div>
-            </div>
-
-            <div class="space-y-3 mt-2">
-                <div>
-                    <label class="label-text">Mercado Seleccionado</label>
-                    <select class="input-box text-xs font-bold"><option>Volatility 100 (1s) Index</option></select>
-                </div>
-
-                <div>
-                    <label class="label-text">Estrategia</label>
-                    <select class="input-box text-xs"><option>🎯 Turbo Trade 1.1</option><option>📊 Scalping Pro</option></select>
-                </div>
-
-                <div>
-                    <label class="label-text">Modo de Negociación</label>
-                    <select class="input-box text-xs"><option>⚡ Veloz</option><option>🐢 Seguro</option></select>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="label-text">Entrada</label>
-                        <input type="number" x-model="stake" class="input-box font-bold">
-                    </div>
-                    <div>
-                        <label class="label-text">Meta</label>
-                        <input type="number" value="20" class="input-box font-bold text-[#00ffa3]">
-                    </div>
-                    <div>
-                        <label class="label-text">Stop Loss</label>
-                        <input type="number" value="1000" class="input-box font-bold text-[#ff3355]">
-                    </div>
-                </div>
-
-                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-[#222]">
-                    <div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center border border-green-500/20">
-                        <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-[11px] font-black uppercase">Conservador</p>
-                        <p class="text-[10px] text-green-500 font-bold">▲ Bajo Riesgo</p>
-                    </div>
-                </div>
-            </div>
-
-            <button class="w-full bg-[#7c3aed] py-4 rounded-2xl btn-action text-[11px] shadow-lg shadow-purple-900/20 mt-auto">
-                ▶ Iniciar IA Automática
-            </button>
-        </aside>
-
-        <main class="flex-1 panel-bg rounded-xl flex flex-col overflow-hidden relative">
-            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 z-10 bg-[#111]">
-                <div class="flex gap-6 text-[10px] font-black uppercase tracking-widest h-full items-center">
+        <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col">
+            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d] z-10">
+                <div class="flex gap-6 text-[10px] font-black uppercase italic tracking-widest h-full items-center">
                     <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] h-full px-2">Gráfico</button>
-                    <button class="text-gray-500 hover:text-white transition h-full px-2">Dígitos</button>
-                    <button class="text-gray-500 hover:text-white transition h-full px-2">Negociaciones</button>
+                    <button class="text-gray-500 h-full px-2">Dígitos</button>
+                    <button class="text-gray-500 h-full px-2">Historial</button>
                 </div>
             </div>
-            
-            <div class="flex-1 chart-wrapper">
-                <iframe id="tradingview-chart" src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
+            <div class="flex-1 chart-container">
+                <iframe id="chart-frame" src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
             </div>
         </main>
 
-        <aside class="w-[320px] panel-bg rounded-xl p-4 flex flex-col gap-5">
-            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                <h3 class="text-xs font-black uppercase italic text-gray-400">Modo Manual</h3>
-                <div class="flex items-center gap-2">
-                    <span class="text-[9px] font-bold text-gray-500 uppercase">Agendar</span>
-                    <div class="w-8 h-4 bg-gray-800 rounded-full relative"><div class="absolute left-1 top-1 w-2 h-2 bg-gray-500 rounded-full"></div></div>
+        <aside class="w-[330px] panel-turbo p-5 flex flex-col gap-4 overflow-y-auto">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-white">Modo manual</h3>
+                <div class="flex items-center gap-2" @click="agendar = !agendar" :class="{ 'active': agendar }">
+                    <span class="text-[10px] font-bold text-gray-500 uppercase">Agendar</span>
+                    <div class="toggle-bg"><div class="toggle-dot"></div></div>
                 </div>
             </div>
 
-            <div>
-                <label class="label-text">Mercado</label>
-                <select class="input-box text-xs font-bold"><option>Volatility 100 Index</option></select>
-            </div>
+            <div class="text-[#00ffa3] font-bold text-sm">$0 (0%)</div>
 
-            <div>
-                <label class="label-text">Duración</label>
-                <div class="flex gap-2">
-                    <div class="flex-1 flex items-center input-box justify-between">
-                        <button @click="ticks > 1 && ticks--" class="text-purple-500 font-black">-</button>
-                        <span x-text="ticks" class="font-black text-base"></span>
-                        <button @click="ticks++" class="text-purple-500 font-black">+</button>
+            <div class="space-y-4">
+                <div>
+                    <label class="label-turbo">Mercado</label>
+                    <select class="input-turbo font-bold">
+                        <option>Volatility 100 Index</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Tipo de Negociación</label>
+                    <div class="relative">
+                        <select class="input-turbo pr-10">
+                            <option>Rise/Fall</option>
+                        </select>
+                        <span class="material-icons-round absolute right-3 top-3 text-gray-500 text-sm">chevron_left</span>
                     </div>
-                    <select class="bg-[#1c1c1c] border border-[#2d2d2d] rounded-lg px-3 text-[10px] font-black text-white"><option>TICKS</option></select>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-1 mb-1">
+                        <label class="label-turbo m-0">Duración</label>
+                        <span class="material-icons-round text-[10px] text-blue-400">info</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="control-group flex-1">
+                            <button @click="ticks > 1 && ticks--" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                            <span x-text="ticks" class="font-bold"></span>
+                            <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
+                        </div>
+                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-3 text-[10px] font-bold text-white"><option>Ticks</option></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Cuantía inicial</label>
+                    <div class="control-group">
+                        <button @click="stake > 1 && (stake--) " class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold outline-none w-20">
+                        <button @click="stake++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Multiplicador de entrada</label>
+                    <div class="flex gap-2">
+                        <div class="control-group flex-1">
+                            <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                            <span class="font-bold">Auto</span>
+                            <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 mt-4">
+                    <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all">
+                        <div class="text-left">
+                            <span class="block text-xl font-black italic italic">Rise</span>
+                            <span class="block text-[10px] font-bold opacity-70">85.00%</span>
+                        </div>
+                        <span class="text-base font-black" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
+                    </button>
+
+                    <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all">
+                        <div class="text-left">
+                            <span class="block text-xl font-black italic">Fall</span>
+                            <span class="block text-[10px] font-bold opacity-70">84.00%</span>
+                        </div>
+                        <span class="text-base font-black" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
+                    </button>
                 </div>
             </div>
-
-            <div>
-                <label class="label-text">Monto de Entrada (USD)</label>
-                <div class="flex items-center input-box justify-between">
-                    <button @click="stake > 1 && stake--" class="text-purple-500 font-black text-lg">-</button>
-                    <input type="number" x-model="stake" class="bg-transparent text-center font-black text-lg w-full outline-none">
-                    <button @click="stake++" class="text-purple-500 font-black text-lg">+</button>
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-3 mt-auto">
-                <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black py-5 rounded-xl flex items-center justify-between px-6 btn-action">
-                    <div class="text-left"><span class="block text-[10px] opacity-70 italic">SUPERIOR</span><span class="text-xl font-black italic">RISE ↑</span></div>
-                    <div class="text-right"><span class="block text-[8px] font-bold">PAYOUT 95%</span><span class="text-lg font-mono font-black italic" x-text="'$' + (stake * 1.95).toFixed(2)"></span></div>
-                </button>
-
-                <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white py-5 rounded-xl flex items-center justify-between px-6 btn-action">
-                    <div class="text-left"><span class="block text-[10px] opacity-70 italic">INFERIOR</span><span class="text-xl font-black italic">FALL ↓</span></div>
-                    <div class="text-right"><span class="block text-[8px] font-bold">PAYOUT 95%</span><span class="text-lg font-mono font-black italic" x-text="'$' + (stake * 1.95).toFixed(2)"></span></div>
-                </button>
-            </div>
-            <p class="text-[9px] text-gray-600 text-center italic mt-2">Si el gráfico no carga, desactiva el bloqueador de anuncios.</p>
         </aside>
     </div>
 
     <script>
-        function atsTerminal() {
+        function terminalCore() {
             return {
-                balance: '10,000.00',
-                profit: '0.00',
-                wins: 0,
-                losses: 0,
-                stake: 10,
-                ticks: 1,
+                agendar: false,
+                balance: '0.00',
                 accountType: 'DEMO',
+                stake: 1,
+                ticks: 1,
                 socket: null,
                 init() {
                     const params = new URLSearchParams(window.location.search);
@@ -205,7 +175,7 @@
                         }
                     };
                 },
-                trade(type) { console.log(`Orden ${type} de $${this.stake} enviada.`); }
+                trade(type) { console.log(`Manual ${type} enviado`); }
             }
         }
     </script>
