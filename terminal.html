@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELINW - TERMINAL PRO</title>
+    <title>ATS ELISS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -281,98 +281,92 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
-                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
                 stake: 5.00,
                 ticks: 1,
-                isBotRunning: false,
                 status: 'Esperando conexión',
                 socket: null,
+                currentSpot: null, // Aquí guardaremos el precio en vivo
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     const token = params.get('token1') || params.get('token2');
                     if (token) this.connect(token);
-                    else this.status = 'Token no detectado';
                 },
     
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
+                    
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
+                        
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                            // NOS SUSCRIBIMOS AL PRECIO EN VIVO PARA SABER DÓNDE DIBUJAR
+                            this.socket.send(JSON.stringify({ "ticks": "R_100", "subscribe": 1 }));
                         }
+    
+                        if (data.msg_type === 'tick') {
+                            this.currentSpot = data.tick.quote;
+                        }
+    
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
+    
                         if (data.msg_type === 'buy' && !data.error) {
                             this.status = 'Orden abierta';
-                            // Dibujamos la línea visual al confirmar la compra
-                            this.drawTradeLine(data.buy.contract_type);
+                            // PASAMOS EL PRECIO DE ENTRADA REAL A LA FUNCIÓN DE DIBUJO
+                            this.drawTradeLine(data.buy.contract_type, data.buy.buy_price);
                         }
                     };
                 },
     
-                // ESTA FUNCIÓN DIBUJA LA LÍNEA SOBRE EL GRÁFICO
-                drawTradeLine(type) {
+                drawTradeLine(type, entryPrice) {
                     const container = document.querySelector('.chart-container');
                     const line = document.createElement('div');
                     const color = type === 'CALL' ? '#00ffa3' : '#ff3355';
                     
-                    // Estilo de la línea (se posiciona en el medio del gráfico como referencia)
+                    // Calculamos una posición estimada. 
+                    // Como no podemos leer el eje Y del iframe, la pondremos cerca del centro
+                    // pero con un pequeño ajuste basado en si fue compra o venta.
+                    const offset = type === 'CALL' ? 45 : 55; 
+    
+                    line.id = "active-trade-line";
                     line.style.cssText = `
                         position: absolute;
                         left: 0;
                         right: 0;
-                        top: 50%; 
+                        top: ${offset}%; 
                         height: 2px;
                         background: ${color};
-                        box-shadow: 0 0 10px ${color};
-                        z-index: 50;
+                        box-shadow: 0 0 15px ${color};
+                        z-index: 100;
                         pointer-events: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-end;
                     `;
                     
-                    // Etiqueta de la línea
-                    const label = document.createElement('span');
-                    label.style.cssText = `
-                        position: absolute;
-                        right: 10px;
-                        top: -20px;
-                        background: ${color};
-                        color: black;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        font-size: 10px;
-                        font-weight: bold;
+                    line.innerHTML = `
+                        <div style="background:${color}; color:black; padding:2px 10px; border-radius:4px; font-size:11px; font-weight:900; margin-right:60px;">
+                            ${type} @ ${this.currentSpot || ''}
+                        </div>
                     `;
-                    label.innerText = type === 'CALL' ? 'ENTRADA COMPRA' : 'ENTRADA VENTA';
                     
-                    line.appendChild(label);
                     container.appendChild(line);
     
-                    // La línea se borra sola después de 5 segundos (o lo que duren tus ticks)
+                    // La línea se queda activa lo que duren los ticks (ejemplo 5 seg)
                     setTimeout(() => {
-                        line.style.opacity = '0';
-                        line.style.transition = 'opacity 1s ease';
-                        setTimeout(() => line.remove(), 1000);
-                    }, 5000); 
-                },
-    
-                rechargeDemo() {
-                    if (this.accountType === 'DEMO' && this.socket) {
-                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                        this.showAccountMenu = false;
-                    }
+                        line.remove();
+                    }, this.ticks * 2000); 
                 },
     
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = `Enviando ${type}...`;
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
