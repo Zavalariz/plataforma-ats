@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELISS - TERMINAL PRO</title>
+    <title>ATS ELICH - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -287,7 +287,6 @@
                 ticks: 1,
                 status: 'Esperando conexión',
                 socket: null,
-                currentSpot: null, // Aquí guardaremos el precio en vivo
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
@@ -305,68 +304,74 @@
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                            // NOS SUSCRIBIMOS AL PRECIO EN VIVO PARA SABER DÓNDE DIBUJAR
-                            this.socket.send(JSON.stringify({ "ticks": "R_100", "subscribe": 1 }));
-                        }
-    
-                        if (data.msg_type === 'tick') {
-                            this.currentSpot = data.tick.quote;
                         }
     
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
     
+                        // DETECTAR LA COMPRA EXITOSA
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden abierta';
-                            // PASAMOS EL PRECIO DE ENTRADA REAL A LA FUNCIÓN DE DIBUJO
-                            this.drawTradeLine(data.buy.contract_type, data.buy.buy_price);
+                            this.status = 'Orden ejecutada';
+                            // Usamos el precio de compra real que devuelve la API
+                            const precioEntrada = data.buy.buy_price;
+                            this.drawPriceTag(data.buy.contract_type, precioEntrada);
+                        }
+    
+                        if (data.error) {
+                            this.status = 'Error: ' + data.error.message;
                         }
                     };
                 },
     
-                drawTradeLine(type, entryPrice) {
+                drawPriceTag(type, price) {
                     const container = document.querySelector('.chart-container');
-                    const line = document.createElement('div');
+                    const tag = document.createElement('div');
                     const color = type === 'CALL' ? '#00ffa3' : '#ff3355';
                     
-                    // Calculamos una posición estimada. 
-                    // Como no podemos leer el eje Y del iframe, la pondremos cerca del centro
-                    // pero con un pequeño ajuste basado en si fue compra o venta.
-                    const offset = type === 'CALL' ? 45 : 55; 
-    
-                    line.id = "active-trade-line";
-                    line.style.cssText = `
+                    // Creamos una etiqueta que se pega al lado derecho (escala de precios)
+                    tag.style.cssText = `
                         position: absolute;
-                        left: 0;
                         right: 0;
-                        top: ${offset}%; 
-                        height: 2px;
+                        top: 50%; /* El precio actual siempre está centrado en estos gráficos */
                         background: ${color};
-                        box-shadow: 0 0 15px ${color};
-                        z-index: 100;
-                        pointer-events: none;
+                        color: black;
+                        padding: 4px 10px;
+                        font-size: 12px;
+                        font-weight: 900;
+                        border-radius: 4px 0 0 4px;
+                        z-index: 1000;
+                        box-shadow: -2px 0 10px ${color};
                         display: flex;
                         align-items: center;
-                        justify-content: flex-end;
+                        gap: 5px;
                     `;
                     
-                    line.innerHTML = `
-                        <div style="background:${color}; color:black; padding:2px 10px; border-radius:4px; font-size:11px; font-weight:900; margin-right:60px;">
-                            ${type} @ ${this.currentSpot || ''}
-                        </div>
+                    tag.innerHTML = `
+                        <span class="material-icons-round" style="font-size:14px">${type === 'CALL' ? 'north' : 'south'}</span>
+                        <span>${price.toFixed(2)}</span>
                     `;
                     
-                    container.appendChild(line);
+                    container.appendChild(tag);
     
-                    // La línea se queda activa lo que duren los ticks (ejemplo 5 seg)
+                    // La etiqueta desaparece cuando termina la operación (aprox 2 seg por tick)
                     setTimeout(() => {
-                        line.remove();
-                    }, this.ticks * 2000); 
+                        tag.style.opacity = '0';
+                        tag.style.transition = 'opacity 0.5s';
+                        setTimeout(() => tag.remove(), 500);
+                    }, this.ticks * 2200);
+                },
+    
+                rechargeDemo() {
+                    if (this.accountType === 'DEMO') {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                        this.showAccountMenu = false;
+                    }
                 },
     
                 executeTrade(type) {
                     if (!this.socket) return;
+                    this.status = 'Enviando...';
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
