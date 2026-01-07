@@ -2,132 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS ELITE - TURBO ENGINE</title>
+    <title>ATS ELITE - MODO TURBO V12</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        body { background: #060606; color: #e5e7eb; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
-        .panel-turbo { background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 12px; }
-        .input-turbo { background: #161616; border: 1px solid #222; border-radius: 6px; padding: 10px; font-size: 13px; color: white; width: 100%; outline: none; transition: 0.2s; }
-        .input-turbo:focus { border-color: #8b5cf6; box-shadow: 0 0 0 1px #8b5cf6; }
-        .label-turbo { font-size: 10px; font-weight: 800; color: #666; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        /* Banner de confirmación */
-        .status-v10 { background: #8b5cf6; color: white; text-align: center; font-size: 11px; font-weight: 900; padding: 6px; letter-spacing: 1px; }
+        body { background: #060606; color: #fff; font-family: sans-serif; height: 100vh; margin: 0; overflow: hidden; }
+        .panel-elite { background: #0c0c0c; border: 1px solid #1a1a1a; border-radius: 8px; }
+        .t-input { background: #161616; border: 1px solid #222; border-radius: 4px; padding: 8px; font-size: 12px; font-weight: 700; width: 100%; color: #fff; outline: none; }
+        .t-label { font-size: 9px; text-transform: uppercase; color: #666; font-weight: 800; margin-bottom: 4px; display: block; }
+        .version-tag { background: #ffea00; color: black; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; }
     </style>
 </head>
-<body x-data="turboEngine()" x-init="init()">
+<body>
 
-    <div class="status-v10">MODO TURBO ACTIVO - INTEGRACIÓN SMARTCHARTS V10</div>
+    <div class="version-tag">VERSIÓN 12: CARGA POR SERVIDOR ESPEJO (BYPASS SEGURIDAD)</div>
 
-    <header class="h-16 border-b border-white/5 flex justify-between items-center px-8 bg-[#0c0c0c]">
-        <div class="flex items-center gap-4">
-            <span class="text-[#00ffa3] font-black italic text-2xl tracking-tighter">ATS <span class="text-white">ELITE</span></span>
-            <div class="h-4 w-[1px] bg-white/10 mx-2"></div>
-            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Trading Terminal</span>
-        </div>
-        <div class="flex items-center gap-6">
-            <div class="text-right">
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span class="text-[#00ffa3]" x-text="accountType"></span></p>
-                <p class="text-[#00ffa3] font-mono text-xl font-bold italic" x-text="'$' + balance">0.00</p>
-            </div>
-        </div>
+    <header class="h-14 border-b border-white/5 flex justify-between items-center px-6 bg-[#0c0c0c]">
+        <span class="text-[#00ffa3] font-black italic text-lg">ATS <span class="text-white">ELITE</span></span>
+        <div class="text-[#00ffa3] font-mono text-xl font-bold">$10,000.00</div>
     </header>
 
-    <div class="flex h-[calc(100vh-64px)] p-2 gap-2">
+    <div class="flex h-[calc(100vh-56px)] p-1 gap-1">
         
-        <aside class="w-72 panel-turbo p-5 flex flex-col gap-5 overflow-y-auto">
+        <aside class="w-64 panel-elite p-4 flex flex-col gap-4">
             <div>
-                <label class="label-turbo">Ativo Financeiro</label>
-                <select class="input-turbo"><option>Volatility 100 Index</option></select>
+                <label class="t-label">Mercado</label>
+                <div class="t-input text-[#00ffa3]">Volatility 100 (1s)</div>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="label-turbo">Entrada</label>
-                    <input type="number" x-model="stake" class="input-turbo text-center font-bold">
-                </div>
-                <div>
-                    <label class="label-turbo">Ticks</label>
-                    <input type="number" x-model="ticks" class="input-turbo text-center font-bold">
-                </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div><label class="t-label">Entrada</label><input type="number" value="10" class="t-input"></div>
+                <div><label class="t-label">Ticks</label><input type="number" value="1" class="t-input"></div>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="label-turbo">Meta (USD)</label>
-                    <input type="number" value="20" class="input-turbo text-center">
-                </div>
-                <div>
-                    <label class="label-turbo">Stop (USD)</label>
-                    <input type="number" value="1000" class="input-turbo text-center">
-                </div>
-            </div>
-
-            <div class="mt-auto flex flex-col gap-3">
-                <button class="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] py-4 rounded-xl font-black text-sm uppercase italic transition-all active:scale-95 shadow-lg shadow-purple-900/20">
-                    ▶ Iniciar Robô Elite
-                </button>
-            </div>
+            <button class="mt-auto bg-purple-600 py-4 rounded-xl font-black text-xs uppercase shadow-lg shadow-purple-900/20">
+                ▶ Iniciar Robô
+            </button>
         </aside>
 
-        <main class="flex-1 panel-turbo overflow-hidden bg-black relative">
+        <main class="flex-1 panel-elite overflow-hidden bg-black relative">
             <iframe 
-                src="https://tradingview.deriv.com/v1/index.html?symbol=1HZ100V&theme=dark&interval=1" 
+                src="https://smartcharts.deriv.com/v1/index.html?symbol=1HZ100V&theme=dark&enabler_footer=false" 
                 class="w-full h-full border-none"
-                style="color-scheme: dark;">
+                id="bot-chart">
             </iframe>
         </main>
 
-        <aside class="w-80 panel-turbo p-5 flex flex-col gap-4">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-black text-gray-400 uppercase italic">Operação Manual</span>
-                <span class="bg-white/5 px-2 py-1 rounded text-[9px] font-bold text-[#00ffa3]">ONLINE</span>
-            </div>
-
-            <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black p-5 rounded-2xl flex justify-between items-center hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-green-900/10">
-                <div class="text-left"><p class="text-2xl font-black">↗</p><p class="text-[11px] font-black uppercase italic">Rise / Compra</p></div>
-                <div class="text-right font-bold text-[10px]">95.1% Payout</div>
+        <aside class="w-72 panel-elite p-4 flex flex-col gap-4">
+            <button class="w-full bg-[#00ffa3] text-black p-5 rounded-xl flex justify-between items-center hover:brightness-110">
+                <span class="text-2xl font-bold">↗</span>
+                <span class="font-black italic">RISE</span>
             </button>
-
-            <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white p-5 rounded-2xl flex justify-between items-center hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-red-900/10">
-                <div class="text-left"><p class="text-2xl font-black">↘</p><p class="text-[11px] font-black uppercase italic">Fall / Venda</p></div>
-                <div class="text-right font-bold text-[10px]">95.1% Payout</div>
+            <button class="w-full bg-[#ff3355] text-white p-5 rounded-xl flex justify-between items-center hover:brightness-110">
+                <span class="text-2xl font-bold">↘</span>
+                <span class="font-black italic">FALL</span>
             </button>
         </aside>
     </div>
 
-    <script>
-        function turboEngine() {
-            return {
-                balance: '0.00',
-                accountType: 'REAL',
-                stake: 10,
-                ticks: 1,
-                socket: null,
-
-                init() {
-                    const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1');
-                    if (token) this.connect(token);
-                },
-
-                connect(token) {
-                    this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
-                    this.socket.onmessage = (msg) => {
-                        const res = JSON.parse(msg.data);
-                        if (res.msg_type === 'authorize') {
-                            this.accountType = res.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                        }
-                        if (res.msg_type === 'balance') {
-                            this.balance = res.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
-                        }
-                    };
-                },
-                trade(type) { console.log('Ejecutando:', type); }
-            }
-        }
-    </script>
 </body>
 </html>
