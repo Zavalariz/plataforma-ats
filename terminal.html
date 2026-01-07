@@ -2,59 +2,69 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TEST DE ACTUALIZACIÓN - RIKY</title>
+    <title>ATS ELITE - REPARACIÓN FINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { background: #050505; color: white; font-family: sans-serif; height: 100vh; overflow: hidden; }
-        .panel { background: #0d0d0d; border: 1px solid #1a1a1a; }
-        /* Animación para verificar que el CSS cargó */
-        .test-banner { background: yellow; color: black; font-weight: 900; padding: 4px; text-align: center; font-size: 12px; }
+        .panel-v3 { background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 8px; }
+        /* Marca de agua para confirmar actualización */
+        .version-tag { position: fixed; top: 10px; right: 200px; background: red; color: white; padding: 2px 10px; font-size: 10px; font-weight: bold; z-index: 9999; border-radius: 20px; }
     </style>
 </head>
-<body x-data="{ balance: '0.00' }" class="flex flex-col">
+<body x-data="{ balance: '9,990.00' }">
 
-    <div class="test-banner">REVISIÓN DE CÓDIGO ACTIVA - USUARIO: RIKY SADY ZAVALA</div>
+    <div class="version-tag">VERSIÓN DE REPARACIÓN: V3-ESTABLE</div>
 
-    <header class="h-14 panel flex justify-between items-center px-6 border-b border-white/10">
-        <div class="flex items-center gap-3">
-            <div class="bg-[#00ffa3] text-black px-2 py-1 rounded font-bold text-xs">TEST</div>
-            <h1 class="text-yellow-400 font-black italic uppercase tracking-tighter">
-                TERMINAL TEST RIKY V2
-            </h1>
+    <header class="h-14 flex justify-between items-center px-6 border-b border-white/5 bg-[#0d0d0d]">
+        <div class="flex items-center gap-4">
+            <span class="text-[#00ffa3] font-black italic tracking-tighter">ATS ELITE TERMINAL PRO</span>
         </div>
-        <div class="text-[#00ffa3] font-mono font-bold">$<span x-text="balance">0.00</span></div>
+        <div class="flex items-center gap-4">
+            <div class="text-right">
+                <div class="text-[8px] text-gray-500 font-bold uppercase">BALANCE DEMO</div>
+                <div class="text-[#00ffa3] font-mono font-bold">$<span x-text="balance"></span></div>
+            </div>
+        </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden p-2 gap-2">
-        <aside class="w-64 panel p-4 flex flex-col gap-4">
-            <div class="text-[10px] text-gray-500 font-bold uppercase">Configuración</div>
-            <select class="w-full bg-[#1a1a1a] border border-white/10 p-2 rounded text-sm outline-none">
-                <option>Volatility 100 (1s) Index</option>
-            </select>
-            <button class="mt-auto bg-purple-600 p-3 rounded-lg font-bold text-xs uppercase italic">Iniciar Robô</button>
+    <div class="flex h-[calc(100vh-56px)] p-2 gap-2">
+        <aside class="w-64 panel-v3 p-4 flex flex-col gap-4">
+            <h3 class="text-[10px] font-bold text-gray-500 uppercase">Configuração IA</h3>
+            <div>
+                <label class="text-[9px] text-gray-400 block mb-1">MERCADO</label>
+                <select class="w-full bg-[#1a1a1a] border border-white/10 p-2 rounded text-xs text-white outline-none">
+                    <option>Volatility 100 (1s) Index</option>
+                </select>
+                <p class="text-[9px] text-purple-400 mt-1 italic">1 tique a cada 2 segundos</p>
+            </div>
+            <button class="mt-auto bg-[#a855f7] py-3 rounded-xl font-bold text-xs italic uppercase">▶ Iniciar Robô Elite</button>
         </aside>
 
-        <main class="flex-1 panel relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-full bg-black flex items-center justify-center" id="loader">
-                <span class="text-gray-500 text-xs animate-pulse">Cargando motor de Deriv...</span>
+        <main class="flex-1 panel-v3 overflow-hidden bg-black relative">
+            <div id="chart-loading" class="absolute inset-0 flex items-center justify-center bg-black z-10">
+                <div class="text-xs text-[#00ffa3] animate-pulse font-bold">CONECTANDO A DERIV...</div>
             </div>
+            
             <iframe 
-                src="https://tradingview.deriv.com/v1/index.html?symbol=R_100&theme=dark&timezone=Etc%2FUTC" 
-                class="w-full h-full border-none relative z-10"
-                onload="document.getElementById('loader').style.display='none'">
+                src="https://tradingview.deriv.com/v1/index.html?symbol=1HZ100V&theme=dark" 
+                class="w-full h-full border-none"
+                onload="document.getElementById('chart-loading').style.display='none'">
             </iframe>
         </main>
 
-        <aside class="w-72 panel p-4">
-            <div class="flex flex-col gap-2">
-                <button class="bg-[#00ffa3] text-black font-black p-5 rounded-xl flex justify-between items-center">
-                    <span>RISE</span>
-                    <span class="text-[10px] opacity-70">95% PAYOUT</span>
+        <aside class="w-72 panel-v3 p-4 flex flex-col gap-4">
+            <h3 class="text-[10px] font-bold text-gray-500 uppercase">Modo Manual</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="bg-[#00ffa3] text-black h-24 rounded-xl flex flex-col items-center justify-center font-black group active:scale-95 transition">
+                    <span class="text-xl">↗</span>
+                    <span class="text-[11px]">RISE</span>
+                    <span class="text-[8px] font-bold opacity-60">PAYOUT 95%</span>
                 </button>
-                <button class="bg-[#ff3355] text-white font-black p-5 rounded-xl flex justify-between items-center">
-                    <span>FALL</span>
-                    <span class="text-[10px] opacity-70">95% PAYOUT</span>
+                <button class="bg-[#ff3355] text-white h-24 rounded-xl flex flex-col items-center justify-center font-black active:scale-95 transition">
+                    <span class="text-xl">↘</span>
+                    <span class="text-[11px]">FALL</span>
+                    <span class="text-[8px] font-bold opacity-60">PAYOUT 95%</span>
                 </button>
             </div>
         </aside>
