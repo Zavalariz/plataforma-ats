@@ -9,7 +9,15 @@
         body { background: #060909; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
         .neon-real { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.4); }
         .neon-demo { color: #ffae00; text-shadow: 0 0 10px rgba(255, 174, 0, 0.4); }
-        .chart-frame { width: 100%; height: calc(100% + 60px); margin-top: -50px; border: none; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+        /* Mantenemos tu filtro de inversión que hace que el gráfico se vea Elite */
+        .chart-frame { 
+            width: 100%; 
+            height: calc(100% + 60px); 
+            margin-top: -50px; 
+            border: none; 
+            filter: invert(1) hue-rotate(180deg) brightness(0.9); 
+        }
+        .panel-glow { box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body x-data="terminalLogic()" class="h-screen flex flex-col">
@@ -40,7 +48,7 @@
         <aside class="w-72 bg-[#0a0f0e] border-r border-white/10 p-6 flex flex-col gap-6 z-50">
             <div class="bg-black/40 p-4 rounded-xl border border-white/5">
                 <label class="text-[9px] text-gray-400 font-bold uppercase block mb-2">Activo en tiempo real</label>
-                <p class="text-xs font-bold text-white italic">Volatility 100 Index (1s)</p>
+                <p class="text-xs font-bold text-[#00ffa3] italic">Volatility 100 Index (1s)</p>
             </div>
 
             <div class="space-y-4">
@@ -51,12 +59,16 @@
             </div>
 
             <div class="mt-auto space-y-3">
-                <button class="w-full bg-[#00ffa3] hover:brightness-110 text-black py-5 rounded-xl font-black italic text-[11px] transition uppercase shadow-lg shadow-emerald-500/10">Ejecutar Rise</button>
-                <button class="w-full bg-[#ff3355] hover:brightness-110 text-white py-5 rounded-xl font-black italic text-[11px] transition uppercase">Ejecutar Fall</button>
+                <button class="w-full bg-[#00ffa3] hover:scale-[1.02] active:scale-95 text-black py-5 rounded-xl font-black italic text-[11px] transition-all uppercase shadow-lg shadow-emerald-500/20">
+                    Ejecutar Rise ↑
+                </button>
+                <button class="w-full bg-[#ff3355] hover:scale-[1.02] active:scale-95 text-white py-5 rounded-xl font-black italic text-[11px] transition-all uppercase">
+                    Ejecutar Fall ↓
+                </button>
             </div>
         </aside>
 
-        <main class="flex-1 bg-black overflow-hidden relative">
+        <main class="flex-1 bg-black overflow-hidden relative panel-glow">
             <iframe src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark" class="chart-frame"></iframe>
         </main>
     </div>
@@ -69,38 +81,19 @@
                 isDemo: false,
                 stake: 10,
                 socket: null,
-
-                init() {
-                    // Por defecto intenta conectar la Real
-                    this.connect('real');
-                },
-
-                formatBalance(val) {
-                    return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
-                },
-
+                init() { this.connect('real'); },
+                formatBalance(val) { return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 }); },
                 switchAccount(type) {
                     if (this.socket) this.socket.close();
                     this.balance = 0;
                     this.connect(type);
                 },
-
                 connect(type) {
                     const params = new URLSearchParams(window.location.search);
-                    // IMPORTANTE: Asegúrate que el Dashboard envíe token1 (real) y token2 (demo)
                     const token = type === 'real' ? params.get('token1') : params.get('token2');
-                    
-                    if (!token) {
-                        this.accountID = "Token no encontrado";
-                        return;
-                    }
-
+                    if (!token) { this.accountID = "Sin Token"; return; }
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    
-                    this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
-                    };
-
+                    this.socket.onopen = () => { this.socket.send(JSON.stringify({ "authorize": token })); };
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         if (data.msg_type === 'authorize' && !data.error) {
@@ -108,9 +101,7 @@
                             this.isDemo = this.accountID.startsWith('VRTC');
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-                        if (data.msg_type === 'balance') {
-                            this.balance = data.balance.balance;
-                        }
+                        if (data.msg_type === 'balance') { this.balance = data.balance.balance; }
                     };
                 }
             }
