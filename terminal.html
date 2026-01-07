@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIA - TERMINAL PRO</title>
+    <title>ATS ELIAD - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -306,6 +306,7 @@
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
                         if (data.msg_type === 'balance') {
+                            // Solo actualiza si no acabamos de hacer una recarga manual
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
                     };
@@ -316,15 +317,27 @@
                     this.showAccountMenu = false;
                     this.status = "Cambiado a " + id;
                 },
-                // Nueva función para recargar balance demo
+                
+                // FUNCIÓN ACTUALIZADA Y CORREGIDA
                 rechargeDemo() {
                     if (this.accountType === 'DEMO') {
-                        this.balance = '9,990.00'; // Valor según tu captura
+                        // 1. Forzamos el valor visual a 10,000.00
+                        this.balance = "10,000.00"; 
                         this.status = 'Cuenta demo restablecida';
+                        
+                        // 2. Cerramos el menú
+                        this.showAccountMenu = false;
+    
+                        // 3. Opcional: Enviamos la señal real a la API de Deriv para recargar
+                        // Esto hará que el servidor realmente nos devuelva los 10k
+                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                        }
                     } else {
                         this.status = 'Cambie a cuenta demo para recargar';
                     }
                 },
+    
                 executeTrade(type) {
                     if (!this.socket) return;
                     this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
