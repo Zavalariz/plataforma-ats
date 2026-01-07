@@ -21,16 +21,33 @@
         .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        /* Gráfico Dark - CAMBIO APLICADO AQUÍ */
+        /* Gráfico Dark */
         .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
         #chart-frame { 
             width: 100%; 
             height: calc(100% + 120px); 
             margin-top: -80px; 
             border: none; 
-            /* Esta línea fuerza el fondo negro y mantiene los colores de las velas */
             filter: invert(1) hue-rotate(180deg) brightness(0.9);
         }
+
+        /* Estilos Selector de Cuenta */
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 280px;
+            background: #111111;
+            border: 1px solid #222222;
+            border-radius: 12px;
+            z-index: 1000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .account-dropdown.show { display: block; }
+        .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
+        .acc-item:hover { background: #1a1a1a; }
+        .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
 
         /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
@@ -46,7 +63,7 @@
         .btn-buy:active { transform: scale(0.96); }
     </style>
 </head>
-<body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen">
+<body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen" @click.away="showAccountMenu = false">
 
     <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6 z-20">
         <div class="flex items-center gap-6">
@@ -57,10 +74,38 @@
                 <a href="#">Registros</a>
             </nav>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="text-right px-3 py-1 bg-black rounded border border-white/5">
-                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
-                <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+        <div class="relative">
+            <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer">
+                <div>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
+                    <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+                </div>
+                <span class="material-icons-round text-gray-600 text-sm">expand_more</span>
+            </div>
+            
+            <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
+                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
+                <div class="acc-item" @click="switchAcc('REAL', '0.00', 'CR7691749')">
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white">CR7691749</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
+                    </div>
+                    <span class="text-xs font-bold text-white">$ 0.00</span>
+                </div>
+                <div class="acc-item" @click="switchAcc('DEMO', '9,990.00', 'VRTC11421273')">
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white">VRTC11421273</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
+                    </div>
+                    <span class="text-xs font-bold text-[#00ffa3]">$ 9,990.00</span>
+                </div>
+                <div class="p-2 border-t border-white/5 bg-black/40">
+                    <button class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2">
+                        <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -208,7 +253,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2">
-                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-green-500/10">
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
                         <div class="text-left">
                             <span class="block text-xl font-black italic">Rise</span>
                             <span class="block text-[10px] font-bold opacity-60">85.00%</span>
@@ -216,7 +261,7 @@
                         <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
                     </button>
 
-                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg shadow-red-500/10">
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
                         <div class="text-left">
                             <span class="block text-xl font-black italic">Fall</span>
                             <span class="block text-[10px] font-bold opacity-60">84.00%</span>
@@ -235,6 +280,7 @@
     <script>
         function tradingCore() {
             return {
+                showAccountMenu: false,
                 agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
@@ -262,10 +308,13 @@
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
-                        if (data.msg_type === 'buy' && !data.error) {
-                            this.status = '¡Operación Exitosa!';
-                        }
                     };
+                },
+                switchAcc(type, val, id) {
+                    this.accountType = type;
+                    this.balance = val;
+                    this.showAccountMenu = false;
+                    this.status = "Cambiado a " + id;
                 },
                 executeTrade(type) {
                     if (!this.socket) return;
