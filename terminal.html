@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS ELITE - TERMINAL PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS ELITE TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -10,44 +11,120 @@
     <style>
         body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
         .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
-        .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; width: 100%; color: white; outline: none; }
+        .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 600; width: 100%; color: white; outline: none; }
         .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
+        .sub-text { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.2; }
+        .infinity-label { font-size: 10px; color: #4b5563; font-weight: 600; margin-top: 2px; }
         
         /* Controles +/- */
-        .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; }
-        .btn-math { padding: 10px 15px; color: #7c3aed; transition: background 0.2s; }
+        .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        /* Toggle Agendar */
-        .toggle-bg { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; }
-        .toggle-dot { width: 12px; height: 12px; background: #9ca3af; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: all 0.3s; }
-        .active .toggle-dot { left: 19px; background: #00ffa3; }
-        .active .toggle-bg { background: rgba(0, 255, 163, 0.2); }
-
-        /* GRÁFICO */
+        /* Gráfico */
         .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000; }
         #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; }
+
+        /* Custom Switch */
+        .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
+        .switch.active { background: rgba(0, 255, 163, 0.2); }
+        .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
+        .switch.active .dot { left: 19px; background: #00ffa3; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
     </style>
 </head>
-<body x-data="terminalCore()" x-init="init()" class="flex flex-col h-screen overflow-hidden">
+<body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen">
 
-    <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6">
-        <div class="flex items-center gap-2">
-            <span class="text-lg font-black italic tracking-tighter text-[#00ffa3]">ATS ELITE</span>
+    <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6 z-20">
+        <div class="flex items-center gap-6">
+            <span class="text-xl font-black italic tracking-tighter text-[#00ffa3]">ATS ELITE</span>
+            <nav class="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                <a href="#" class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Operar</a>
+                <a href="#">Señales GPT</a>
+                <a href="#">Registros</a>
+            </nav>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="text-right">
-                <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></div>
-                <div class="text-[#00ffa3] font-mono font-bold text-lg">$<span x-text="balance">0.00</span></div>
+        <div class="flex items-center gap-4 text-right">
+            <div>
+                <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></p>
+                <p class="text-[#00ffa3] font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
             </div>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden p-1 gap-1">
         
-        <aside class="w-[300px] panel-turbo p-5 flex flex-col gap-4 overflow-y-auto opacity-80">
-            <h3 class="text-xs font-bold text-gray-500 uppercase italic">Configuración IA</h3>
-            </aside>
+        <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
+            <div>
+                <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
+                <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="label-turbo">Mercado</label>
+                    <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
+                    <p class="sub-text">Volatilidad constante de 100% con un tique a cada 2 segundos</p>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Estrategia</label>
+                    <div class="relative">
+                        <select class="input-turbo"><option>Turbo Trade 1.1</option></select>
+                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">settings</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Modo de negociación</label>
+                    <div class="relative">
+                        <select class="input-turbo"><option>Veloz</option></select>
+                        <span class="material-icons-round absolute right-3 top-2.5 text-yellow-500 text-sm">bolt</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Cuantía inicial $</label>
+                    <input type="number" x-model="stake" class="input-turbo">
+                    <p class="infinity-label">Infinity% del saldo</p>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Lucro objetivo $</label>
+                    <input type="number" value="10" class="input-turbo">
+                    <p class="infinity-label">Infinity% del saldo</p>
+                </div>
+
+                <div>
+                    <label class="label-turbo">Límite de pérdida $</label>
+                    <div class="relative">
+                        <input type="number" value="50" class="input-turbo">
+                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">settings</span>
+                    </div>
+                    <p class="infinity-label">Infinity% del saldo</p>
+                </div>
+
+                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[#222]">
+                    <div class="flex items-center gap-3">
+                        <span class="material-icons-round text-yellow-500">warning</span>
+                        <div class="leading-tight">
+                            <p class="text-[10px] font-black uppercase text-white">Gestión de riesgo</p>
+                            <p class="text-[10px] text-green-500 font-bold">Conservador / Bajo riesgo</p>
+                            <p class="text-[9px] text-gray-500">Valor recomendado: mín. $50</p>
+                        </div>
+                    </div>
+                    <span class="material-icons-round text-gray-600">chevron_right</span>
+                </div>
+            </div>
+
+            <button class="w-full bg-[#7c3aed] py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto active:scale-95 transition-all shadow-lg shadow-purple-500/20">
+                <span class="material-icons-round">play_circle</span>
+                <span class="text-xs font-black uppercase tracking-widest">Iniciar Robot</span>
+            </button>
+        </aside>
 
         <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col">
             <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d] z-10">
@@ -62,85 +139,79 @@
             </div>
         </main>
 
-        <aside class="w-[330px] panel-turbo p-5 flex flex-col gap-4 overflow-y-auto">
+        <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div class="flex justify-between items-center">
                 <h3 class="text-sm font-bold text-white">Modo manual</h3>
-                <div class="flex items-center gap-2" @click="agendar = !agendar" :class="{ 'active': agendar }">
+                <div class="flex items-center gap-2" @click="agendar = !agendar">
                     <span class="text-[10px] font-bold text-gray-500 uppercase">Agendar</span>
-                    <div class="toggle-bg"><div class="toggle-dot"></div></div>
+                    <div class="switch" :class="agendar ? 'active' : ''"><div class="dot"></div></div>
                 </div>
             </div>
 
-            <div class="text-[#00ffa3] font-bold text-sm">$0 (0%)</div>
+            <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
 
             <div class="space-y-4">
                 <div>
                     <label class="label-turbo">Mercado</label>
-                    <select class="input-turbo font-bold">
-                        <option>Volatility 100 Index</option>
-                    </select>
+                    <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
                 </div>
 
                 <div>
                     <label class="label-turbo">Tipo de Negociación</label>
                     <div class="relative">
-                        <select class="input-turbo pr-10">
-                            <option>Rise/Fall</option>
-                        </select>
-                        <span class="material-icons-round absolute right-3 top-3 text-gray-500 text-sm">chevron_left</span>
+                        <select class="input-turbo pr-10"><option>Rise/Fall</option></select>
+                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">chevron_left</span>
                     </div>
                 </div>
 
                 <div>
                     <div class="flex items-center gap-1 mb-1">
                         <label class="label-turbo m-0">Duración</label>
-                        <span class="material-icons-round text-[10px] text-blue-400">info</span>
+                        <span class="material-icons-round text-[12px] text-blue-400">info</span>
                     </div>
                     <div class="flex gap-2">
                         <div class="control-group flex-1">
                             <button @click="ticks > 1 && ticks--" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                            <span x-text="ticks" class="font-bold"></span>
+                            <span x-text="ticks" class="font-bold text-sm"></span>
                             <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                         </div>
-                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-3 text-[10px] font-bold text-white"><option>Ticks</option></select>
+                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-2 text-[10px] font-bold uppercase"><option>Ticks</option></select>
                     </div>
                 </div>
 
                 <div>
                     <label class="label-turbo">Cuantía inicial</label>
                     <div class="control-group">
-                        <button @click="stake > 1 && (stake--) " class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold outline-none w-20">
-                        <button @click="stake++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
+                        <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
+                        <button @click="stake = (parseFloat(stake) + 1).toFixed(2)" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                     </div>
                 </div>
 
                 <div>
                     <label class="label-turbo">Multiplicador de entrada</label>
-                    <div class="flex gap-2">
-                        <div class="control-group flex-1">
-                            <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                            <span class="font-bold">Auto</span>
-                            <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                        </div>
+                    <div class="control-group">
+                        <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                        <span class="font-bold text-sm">Auto</span>
+                        <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-3 mt-4">
-                    <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all">
+                <div class="flex flex-col gap-3 pt-2">
+                    <button @click="trade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all shadow-lg shadow-green-500/10">
                         <div class="text-left">
-                            <span class="block text-xl font-black italic italic">Rise</span>
-                            <span class="block text-[10px] font-bold opacity-70">85.00%</span>
+                            <span class="block text-xl font-black italic">Rise</span>
+                            <span class="block text-[10px] font-bold opacity-60">85.00%</span>
                         </div>
-                        <span class="text-base font-black" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
+                        <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
                     </button>
 
-                    <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all">
+                    <button @click="trade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 transition-all shadow-lg shadow-red-500/10">
                         <div class="text-left">
                             <span class="block text-xl font-black italic">Fall</span>
-                            <span class="block text-[10px] font-bold opacity-70">84.00%</span>
+                            <span class="block text-[10px] font-bold opacity-60">84.00%</span>
                         </div>
-                        <span class="text-base font-black" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
+                        <span class="text-base font-black italic" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
                     </button>
                 </div>
             </div>
@@ -148,12 +219,12 @@
     </div>
 
     <script>
-        function terminalCore() {
+        function tradingCore() {
             return {
                 agendar: false,
                 balance: '0.00',
                 accountType: 'DEMO',
-                stake: 1,
+                stake: 1.00,
                 ticks: 1,
                 socket: null,
                 init() {
@@ -175,7 +246,9 @@
                         }
                     };
                 },
-                trade(type) { console.log(`Manual ${type} enviado`); }
+                trade(type) {
+                    console.log(`📡 Operación ${type} ejecutada con $${this.stake} a ${this.ticks} ticks.`);
+                }
             }
         }
     </script>
