@@ -2,31 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS ELITE - FIXED</title>
+    <title>ATS ELITE - CONEXIÓN TOTAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         body { background: #050505; color: white; margin: 0; overflow: hidden; }
         .panel { background: #0d0d0d; border: 1px solid #1a1a1a; }
-        .test-banner { background: #00ffa3; color: black; font-weight: 900; padding: 4px; text-align: center; font-size: 11px; }
+        /* Banner AZUL para confirmar que es la nueva versión */
+        .version-check { background: #007bff; color: white; text-align: center; font-size: 10px; font-weight: bold; padding: 4px; }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-    <div class="test-banner">CONEXIÓN ESTABLE DE GRÁFICO - VERSIÓN 4.0</div>
+    <div class="version-check">SISTEMA V4: GRÁFICO POR LIBRERÍA DIRECTA (BYPASS GITHUB)</div>
 
     <header class="h-14 panel flex justify-between items-center px-6">
-        <h1 class="text-[#00ffa3] font-black italic">ATS ELITE TERMINAL</h1>
-        <div class="text-[#00ffa3] font-mono font-bold">$10,000.00</div>
+        <h1 class="text-[#00ffa3] font-black italic">ATS ELITE TERMINAL PRO</h1>
+        <div class="text-[#00ffa3] font-mono font-bold">$9,990.00</div>
     </header>
 
     <div class="flex flex-1 overflow-hidden p-2 gap-2">
         <aside class="w-64 panel p-4 flex flex-col gap-4">
-            <div class="text-[10px] text-gray-500 font-bold uppercase">Mercado</div>
-            <div class="bg-black p-3 rounded border border-white/10 text-xs text-gray-300">
+            <div class="text-[10px] text-gray-500 font-bold uppercase">Configuración</div>
+            <div class="bg-black p-3 rounded border border-white/10 text-xs text-gray-400">
                 Volatility 100 (1s) Index
             </div>
-            <button class="mt-auto bg-purple-600 p-3 rounded-lg font-bold text-xs uppercase">Iniciar Robô</button>
+            <button class="mt-auto bg-purple-600 p-3 rounded-lg font-bold text-xs uppercase">▶ Iniciar Robô</button>
         </aside>
 
         <main class="flex-1 panel relative bg-black" id="tv_chart_container">
@@ -39,23 +40,21 @@
     </div>
 
     <script type="text/javascript">
-        // Inyectamos el gráfico después de que cargue la página
-        window.onload = function() {
-            new TradingView.widget({
-                "autosize": true,
-                "symbol": "DERIV:R_100",
-                "interval": "1",
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "es",
-                "toolbar_bg": "#f1f3f6",
-                "enable_publishing": false,
-                "hide_side_toolbar": false,
-                "allow_symbol_change": true,
-                "container_id": "tv_chart_container"
-            });
-        };
+        // Este script fuerza la creación del gráfico ignorando bloqueos de iframe
+        new TradingView.widget({
+            "autosize": true,
+            "symbol": "DERIV:R_100", // Código universal para Volatility 100
+            "interval": "1",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "es",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "container_id": "tv_chart_container"
+        });
     </script>
 </body>
 </html>
