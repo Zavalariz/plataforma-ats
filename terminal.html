@@ -1,128 +1,131 @@
 <!DOCTYPE html>
-<html lang="es" ng-app="app">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ATS Elite | Terminal Institucional</title>
+    <title>ATS Elite | Terminal Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #050707; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
-        .panel-dark { background: #0a0f0e; border: 1px solid #14211e; }
-        .accent-neon { color: #00ffa3; text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
-        .btn-buy { background: #00ffa3; color: #000; }
-        .btn-sell { background: #ff3355; color: #fff; }
-        /* Ajuste para que el gráfico ocupe el centro perfectamente */
-        .chart-container { height: calc(100vh - 120px); width: 100%; border: none; }
-        input[type="number"] { background: #050707; border: 1px solid #14211e; color: white; padding: 4px 8px; border-radius: 4px; }
+        body { background: #060808; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+        .panel-bg { background: #0a0f0e; border: 1px solid #14211e; }
+        .input-box { background: #111817; border: 1px solid #1c2b28; border-radius: 6px; }
+        .btn-neon { background: #00ffa3; color: #000; font-weight: 800; font-style: italic; transition: 0.3s; }
+        .btn-neon:hover { box-shadow: 0 0 20px rgba(0, 255, 163, 0.4); transform: scale(1.02); }
+        .btn-danger { background: #ff3355; color: #fff; font-weight: 800; font-style: italic; transition: 0.3s; }
+        .btn-danger:hover { box-shadow: 0 0 20px rgba(255, 51, 85, 0.4); transform: scale(1.02); }
+        iframe { filter: invert(1) hue-rotate(180deg) contrast(0.9); } /* Ajuste de color para el gráfico */
     </style>
 </head>
-<body x-data="terminalLogic()" class="flex flex-col">
+<body x-data="terminalLogic()" class="flex flex-col h-screen">
 
-    <header class="h-14 panel-dark flex justify-between items-center px-6 border-b border-white/5">
-        <div class="flex items-center gap-6">
+    <header class="h-14 panel-bg flex justify-between items-center px-6 border-b border-white/5">
+        <div class="flex items-center gap-8">
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-brand-accent rounded bg-[#00ffa3] text-black font-black flex items-center justify-center text-[10px]">ATS</div>
-                <span class="font-bold text-xs tracking-tighter uppercase italic">Turbo <span class="text-[#00ffa3]">Elite</span></span>
+                <div class="w-6 h-6 bg-[#00ffa3] rounded flex items-center justify-center text-black font-black text-[10px]">ATS</div>
+                <span class="text-sm font-black italic tracking-tighter uppercase">ATS <span class="text-[#00ffa3]">Elite</span></span>
             </div>
-            <nav class="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
-                <button class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Operar</button>
-                <button class="text-gray-500 hover:text-white transition">Señales GPT</button>
-                <button class="text-gray-500 hover:text-white transition">Registros</button>
+            <nav class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] pb-1">Operar</button>
+                <button class="hover:text-white transition">Señales GPT</button>
+                <button class="hover:text-white transition">Registros</button>
             </nav>
         </div>
-
         <div class="flex items-center gap-4">
             <div class="text-right">
-                <div class="text-[8px] text-gray-500 font-bold uppercase">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></div>
-                <div class="text-[#00ffa3] font-mono font-bold text-sm italic">$<span x-text="formatBalance(balance)">0.00</span></div>
+                <div class="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Balance <span x-text="accountType" class="text-[#00ffa3]"></span></div>
+                <div class="text-[#00ffa3] font-mono font-bold text-sm italic">$<span x-text="balance">0.00</span></div>
             </div>
-            <button @click="exit()" class="bg-white/5 hover:bg-white/10 px-4 py-2 rounded text-[9px] font-bold uppercase border border-white/10">Salir</button>
+            <button @click="goBack()" class="bg-white/5 border border-white/10 px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase hover:bg-white/10">Volver</button>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
         
-        <aside class="w-72 panel-dark p-4 flex flex-col gap-4 overflow-y-auto">
+        <aside class="w-72 panel-bg p-5 flex flex-col gap-6 border-r border-white/5">
             <div>
-                <h3 class="text-[10px] font-black text-gray-500 uppercase mb-3">Configuración IA</h3>
-                <div class="bg-black/40 p-3 rounded-lg border border-white/5">
-                    <label class="text-[9px] text-gray-400 block mb-1 uppercase">Mercado</label>
-                    <select class="w-full bg-[#050707] text-xs font-bold p-2 rounded border border-white/10 outline-none">
-                        <option>Volatility 100 Index</option>
-                        <option>Volatility 75 Index</option>
-                    </select>
+                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Configurações da IA</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[9px] text-gray-400 block mb-1 uppercase font-bold tracking-tighter">Mercado</label>
+                        <select class="w-full input-box p-2.5 text-xs font-bold outline-none text-white">
+                            <option>Volatility 100 Index</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-400 block mb-1 uppercase font-bold tracking-tighter">Estratégia</label>
+                        <select class="w-full input-box p-2.5 text-xs font-bold outline-none text-white">
+                            <option>Turbo Trade 1.1</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Quantia</label>
+                            <input type="text" x-model="stake" class="w-full input-box p-2 text-center text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Meta</label>
+                            <input type="text" value="$20" class="w-full input-box p-2 text-center text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[8px] text-gray-500 block mb-1 uppercase font-bold">Perda</label>
+                            <input type="text" value="$1k" class="w-full input-box p-2 text-center text-xs font-bold">
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="bg-black/40 p-3 rounded-lg border border-white/5">
-                <label class="text-[9px] text-gray-400 block mb-1 uppercase">Estrategia</label>
-                <select class="w-full bg-[#050707] text-xs font-bold p-2 rounded border border-white/10 outline-none">
-                    <option>Turbo Trade 1.1 (Recomendado)</option>
-                    <option>High Frequency Scalper</option>
-                </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-black/40 p-2 rounded-lg border border-white/5">
-                    <label class="text-[8px] text-gray-500 block uppercase font-bold">Meta</label>
-                    <input type="number" x-model="profitTarget" class="w-full text-xs font-bold">
-                </div>
-                <div class="bg-black/40 p-2 rounded-lg border border-white/5">
-                    <label class="text-[8px] text-gray-500 block uppercase font-bold">Pérdida</label>
-                    <input type="number" x-model="stopLoss" class="w-full text-xs font-bold">
-                </div>
-            </div>
-
             <div class="mt-auto">
-                <button class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl font-black italic text-[10px] uppercase transition shadow-lg shadow-indigo-500/20">
-                    Iniciar Robô
+                <button class="w-full bg-[#7c3aed] text-white py-4 rounded-xl font-black italic text-[11px] uppercase shadow-lg shadow-purple-500/20 hover:brightness-110">
+                    ▶ Iniciar Robô
                 </button>
             </div>
         </aside>
 
-        <main class="flex-1 relative bg-black">
-            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0a0f0e]/50">
-                <div class="flex gap-4 text-[9px] font-black uppercase italic">
-                    <span class="text-[#00ffa3] border-b border-[#00ffa3]">Gráfico</span>
-                    <span class="text-gray-500">Dígitos</span>
-                    <span class="text-gray-500">Negociaciones</span>
+        <main class="flex-1 flex flex-col bg-black">
+            <div class="h-10 border-b border-white/5 flex items-center px-6 gap-6 bg-[#0a0f0e]">
+                <div class="flex gap-6 text-[9px] font-black uppercase italic tracking-widest">
+                    <button class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Gráfico</button>
+                    <button class="text-gray-500 hover:text-white">Dígitos</button>
+                    <button class="text-gray-500 hover:text-white">Negociações</button>
+                    <button class="text-gray-500 hover:text-white">Registros</button>
                 </div>
             </div>
-            <iframe src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark" class="chart-container"></iframe>
+            <div class="flex-1 relative">
+                <iframe src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark" class="w-full h-full border-none"></iframe>
+            </div>
         </main>
 
-        <aside class="w-72 panel-dark p-4 flex flex-col gap-6">
+        <aside class="w-72 panel-bg p-5 flex flex-col gap-6 border-l border-white/5">
             <div class="flex justify-between items-center">
-                <h3 class="text-[10px] font-black text-gray-500 uppercase">Modo Manual</h3>
-                <div class="w-8 h-4 bg-white/10 rounded-full relative"><div class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5"></div></div>
+                <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Modo Manual</h3>
+                <div class="w-8 h-4 bg-white/10 rounded-full relative"><div class="w-3 h-3 bg-white rounded-full absolute top-0.5 right-0.5"></div></div>
             </div>
 
             <div class="space-y-4">
-                <div class="bg-black/40 p-4 rounded-xl border border-white/5">
-                    <label class="text-[9px] text-gray-400 block mb-2 uppercase font-bold text-center">Inversión (USD)</label>
-                    <div class="flex items-center justify-between gap-4">
-                        <button class="text-xl font-bold text-gray-600">-</button>
-                        <input type="number" x-model="stake" class="w-20 text-center text-xl font-black bg-transparent">
-                        <button class="text-xl font-bold text-gray-600">+</button>
+                <div class="text-center">
+                    <label class="text-[9px] text-gray-500 block mb-2 uppercase font-bold">Duração (Ticks)</label>
+                    <div class="flex items-center justify-between input-box p-1">
+                        <button class="w-8 h-8 flex items-center justify-center font-bold">-</button>
+                        <span class="text-xs font-black">1</span>
+                        <button class="w-8 h-8 flex items-center justify-center font-bold">+</button>
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <button class="w-full btn-buy py-5 rounded-xl flex flex-col items-center group transition active:scale-95">
-                        <span class="text-[12px] font-black italic uppercase">Rise</span>
-                        <span class="text-[9px] font-bold opacity-70">Payout: 95%</span>
+                <div class="flex flex-col gap-3">
+                    <button class="w-full btn-neon py-6 rounded-xl flex flex-col items-center group">
+                        <span class="text-xs uppercase italic">↗ Rise</span>
+                        <span class="text-[9px] opacity-70">Payout: 95%</span>
                     </button>
-                    <button class="w-full btn-sell py-5 rounded-xl flex flex-col items-center group transition active:scale-95">
-                        <span class="text-[12px] font-black italic uppercase">Fall</span>
-                        <span class="text-[9px] font-bold opacity-70">Payout: 95%</span>
+                    <button class="w-full btn-danger py-6 rounded-xl flex flex-col items-center group">
+                        <span class="text-xs uppercase italic">↘ Fall</span>
+                        <span class="text-[9px] opacity-70">Payout: 95%</span>
                     </button>
                 </div>
             </div>
-            
-            <div class="mt-auto bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl text-center">
-                <p class="text-[9px] font-bold text-emerald-500 uppercase mb-1">Gerenciamiento de Risco</p>
-                <p class="text-xs font-black italic">🛡️ Conservador</p>
+
+            <div class="mt-auto bg-[#00ffa3]/5 border border-[#00ffa3]/20 p-4 rounded-xl flex items-center justify-center gap-3">
+                <div class="w-2 h-2 bg-[#00ffa3] rounded-full animate-pulse"></div>
+                <span class="text-[10px] font-black italic text-[#00ffa3] uppercase">🛡️ Conservador</span>
             </div>
         </aside>
     </div>
@@ -130,21 +133,16 @@
     <script>
         function terminalLogic() {
             return {
-                balance: 0,
-                accountType: 'real',
-                stake: 1,
-                profitTarget: 20,
-                stopLoss: 1000,
+                balance: '0.00',
+                accountType: 'REAL',
+                stake: '$1',
                 socket: null,
 
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1');
+                    // Captura el token activo para mantener la sesión de Sandra Elizabeth
+                    const token = params.get('token1'); 
                     if (token) this.connect(token);
-                },
-
-                formatBalance(val) {
-                    return parseFloat(val).toLocaleString('en-US', { minimumFractionDigits: 2 });
                 },
 
                 connect(token) {
@@ -153,14 +151,19 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         if (data.msg_type === 'authorize') {
-                            this.accountType = data.authorize.is_virtual ? 'demo' : 'real';
+                            this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-                        if (data.msg_type === 'balance') this.balance = data.balance.balance;
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                        }
                     };
                 },
 
-                exit() { window.location.href = 'dashboard.html' + window.location.search; }
+                goBack() {
+                    // Mantiene todos los tokens al volver al Dashboard para que no se pierda la sesión
+                    window.location.href = 'dashboard.html' + window.location.search;
+                }
             }
         }
     </script>
