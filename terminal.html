@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELICH - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -284,9 +284,10 @@
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
                 stake: 5.00,
-                ticks: 1,
+                ticks: 5,
                 status: 'Esperando conexión',
                 socket: null,
+                lastTickPrice: null,
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
@@ -296,7 +297,9 @@
     
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": token }));
+                    };
                     
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
@@ -304,74 +307,79 @@
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                            // Suscripción constante a los ticks para seguimiento real
+                            this.socket.send(JSON.stringify({ "ticks": "R_100", "subscribe": 1 }));
+                        }
+    
+                        if (data.msg_type === 'tick') {
+                            this.lastTickPrice = data.tick.quote;
+                            this.updateLinePosition(); // Actualiza la posición de la línea en cada movimiento
                         }
     
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
     
-                        // DETECTAR LA COMPRA EXITOSA
                         if (data.msg_type === 'buy' && !data.error) {
                             this.status = 'Orden ejecutada';
-                            // Usamos el precio de compra real que devuelve la API
-                            const precioEntrada = data.buy.buy_price;
-                            this.drawPriceTag(data.buy.contract_type, precioEntrada);
-                        }
-    
-                        if (data.error) {
-                            this.status = 'Error: ' + data.error.message;
+                            this.createDynamicTag(data.buy.contract_type, data.buy.buy_price);
                         }
                     };
                 },
     
-                drawPriceTag(type, price) {
+                createDynamicTag(type, entryPrice) {
+                    // Borrar etiquetas anteriores para no saturar
+                    const oldTag = document.getElementById('trade-tag');
+                    if (oldTag) oldTag.remove();
+    
                     const container = document.querySelector('.chart-container');
                     const tag = document.createElement('div');
+                    tag.id = 'trade-tag';
                     const color = type === 'CALL' ? '#00ffa3' : '#ff3355';
                     
-                    // Creamos una etiqueta que se pega al lado derecho (escala de precios)
+                    tag.setAttribute('data-entry', entryPrice);
                     tag.style.cssText = `
                         position: absolute;
-                        right: 0;
-                        top: 50%; /* El precio actual siempre está centrado en estos gráficos */
+                        right: 60px;
                         background: ${color};
                         color: black;
-                        padding: 4px 10px;
+                        padding: 4px 12px;
                         font-size: 12px;
                         font-weight: 900;
-                        border-radius: 4px 0 0 4px;
+                        border-radius: 4px;
                         z-index: 1000;
-                        box-shadow: -2px 0 10px ${color};
+                        box-shadow: 0 0 15px ${color};
                         display: flex;
                         align-items: center;
                         gap: 5px;
+                        transition: top 0.2s linear;
+                        top: 50%;
                     `;
                     
                     tag.innerHTML = `
-                        <span class="material-icons-round" style="font-size:14px">${type === 'CALL' ? 'north' : 'south'}</span>
-                        <span>${price.toFixed(2)}</span>
+                        <span style="font-size:16px">${type === 'CALL' ? '▲' : '▼'}</span>
+                        <span>${entryPrice.toFixed(2)}</span>
                     `;
                     
                     container.appendChild(tag);
-    
-                    // La etiqueta desaparece cuando termina la operación (aprox 2 seg por tick)
-                    setTimeout(() => {
-                        tag.style.opacity = '0';
-                        tag.style.transition = 'opacity 0.5s';
-                        setTimeout(() => tag.remove(), 500);
-                    }, this.ticks * 2200);
+                    setTimeout(() => tag.remove(), this.ticks * 2000);
                 },
     
-                rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                        this.showAccountMenu = false;
-                    }
+                updateLinePosition() {
+                    const tag = document.getElementById('trade-tag');
+                    if (!tag || !this.lastTickPrice) return;
+    
+                    const entryPrice = parseFloat(tag.getAttribute('data-entry'));
+                    const diff = (this.lastTickPrice - entryPrice);
+                    
+                    // Lógica de movimiento: si el precio sube, la etiqueta baja visualmente para compensar
+                    // el movimiento del gráfico y mantenerse nivelada con la vela.
+                    const movementFactor = 50 - (diff * 2); // Ajuste fino de sensibilidad
+                    tag.style.top = `${Math.max(10, Math.min(90, movementFactor))}%`;
                 },
     
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = 'Enviando...';
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
