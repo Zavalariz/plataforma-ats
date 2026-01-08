@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELISQ - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -287,7 +287,6 @@
                 ticks: 5,
                 status: 'Esperando conexión',
                 socket: null,
-                lastTickPrice: null,
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
@@ -297,9 +296,7 @@
     
                 connect(token) {
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
-                    };
+                    this.socket.onopen = () => this.socket.send(JSON.stringify({ "authorize": token }));
                     
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
@@ -307,75 +304,82 @@
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                            // Suscripción constante a los ticks para seguimiento real
-                            this.socket.send(JSON.stringify({ "ticks": "R_100", "subscribe": 1 }));
-                        }
-    
-                        if (data.msg_type === 'tick') {
-                            this.lastTickPrice = data.tick.quote;
-                            this.updateLinePosition(); // Actualiza la posición de la línea en cada movimiento
                         }
     
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
     
+                        // DETECTAR LA COMPRA
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada';
-                            this.createDynamicTag(data.buy.contract_type, data.buy.buy_price);
+                            this.status = 'Orden activa';
+                            // Llamamos a la nueva función visual
+                            this.showVisualOrder(data.buy.contract_type, data.buy.buy_price);
                         }
                     };
                 },
     
-                createDynamicTag(type, entryPrice) {
-                    // Borrar etiquetas anteriores para no saturar
-                    const oldTag = document.getElementById('trade-tag');
-                    if (oldTag) oldTag.remove();
+                showVisualOrder(type, price) {
+                    // Eliminamos cualquier indicador anterior
+                    const existing = document.getElementById('order-indicator');
+                    if (existing) existing.remove();
     
                     const container = document.querySelector('.chart-container');
-                    const tag = document.createElement('div');
-                    tag.id = 'trade-tag';
-                    const color = type === 'CALL' ? '#00ffa3' : '#ff3355';
+                    const indicator = document.createElement('div');
+                    indicator.id = 'order-indicator';
                     
-                    tag.setAttribute('data-entry', entryPrice);
-                    tag.style.cssText = `
+                    // Colores claros: Verde para Rise (compra), Rojo para Fall (venta)
+                    const isRise = type === 'CALL';
+                    const color = isRise ? '#00ffa3' : '#ff3355';
+                    const label = isRise ? 'COMPRA (RISE)' : 'VENTA (FALL)';
+                    
+                    indicator.style.cssText = `
                         position: absolute;
-                        right: 60px;
+                        right: 0;
+                        top: 0;
+                        bottom: 0;
+                        width: 6px;
                         background: ${color};
-                        color: black;
-                        padding: 4px 12px;
-                        font-size: 12px;
-                        font-weight: 900;
-                        border-radius: 4px;
-                        z-index: 1000;
-                        box-shadow: 0 0 15px ${color};
+                        box-shadow: -4px 0 15px ${color}66;
+                        z-index: 9999;
                         display: flex;
                         align-items: center;
-                        gap: 5px;
-                        transition: top 0.2s linear;
+                        justify-content: center;
+                    `;
+    
+                    // Etiqueta flotante que dice qué hiciste y el precio
+                    const info = document.createElement('div');
+                    info.style.cssText = `
+                        position: absolute;
+                        right: 15px;
                         top: 50%;
+                        transform: translateY(-50%);
+                        background: ${color};
+                        color: black;
+                        padding: 8px 15px;
+                        border-radius: 8px;
+                        font-weight: 900;
+                        font-size: 14px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                        text-align: right;
+                        min-width: 140px;
                     `;
                     
-                    tag.innerHTML = `
-                        <span style="font-size:16px">${type === 'CALL' ? '▲' : '▼'}</span>
-                        <span>${entryPrice.toFixed(2)}</span>
+                    info.innerHTML = `
+                        <div style="font-size: 10px; opacity: 0.8;">ORDEN EJECUTADA</div>
+                        <div style="margin: 2px 0;">${label}</div>
+                        <div style="font-family: monospace;">$ ${price.toFixed(2)}</div>
                     `;
-                    
-                    container.appendChild(tag);
-                    setTimeout(() => tag.remove(), this.ticks * 2000);
-                },
     
-                updateLinePosition() {
-                    const tag = document.getElementById('trade-tag');
-                    if (!tag || !this.lastTickPrice) return;
+                    indicator.appendChild(info);
+                    container.appendChild(indicator);
     
-                    const entryPrice = parseFloat(tag.getAttribute('data-entry'));
-                    const diff = (this.lastTickPrice - entryPrice);
-                    
-                    // Lógica de movimiento: si el precio sube, la etiqueta baja visualmente para compensar
-                    // el movimiento del gráfico y mantenerse nivelada con la vela.
-                    const movementFactor = 50 - (diff * 2); // Ajuste fino de sensibilidad
-                    tag.style.top = `${Math.max(10, Math.min(90, movementFactor))}%`;
+                    // Desaparece después de la duración de la operación
+                    setTimeout(() => {
+                        indicator.style.opacity = '0';
+                        indicator.style.transition = 'opacity 0.8s';
+                        setTimeout(() => indicator.remove(), 800);
+                    }, this.ticks * 2000);
                 },
     
                 executeTrade(type) {
