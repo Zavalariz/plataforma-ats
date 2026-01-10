@@ -3,25 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELULTIMO - TERMINAL PRO</title>
+    <title>ATS ELIYYYY - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { background: #050505; color: #f3f4f6; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+        /* Estilos Base de la Terminal */
+        body { 
+            background: #050505; 
+            color: #f3f4f6; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden; 
+            height: 100vh; 
+        }
+        
+        /* Paneles y Contenedores */
         .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
-        .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 600; width: 100%; color: white; outline: none; }
-        .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
+        .input-turbo { 
+            background: #161616; 
+            border: 1px solid #262626; 
+            border-radius: 8px; 
+            padding: 10px 12px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            width: 100%; 
+            color: white; 
+            outline: none; 
+        }
+        .input-turbo:focus { border-color: #7c3aed; }
+        
+        .label-turbo { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #9ca3af; 
+            margin-bottom: 4px; 
+            display: block; 
+            text-transform: uppercase;
+        }
+        
         .sub-text { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.2; }
         .infinity-label { font-size: 10px; color: #4b5563; font-weight: 600; margin-top: 2px; }
         
-        /* Controles +/- */
-        .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
-        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
+        /* Controles de Incremento/Decremento */
+        .control-group { 
+            background: #161616; 
+            border: 1px solid #262626; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; border: none; background: none; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
 
-        /* Gráfico Dark */
+        /* Configuración del Gráfico */
         .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
         #chart-frame { 
             width: 100%; 
@@ -31,7 +68,7 @@
             filter: invert(1) hue-rotate(180deg) brightness(0.9);
         }
 
-        /* Estilos Selector de Cuenta */
+        /* Menú de Cuentas */
         .account-dropdown {
             display: none;
             position: absolute;
@@ -45,21 +82,33 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
         .account-dropdown.show { display: block; }
-        .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
+        .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #1a1a1a; }
+        .acc-item:last-child { border-bottom: none; }
         .acc-item:hover { background: #1a1a1a; }
-        .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+        .acc-icon-circle { 
+            width: 32px; 
+            height: 32px; 
+            background: #222; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-right: 12px; 
+        }
 
-        /* Custom Switch */
+        /* Interruptores Personalizados */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
         .switch.active { background: rgba(0, 255, 163, 0.2); }
         .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
         .switch.active .dot { left: 19px; background: #00ffa3; }
 
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
         
-        .btn-buy { transition: all 0.2s; }
+        /* Animaciones de Botón */
+        .btn-buy { transition: all 0.2s; border: none; cursor: pointer; }
         .btn-buy:active { transform: scale(0.96); }
     </style>
 </head>
@@ -72,35 +121,42 @@
                 <a href="#" class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Operar</a>
                 <a href="#">Señales GPT</a>
                 <a href="#">Registros</a>
+                <a href="#">Tutoriales</a>
             </nav>
         </div>
+
         <div class="relative">
-            <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer">
+            <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer hover:border-white/20 transition-all">
                 <div>
-                    <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">
+                        Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span>
+                    </p>
                     <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
                 </div>
                 <span class="material-icons-round text-gray-600 text-sm">expand_more</span>
             </div>
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
-                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
+                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5 tracking-widest uppercase">Seleccione una conta</div>
+                
                 <div class="acc-item" @click="switchAcc('REAL')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
                     <div class="flex-1">
-                        <p class="text-xs font-bold text-white">CR7691749</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-tight">CR7691749</p>
                         <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
                     </div>
                     <span class="text-xs font-bold text-white">$ <span x-text="accountType === 'REAL' ? balance : '0.00'"></span></span>
                 </div>
+
                 <div class="acc-item" @click="switchAcc('DEMO')">
-                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-[#00ffa3]">account_circle</span></div>
                     <div class="flex-1">
-                        <p class="text-xs font-bold text-white">VRTC11421273</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-tight">VRTC11421273</p>
                         <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
                     </div>
-                    <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="accountType === 'DEMO' ? balance : '0.00'"></span></span>
+                    <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="accountType === 'DEMO' ? balance : '10,000.00'"></span></span>
                 </div>
+
                 <div class="p-2 border-t border-white/5 bg-black/40">
                     <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
                         <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
@@ -114,7 +170,7 @@
         
         <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div>
-                <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
+                <h3 class="text-sm font-bold text-white uppercase tracking-tight">Configuraciones de la IA</h3>
                 <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
             </div>
 
@@ -162,7 +218,7 @@
                     <p class="infinity-label">Infinity% del saldo</p>
                 </div>
 
-                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[#222]">
+                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[#222] transition-all">
                     <div class="flex items-center gap-3">
                         <span class="material-icons-round text-yellow-500">warning</span>
                         <div class="leading-tight">
@@ -184,9 +240,9 @@
         <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col bg-black">
             <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d] z-10">
                 <div class="flex gap-6 text-[10px] font-black uppercase italic tracking-widest h-full items-center">
-                    <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] h-full px-2">Gráfico</button>
-                    <button class="text-gray-500 h-full px-2">Dígitos</button>
-                    <button class="text-gray-500 h-full px-2">Historial</button>
+                    <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] h-full px-2">Gráfico Tiempo Real</button>
+                    <button class="text-gray-500 h-full px-2">Análisis de Dígitos</button>
+                    <button class="text-gray-500 h-full px-2">Historial de Operaciones</button>
                 </div>
             </div>
             <div class="flex-1 chart-container">
@@ -196,7 +252,7 @@
 
         <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white">Modo manual</h3>
+                <h3 class="text-sm font-bold text-white uppercase tracking-tight">Modo manual</h3>
                 <div class="flex items-center gap-2" @click="agendar = !agendar">
                     <span class="text-[10px] font-bold text-gray-500 uppercase">Agendar</span>
                     <div class="switch" :class="agendar ? 'active' : ''"><div class="dot"></div></div>
@@ -207,7 +263,7 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="label-turbo">Mercado</label>
+                    <label class="label-turbo">Mercado Seleccionado</label>
                     <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
                 </div>
 
@@ -215,13 +271,13 @@
                     <label class="label-turbo">Tipo de Negociación</label>
                     <div class="relative">
                         <select class="input-turbo pr-10"><option>Rise/Fall</option></select>
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">chevron_left</span>
+                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">unfold_more</span>
                     </div>
                 </div>
 
                 <div>
                     <div class="flex items-center gap-1 mb-1">
-                        <label class="label-turbo m-0">Duración</label>
+                        <label class="label-turbo m-0">Duración de Operación</label>
                         <span class="material-icons-round text-[12px] text-blue-400">info</span>
                     </div>
                     <div class="flex gap-2">
@@ -230,49 +286,56 @@
                             <span x-text="ticks" class="font-bold text-sm"></span>
                             <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                         </div>
-                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-2 text-[10px] font-bold uppercase"><option>Ticks</option></select>
+                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-2 text-[10px] font-bold uppercase text-gray-400">
+                            <option>Ticks</option>
+                            <option>Segundos</option>
+                        </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="label-turbo">Cuantía inicial</label>
+                    <label class="label-turbo">Inversión (Stake)</label>
                     <div class="control-group">
                         <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
+                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20 text-white">
                         <button @click="stake = (parseFloat(stake) + 1).toFixed(2)" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="label-turbo">Multiplicador de entrada</label>
+                    <label class="label-turbo">Multiplicador de Martingala</label>
                     <div class="control-group">
                         <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <span class="font-bold text-sm">Auto</span>
+                        <span class="font-bold text-sm text-gray-400">Automático</span>
                         <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2">
-                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
-                        <div class="text-left">
-                            <span class="block text-xl font-black italic">Rise</span>
-                            <span class="block text-[10px] font-bold opacity-60">85.00%</span>
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 shadow-[0_10px_20px_rgba(0,255,163,0.2)]">
+                        <div class="text-left leading-tight">
+                            <span class="block text-xl font-black italic uppercase">Rise</span>
+                            <span class="block text-[10px] font-bold opacity-60 italic">Payout: 85.00%</span>
                         </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
+                        <span class="text-base font-black italic" x-text="'+' + (stake * 0.85).toFixed(2) + ' USD'"></span>
                     </button>
 
-                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
-                        <div class="text-left">
-                            <span class="block text-xl font-black italic">Fall</span>
-                            <span class="block text-[10px] font-bold opacity-60">84.00%</span>
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 shadow-[0_10px_20px_rgba(255,51,85,0.2)]">
+                        <div class="text-left leading-tight">
+                            <span class="block text-xl font-black italic uppercase">Fall</span>
+                            <span class="block text-[10px] font-bold opacity-60 italic">Payout: 84.00%</span>
                         </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
+                        <span class="text-base font-black italic" x-text="'+' + (stake * 0.84).toFixed(2) + ' USD'"></span>
                     </button>
                 </div>
             </div>
             
-            <div class="mt-auto p-2 bg-white/5 rounded text-[9px] font-mono text-gray-500">
-                Estado: <span class="text-[#00ffa3]" x-text="status"></span>
+            <div class="mt-auto p-3 bg-white/5 rounded-lg border border-white/5">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-mono text-gray-500 uppercase">Sistema de Status</span>
+                    <span class="w-2 h-2 rounded-full bg-[#00ffa3] animate-pulse"></span>
+                </div>
+                <div class="text-[10px] font-bold text-white uppercase" x-text="status"></div>
             </div>
         </aside>
     </div>
@@ -287,77 +350,90 @@
                 accountType: 'CONECTANDO...',
                 stake: 5.00,
                 ticks: 5,
-                status: 'Esperando conexión',
+                status: 'Iniciando terminal...',
                 socket: null,
                 tokenReal: '',
                 tokenDemo: '',
-                sessionId: 0, // Identificador único de sesión para evitar que Demo pise a Real
+                
+                // BLOQUEO DE SEGURIDAD (Para que no salte a Demo)
+                currentSessionId: 0,
+                activeAccountType: '', 
 
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     this.tokenReal = params.get('token1'); 
                     this.tokenDemo = params.get('token2');
                     
-                    // Al cargar, intentamos Real primero, si no Demo
-                    const tokenInicial = this.tokenReal || this.tokenDemo;
-                    if (tokenInicial) {
-                        this.connect(tokenInicial);
+                    // Prioridad de conexión: Real si existe, si no Demo
+                    if (this.tokenReal) {
+                        this.switchAcc('REAL');
+                    } else if (this.tokenDemo) {
+                        this.switchAcc('DEMO');
                     } else {
-                        this.status = 'Error: No hay tokens en la URL';
+                        this.status = 'Error: No se detectaron tokens de acceso';
                     }
                 },
 
-                connect(token) {
-                    // Cada vez que conectamos, aumentamos el ID. 
-                    // Esto "invalida" cualquier respuesta que venga de una conexión anterior.
-                    this.sessionId++;
-                    const currentId = this.sessionId;
+                connect(token, type) {
+                    // Generar nuevo ID de sesión para ignorar mensajes de la conexión anterior
+                    this.currentSessionId++;
+                    const sessionId = this.currentSessionId;
+                    this.activeAccountType = type;
 
                     if (this.socket) {
-                        this.socket.onmessage = null; // Ensordecemos el socket anterior
+                        this.socket.onmessage = null; // Ensordecer socket anterior inmediatamente
                         this.socket.close();
                     }
 
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
-                        // Solo mandamos el authorize si el usuario no ha cambiado de opinión (clic rápido)
-                        if (currentId === this.sessionId) {
+                        if (sessionId === this.currentSessionId) {
                             this.socket.send(JSON.stringify({ "authorize": token }));
                         }
                     };
 
                     this.socket.onmessage = (msg) => {
-                        // BLOQUEO CRÍTICO: Si el mensaje no pertenece a la sesión actual, se ignora.
-                        if (currentId !== this.sessionId) return;
+                        // FILTRO DE SEGURIDAD: Si el mensaje es de una sesión vieja, se descarta
+                        if (sessionId !== this.currentSessionId) return;
 
                         const data = JSON.parse(msg.data);
                         
                         if (data.msg_type === 'authorize' && !data.error) {
-                            this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado a ' + this.accountType;
+                            this.accountType = type; // Forzamos el nombre de la cuenta elegida
+                            this.status = 'Sesión ' + type + ' Autorizada';
+                            // Pedimos el balance y nos suscribimos
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
                         if (data.msg_type === 'balance' && !data.error) {
+                            // Solo actualizamos si seguimos en la misma sesión
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2 
                             });
                         }
 
-                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-                            this.showPopupResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = 'Operación en curso...';
+                            this.socket.send(JSON.stringify({ 
+                                "proposal_open_contract": 1, 
+                                "contract_id": data.buy.contract_id, 
+                                "subscribe": 1 
+                            }));
                         }
 
-                        if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada';
-                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
+                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
+                            this.showResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
                         }
 
                         if (data.error) {
-                            this.status = 'API Error: ' + data.error.message;
+                            this.status = 'Error de API: ' + data.error.message;
                         }
+                    };
+
+                    this.socket.onerror = () => {
+                        this.status = 'Error de conexión. Reintentando...';
                     };
                 },
 
@@ -365,14 +441,14 @@
                     const targetToken = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
                     
                     if (!targetToken) {
-                        alert("El token para la cuenta " + type + " no está en la URL");
+                        this.status = 'Token ' + type + ' no disponible';
                         return;
                     }
 
                     this.showAccountMenu = false;
                     this.balance = '...';
                     this.accountType = 'CAMBIANDO...';
-                    this.connect(targetToken);
+                    this.connect(targetToken, type);
                 },
 
                 rechargeDemo() {
@@ -382,22 +458,32 @@
                     this.showAccountMenu = false;
                 },
 
-                showPopupResult(status, profit) {
+                showResult(status, profit) {
                     const isWin = status === 'won';
-                    const color = isWin ? '#00ffa3' : '#ff3355';
-                    const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
-                    this.status = msg;
-                    const div = document.createElement('div');
-                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5); font-family: sans-serif;`;
-                    div.innerHTML = msg;
-                    document.body.appendChild(div);
-                    setTimeout(() => div.remove(), 3000);
+                    this.status = isWin ? '¡WIN! (+$' + profit + ')' : 'LOSS ($' + profit + ')';
+                    
+                    // Notificación flotante
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+                        background: ${isWin ? '#00ffa3' : '#ff3355'};
+                        color: ${isWin ? '#000' : '#fff'};
+                        padding: 20px 50px; border-radius: 12px; font-weight: 800;
+                        z-index: 9999; box-shadow: 0 0 40px rgba(0,0,0,0.6);
+                        font-size: 1.5rem; text-transform: uppercase;
+                    `;
+                    notification.innerText = this.status;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
                 },
 
-                executeTrade(type) {
-                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+                executeTrade(dir) {
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                        this.status = 'Socket no listo';
+                        return;
+                    }
                     
-                    const contractType = (type === 'PUT') ? 'FALL' : 'CALL';
+                    const contract = (dir === 'PUT') ? 'FALL' : 'CALL';
 
                     this.socket.send(JSON.stringify({
                         "buy": 1,
@@ -405,7 +491,7 @@
                         "parameters": {
                             "amount": parseFloat(this.stake),
                             "basis": "stake",
-                            "contract_type": contractType,
+                            "contract_type": contract,
                             "currency": "USD",
                             "duration": parseInt(this.ticks),
                             "duration_unit": "t",
