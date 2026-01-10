@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIRR - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -281,92 +281,126 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
-                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
-                stake: 1.00,
-                ticks: 1,
-                isBotRunning: false,
+                stake: 5.00,
+                ticks: 5,
                 status: 'Esperando conexión',
                 socket: null,
+                tokenReal: '',
+                tokenDemo: '',
+                activeToken: '', // Para rastrear qué cuenta debe estar activa
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1') || params.get('token2');
-                    if (token) this.connect(token);
-                    else this.status = 'Token no detectado';
+                    this.tokenReal = params.get('token1'); 
+                    this.tokenDemo = params.get('token2');
+                    
+                    // Prioridad inicial: Real si existe, si no Demo
+                    this.activeToken = this.tokenReal || this.tokenDemo;
+                    if (this.activeToken) {
+                        this.connect(this.activeToken);
+                    } else {
+                        this.status = 'Error: No se detectaron tokens';
+                    }
                 },
     
                 connect(token) {
-                    // Conexión oficial a la API de Deriv
+                    // Bloqueamos el cambio si es el mismo token para evitar parpadeos
+                    this.activeToken = token;
+    
+                    if (this.socket) {
+                        this.socket.onmessage = null;
+                        this.socket.onopen = null;
+                        this.socket.close();
+                    }
+    
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
-                        this.socket.send(JSON.stringify({ "authorize": token }));
+                        if (this.activeToken === token) {
+                            this.socket.send(JSON.stringify({ "authorize": token }));
+                        }
                     };
     
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        // 1. Manejo de Autorización
                         if (data.msg_type === 'authorize' && !data.error) {
+                            // Solo procesamos si el token autorizado es el que queremos tener activo
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado';
-                            // Suscripción en tiempo real al balance
+                            this.status = 'Conectado a ' + this.accountType;
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        // 2. Recepción de Balance (Aquí es donde ocurre la magia de actualización)
-                        if (data.msg_type === 'balance') {
+                        if (data.msg_type === 'balance' && !data.error) {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2 
                             });
                         }
     
-                        // 3. Confirmación de Recarga Virtual
-                        if (data.msg_type === 'topup_virtual' && !data.error) {
-                            this.status = '¡Recarga exitosa en servidor!';
+                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
+                            this.showPopupResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
                         }
     
-                        // Manejo de errores de la API
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = 'Orden ejecutada';
+                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
+                        }
+    
                         if (data.error) {
-                            this.status = 'Error: ' + data.error.message;
+                            this.status = 'API Error: ' + data.error.message;
                         }
                     };
                 },
     
-                switchAcc(type, val, id) {
-                    this.accountType = type;
-                    this.balance = val;
+                switchAcc(type) {
+                    let targetToken = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
+                    
+                    if (!targetToken) {
+                        alert("Token " + type + " no disponible en la URL");
+                        return;
+                    }
+    
                     this.showAccountMenu = false;
-                    this.status = "Cambiado a " + id;
+                    this.balance = '...';
+                    this.accountType = 'CAMBIANDO...';
+                    this.connect(targetToken);
                 },
     
-                // FUNCIÓN DE RECARGA REAL CONECTADA A DERIV
                 rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.status = 'Solicitando recarga real...';
-                            // Comando oficial para resetear la cuenta demo a $10,000
-                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                            this.showAccountMenu = false;
-                        }
-                    } else {
-                        this.status = 'Cambie a cuenta demo para recargar';
+                    if (this.accountType === 'DEMO' && this.socket) {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
                     }
+                    this.showAccountMenu = false;
+                },
+    
+                showPopupResult(status, profit) {
+                    const isWin = status === 'won';
+                    const color = isWin ? '#00ffa3' : '#ff3355';
+                    const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
+                    this.status = msg;
+                    const div = document.createElement('div');
+                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5); font-family: sans-serif;`;
+                    div.innerHTML = msg;
+                    document.body.appendChild(div);
+                    setTimeout(() => div.remove(), 3000);
                 },
     
                 executeTrade(type) {
-                    if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+                    
+                    // NOTA: Para Rise/Fall en Deriv se usa CALL y FALL (no PUT)
+                    const contractType = (type === 'PUT') ? 'FALL' : type;
+    
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
                         "parameters": {
                             "amount": parseFloat(this.stake),
                             "basis": "stake",
-                            "contract_type": type,
+                            "contract_type": contractType,
                             "currency": "USD",
                             "duration": parseInt(this.ticks),
                             "duration_unit": "t",
