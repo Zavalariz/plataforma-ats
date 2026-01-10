@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIPP - TERMINAL PRO</title>
+    <title>ATS ELIAAA - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -49,7 +49,6 @@
         .acc-item:hover { background: #1a1a1a; }
         .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
 
-        /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
         .switch.active { background: rgba(0, 255, 163, 0.2); }
         .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
@@ -85,22 +84,25 @@
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
                 <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
-                <div class="acc-item" @click="switchAcc('REAL', '0.00', 'CR7691749')">
+                
+                <div class="acc-item" @click="switchAcc('REAL')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">CR7691749</p>
                         <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
                     </div>
-                    <span class="text-xs font-bold text-white">$ 0.00</span>
+                    <span class="text-xs font-bold text-white">$ <span x-text="accountType === 'REAL' ? balance : '0.00'"></span></span>
                 </div>
-                <div class="acc-item" @click="switchAcc('DEMO', balance, 'VRTC11421273')">
+
+                <div class="acc-item" @click="switchAcc('DEMO')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">VRTC11421273</p>
                         <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
                     </div>
-                    <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="balance"></span></span>
+                    <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="accountType === 'DEMO' ? balance : '0.00'"></span></span>
                 </div>
+
                 <div class="p-2 border-t border-white/5 bg-black/40">
                     <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
                         <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
@@ -243,15 +245,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="label-turbo">Multiplicador de entrada</label>
-                    <div class="control-group">
-                        <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <span class="font-bold text-sm">Auto</span>
-                        <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                    </div>
-                </div>
-
                 <div class="flex flex-col gap-3 pt-2">
                     <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
                         <div class="text-left">
@@ -281,6 +274,8 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
+                isBotRunning: false,
+                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
                 stake: 5.00,
@@ -289,118 +284,106 @@
                 socket: null,
                 tokenReal: '',
                 tokenDemo: '',
-                activeToken: '', // Para rastrear qué cuenta debe estar activa
-    
+                sessionId: 0,
+
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     this.tokenReal = params.get('token1'); 
                     this.tokenDemo = params.get('token2');
                     
-                    // Prioridad inicial: Real si existe, si no Demo
-                    this.activeToken = this.tokenReal || this.tokenDemo;
-                    if (this.activeToken) {
-                        this.connect(this.activeToken);
-                    } else {
-                        this.status = 'Error: No se detectaron tokens';
-                    }
+                    const inicial = this.tokenReal || this.tokenDemo;
+                    if (inicial) this.connect(inicial);
+                    else this.status = 'Error: No hay tokens';
                 },
-    
+
                 connect(token) {
-                    // Bloqueamos el cambio si es el mismo token para evitar parpadeos
-                    this.activeToken = token;
-    
+                    this.sessionId++;
+                    const currentId = this.sessionId;
+
                     if (this.socket) {
                         this.socket.onmessage = null;
-                        this.socket.onopen = null;
                         this.socket.close();
                     }
-    
+
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
-                        if (this.activeToken === token) {
+                        if (currentId === this.sessionId) {
                             this.socket.send(JSON.stringify({ "authorize": token }));
                         }
                     };
-    
+
                     this.socket.onmessage = (msg) => {
+                        if (currentId !== this.sessionId) return;
                         const data = JSON.parse(msg.data);
                         
                         if (data.msg_type === 'authorize' && !data.error) {
-                            // Solo procesamos si el token autorizado es el que queremos tener activo
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado a ' + this.accountType;
+                            this.status = 'Cuenta ' + this.accountType + ' Activa';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-    
+
                         if (data.msg_type === 'balance' && !data.error) {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2 
                             });
                         }
-    
+
                         if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
                             this.showPopupResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
                         }
-    
+
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada';
+                            this.status = 'Orden en curso...';
                             this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                         }
-    
-                        if (data.error) {
-                            this.status = 'API Error: ' + data.error.message;
-                        }
+
+                        if (data.error) this.status = 'Error: ' + data.error.message;
                     };
                 },
-    
+
                 switchAcc(type) {
-                    let targetToken = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
-                    
-                    if (!targetToken) {
-                        alert("Token " + type + " no disponible en la URL");
-                        return;
+                    const target = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
+                    if (target) {
+                        this.showAccountMenu = false;
+                        this.balance = '...';
+                        this.accountType = 'CAMBIANDO...';
+                        this.connect(target);
+                    } else {
+                        alert("Token no encontrado para " + type);
                     }
-    
-                    this.showAccountMenu = false;
-                    this.balance = '...';
-                    this.accountType = 'CAMBIANDO...';
-                    this.connect(targetToken);
                 },
-    
+
                 rechargeDemo() {
                     if (this.accountType === 'DEMO' && this.socket) {
                         this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
                     }
                     this.showAccountMenu = false;
                 },
-    
+
                 showPopupResult(status, profit) {
                     const isWin = status === 'won';
                     const color = isWin ? '#00ffa3' : '#ff3355';
                     const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
                     this.status = msg;
                     const div = document.createElement('div');
-                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5); font-family: sans-serif;`;
+                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5);`;
                     div.innerHTML = msg;
                     document.body.appendChild(div);
                     setTimeout(() => div.remove(), 3000);
                 },
-    
+
                 executeTrade(type) {
                     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
-                    
-                    // NOTA: Para Rise/Fall en Deriv se usa CALL y FALL (no PUT)
-                    const contractType = (type === 'PUT') ? 'FALL' : type;
-    
+                    const cType = (type === 'PUT') ? 'FALL' : 'CALL';
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
                         "parameters": {
                             "amount": parseFloat(this.stake),
                             "basis": "stake",
-                            "contract_type": contractType,
+                            "contract_type": cType,
                             "currency": "USD",
                             "duration": parseInt(this.ticks),
                             "duration_unit": "t",
