@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELITT - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -281,24 +281,25 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
-                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
-                stake: 1.00,
-                ticks: 1,
-                isBotRunning: false,
+                stake: 5.00,
+                ticks: 5,
                 status: 'Esperando conexión',
                 socket: null,
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     const token = params.get('token1') || params.get('token2');
-                    if (token) this.connect(token);
-                    else this.status = 'Token no detectado';
+                    if (token) {
+                        this.connect(token);
+                    } else {
+                        this.status = 'Error: Token no encontrado';
+                    }
                 },
     
                 connect(token) {
-                    // Conexión oficial a la API de Deriv
+                    // Conexión limpia a la API
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -308,15 +309,15 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        // 1. Manejo de Autorización
+                        // 1. AUTORIZACIÓN Y TIPO DE CUENTA
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado';
-                            // Suscripción en tiempo real al balance
+                            this.status = 'Conectado con éxito';
+                            // Suscribirse al balance inmediatamente
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        // 2. Recepción de Balance (Aquí es donde ocurre la magia de actualización)
+                        // 2. ACTUALIZACIÓN DE BALANCE REAL
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
@@ -324,42 +325,60 @@
                             });
                         }
     
-                        // 3. Confirmación de Recarga Virtual
-                        if (data.msg_type === 'topup_virtual' && !data.error) {
-                            this.status = '¡Recarga exitosa en servidor!';
+                        // 3. RESULTADOS DE OPERACIONES
+                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
+                            const contract = data.proposal_open_contract;
+                            this.showPopupResult(contract.status, contract.profit);
                         }
     
-                        // Manejo de errores de la API
+                        // 4. CONFIRMACIÓN DE RECARGA O COMPRA
+                        if (data.msg_type === 'topup_virtual' && !data.error) {
+                            this.status = 'Cuenta demo restablecida';
+                        }
+    
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = 'Operación abierta...';
+                            // Suscribirse al resultado
+                            this.socket.send(JSON.stringify({ 
+                                "proposal_open_contract": 1, 
+                                "contract_id": data.buy.contract_id, 
+                                "subscribe": 1 
+                            }));
+                        }
+    
                         if (data.error) {
                             this.status = 'Error: ' + data.error.message;
                         }
                     };
                 },
     
-                switchAcc(type, val, id) {
-                    this.accountType = type;
-                    this.balance = val;
-                    this.showAccountMenu = false;
-                    this.status = "Cambiado a " + id;
-                },
-    
-                // FUNCIÓN DE RECARGA REAL CONECTADA A DERIV
+                // FUNCIÓN DE RECARGA QUE SÍ FUNCIONA
                 rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.status = 'Solicitando recarga real...';
-                            // Comando oficial para resetear la cuenta demo a $10,000
+                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        if (this.accountType === 'DEMO') {
                             this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
                             this.showAccountMenu = false;
+                        } else {
+                            alert("Solo puedes recargar cuentas DEMO");
                         }
-                    } else {
-                        this.status = 'Cambie a cuenta demo para recargar';
                     }
                 },
     
+                showPopupResult(status, profit) {
+                    const isWin = status === 'won';
+                    const color = isWin ? '#00ffa3' : '#ff3355';
+                    const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
+                    
+                    this.status = msg;
+                    const div = document.createElement('div');
+                    div.style.cssText = `position:fixed; top:25%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:20px 50px; border-radius:15px; font-weight:900; font-size:22px; z-index:10000; box-shadow:0 0 40px rgba(0,0,0,0.5); border:2px solid white;`;
+                    div.innerHTML = msg;
+                    document.body.appendChild(div);
+                    setTimeout(() => div.remove(), 3000);
+                },
+    
                 executeTrade(type) {
-                    if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
