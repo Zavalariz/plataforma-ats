@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIAAA - TERMINAL PRO</title>
+    <title>ATS ELULTIMO - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -49,6 +49,7 @@
         .acc-item:hover { background: #1a1a1a; }
         .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
 
+        /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
         .switch.active { background: rgba(0, 255, 163, 0.2); }
         .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
@@ -84,7 +85,6 @@
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
                 <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
-                
                 <div class="acc-item" @click="switchAcc('REAL')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
                     <div class="flex-1">
@@ -93,7 +93,6 @@
                     </div>
                     <span class="text-xs font-bold text-white">$ <span x-text="accountType === 'REAL' ? balance : '0.00'"></span></span>
                 </div>
-
                 <div class="acc-item" @click="switchAcc('DEMO')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
                     <div class="flex-1">
@@ -102,7 +101,6 @@
                     </div>
                     <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="accountType === 'DEMO' ? balance : '0.00'"></span></span>
                 </div>
-
                 <div class="p-2 border-t border-white/5 bg-black/40">
                     <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
                         <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
@@ -245,6 +243,15 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="label-turbo">Multiplicador de entrada</label>
+                    <div class="control-group">
+                        <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                        <span class="font-bold text-sm">Auto</span>
+                        <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-3 pt-2">
                     <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
                         <div class="text-left">
@@ -284,42 +291,51 @@
                 socket: null,
                 tokenReal: '',
                 tokenDemo: '',
-                sessionId: 0,
+                sessionId: 0, // Identificador único de sesión para evitar que Demo pise a Real
 
                 init() {
                     const params = new URLSearchParams(window.location.search);
                     this.tokenReal = params.get('token1'); 
                     this.tokenDemo = params.get('token2');
                     
-                    const inicial = this.tokenReal || this.tokenDemo;
-                    if (inicial) this.connect(inicial);
-                    else this.status = 'Error: No hay tokens';
+                    // Al cargar, intentamos Real primero, si no Demo
+                    const tokenInicial = this.tokenReal || this.tokenDemo;
+                    if (tokenInicial) {
+                        this.connect(tokenInicial);
+                    } else {
+                        this.status = 'Error: No hay tokens en la URL';
+                    }
                 },
 
                 connect(token) {
+                    // Cada vez que conectamos, aumentamos el ID. 
+                    // Esto "invalida" cualquier respuesta que venga de una conexión anterior.
                     this.sessionId++;
                     const currentId = this.sessionId;
 
                     if (this.socket) {
-                        this.socket.onmessage = null;
+                        this.socket.onmessage = null; // Ensordecemos el socket anterior
                         this.socket.close();
                     }
 
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
+                        // Solo mandamos el authorize si el usuario no ha cambiado de opinión (clic rápido)
                         if (currentId === this.sessionId) {
                             this.socket.send(JSON.stringify({ "authorize": token }));
                         }
                     };
 
                     this.socket.onmessage = (msg) => {
+                        // BLOQUEO CRÍTICO: Si el mensaje no pertenece a la sesión actual, se ignora.
                         if (currentId !== this.sessionId) return;
+
                         const data = JSON.parse(msg.data);
                         
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Cuenta ' + this.accountType + ' Activa';
+                            this.status = 'Conectado a ' + this.accountType;
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
 
@@ -335,24 +351,28 @@
                         }
 
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden en curso...';
+                            this.status = 'Orden ejecutada';
                             this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                         }
 
-                        if (data.error) this.status = 'Error: ' + data.error.message;
+                        if (data.error) {
+                            this.status = 'API Error: ' + data.error.message;
+                        }
                     };
                 },
 
                 switchAcc(type) {
-                    const target = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
-                    if (target) {
-                        this.showAccountMenu = false;
-                        this.balance = '...';
-                        this.accountType = 'CAMBIANDO...';
-                        this.connect(target);
-                    } else {
-                        alert("Token no encontrado para " + type);
+                    const targetToken = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
+                    
+                    if (!targetToken) {
+                        alert("El token para la cuenta " + type + " no está en la URL");
+                        return;
                     }
+
+                    this.showAccountMenu = false;
+                    this.balance = '...';
+                    this.accountType = 'CAMBIANDO...';
+                    this.connect(targetToken);
                 },
 
                 rechargeDemo() {
@@ -368,7 +388,7 @@
                     const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
                     this.status = msg;
                     const div = document.createElement('div');
-                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5);`;
+                    div.style.cssText = `position:fixed; top:20%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5); font-family: sans-serif;`;
                     div.innerHTML = msg;
                     document.body.appendChild(div);
                     setTimeout(() => div.remove(), 3000);
@@ -376,14 +396,16 @@
 
                 executeTrade(type) {
                     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
-                    const cType = (type === 'PUT') ? 'FALL' : 'CALL';
+                    
+                    const contractType = (type === 'PUT') ? 'FALL' : 'CALL';
+
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
                         "parameters": {
                             "amount": parseFloat(this.stake),
                             "basis": "stake",
-                            "contract_type": cType,
+                            "contract_type": contractType,
                             "currency": "USD",
                             "duration": parseInt(this.ticks),
                             "duration_unit": "t",
