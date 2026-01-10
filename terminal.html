@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIAA - TERMINAL PRO</title>
+    <title>ATS ELIS - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -287,19 +287,27 @@
                 ticks: 5,
                 status: 'Esperando conexión',
                 socket: null,
+                currentToken: '',
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1') || params.get('token2');
-                    if (token) {
-                        this.connect(token);
-                    } else {
-                        this.status = 'Error: Token no encontrado';
-                    }
+                    // Intentamos capturar ambos tokens desde la URL
+                    this.token1 = params.get('token1'); // Usualmente Real
+                    this.token2 = params.get('token2'); // Usualmente Demo
+                    
+                    // Conectamos con el primero que esté disponible al iniciar
+                    const inicial = this.token1 || this.token2;
+                    if (inicial) this.connect(inicial);
+                    else this.status = 'Error: Sin acceso';
                 },
     
                 connect(token) {
-                    // Conexión limpia a la API
+                    // Si ya hay una conexión abierta, la cerramos para evitar que se pegue
+                    if (this.socket) {
+                        this.socket.close();
+                    }
+    
+                    this.currentToken = token;
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -309,15 +317,13 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        // 1. AUTORIZACIÓN Y TIPO DE CUENTA
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado con éxito';
-                            // Suscribirse al balance inmediatamente
+                            this.status = 'Cuenta ' + this.accountType + ' activa';
+                            // Suscripción al balance (clave para que no se pegue)
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        // 2. ACTUALIZACIÓN DE BALANCE REAL
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
@@ -325,25 +331,13 @@
                             });
                         }
     
-                        // 3. RESULTADOS DE OPERACIONES
                         if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-                            const contract = data.proposal_open_contract;
-                            this.showPopupResult(contract.status, contract.profit);
-                        }
-    
-                        // 4. CONFIRMACIÓN DE RECARGA O COMPRA
-                        if (data.msg_type === 'topup_virtual' && !data.error) {
-                            this.status = 'Cuenta demo restablecida';
+                            this.showPopupResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
                         }
     
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Operación abierta...';
-                            // Suscribirse al resultado
-                            this.socket.send(JSON.stringify({ 
-                                "proposal_open_contract": 1, 
-                                "contract_id": data.buy.contract_id, 
-                                "subscribe": 1 
-                            }));
+                            this.status = 'Operación en curso...';
+                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                         }
     
                         if (data.error) {
@@ -352,26 +346,37 @@
                     };
                 },
     
-                // FUNCIÓN DE RECARGA QUE SÍ FUNCIONA
-                rechargeDemo() {
-                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                        if (this.accountType === 'DEMO') {
-                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                            this.showAccountMenu = false;
-                        } else {
-                            alert("Solo puedes recargar cuentas DEMO");
-                        }
+                // ESTA ES LA FUNCIÓN QUE CAMBIA ENTRE REAL Y DEMO SIN PEGARSE
+                switchAcc(type) {
+                    this.status = 'Cambiando a ' + type + '...';
+                    this.balance = '0.00';
+                    this.showAccountMenu = false;
+                    
+                    if (type === 'REAL' && this.token1) {
+                        this.connect(this.token1);
+                    } else if (type === 'DEMO' && this.token2) {
+                        this.connect(this.token2);
+                    } else {
+                        this.status = 'Token ' + type + ' no disponible';
                     }
+                },
+    
+                rechargeDemo() {
+                    if (this.accountType === 'DEMO' && this.socket) {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                    } else {
+                        alert("Solo disponible en cuenta DEMO");
+                    }
+                    this.showAccountMenu = false;
                 },
     
                 showPopupResult(status, profit) {
                     const isWin = status === 'won';
                     const color = isWin ? '#00ffa3' : '#ff3355';
                     const msg = isWin ? `¡GANAMOS! +$${profit}` : `PERDIMOS: $${profit}`;
-                    
                     this.status = msg;
                     const div = document.createElement('div');
-                    div.style.cssText = `position:fixed; top:25%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:20px 50px; border-radius:15px; font-weight:900; font-size:22px; z-index:10000; box-shadow:0 0 40px rgba(0,0,0,0.5); border:2px solid white;`;
+                    div.style.cssText = `position:fixed; top:25%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5);`;
                     div.innerHTML = msg;
                     document.body.appendChild(div);
                     setTimeout(() => div.remove(), 3000);
