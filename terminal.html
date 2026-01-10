@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIOO - TERMINAL PRO</title>
+    <title>ATS ELIHOY - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -281,37 +281,23 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
+                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
                 stake: 5.00,
-                ticks: 5,
+                ticks: 1,
+                isBotRunning: false,
                 status: 'Esperando conexión',
                 socket: null,
-                tokenReal: '',
-                tokenDemo: '',
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    // Guardamos ambos tokens para que no se pierdan
-                    this.tokenReal = params.get('token1'); 
-                    this.tokenDemo = params.get('token2');
-                    
-                    // Prioridad: Si hay token real, conectamos a Real primero
-                    const tokenInicial = this.tokenReal || this.tokenDemo;
-                    if (tokenInicial) {
-                        this.connect(tokenInicial);
-                    } else {
-                        this.status = 'Error: No se detectaron tokens';
-                    }
+                    const token = params.get('token1') || params.get('token2');
+                    if (token) this.connect(token);
+                    else this.status = 'Token no detectado';
                 },
     
                 connect(token) {
-                    // Si hay un socket abierto, lo cerramos completamente antes de uno nuevo
-                    if (this.socket) {
-                        this.socket.onclose = function () {}; // Deshabilitar eventos de cierre
-                        this.socket.close();
-                    }
-    
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -322,28 +308,27 @@
                         const data = JSON.parse(msg.data);
                         
                         if (data.msg_type === 'authorize' && !data.error) {
-                            // Forzamos la identificación de la cuenta según la respuesta oficial
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Conectado a cuenta ' + this.accountType;
-                            
-                            // Pedimos el balance específico de esta sesión
+                            this.status = 'Conectado';
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
                         if (data.msg_type === 'balance') {
-                            // Solo actualizamos si el ID de la cuenta coincide para evitar saltos
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2 
                             });
                         }
     
+                        // DETECTAR RESULTADO DE LA OPERACIÓN (PROFIT/LOSS)
                         if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-                            this.showPopupResult(data.proposal_open_contract.status, data.proposal_open_contract.profit);
+                            const contract = data.proposal_open_contract;
+                            this.showTradeResult(contract.status, contract.profit);
                         }
     
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Operación activa';
+                            this.status = 'Orden ejecutada con éxito';
+                            // Nos suscribimos al contrato para saber cuándo termina y ver el resultado
                             this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                         }
     
@@ -353,43 +338,35 @@
                     };
                 },
     
-                // FUNCIÓN MEJORADA PARA CAMBIO MANUAL
-                switchAcc(type) {
-                    this.showAccountMenu = false;
-                    let tokenDestino = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
-    
-                    if (tokenDestino) {
-                        this.status = 'Cambiando a ' + type + '...';
-                        this.balance = '0.00';
-                        this.connect(tokenDestino);
-                    } else {
-                        alert("El token para cuenta " + type + " no está disponible.");
-                    }
+                // FUNCIÓN PARA MOSTRAR RESULTADO VISUAL (Ya que no se puede dibujar en el iframe)
+                showTradeResult(status, profit) {
+                    const color = status === 'won' ? '#00ffa3' : '#ff3355';
+                    const text = status === 'won' ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
+                    
+                    this.status = text;
+                    
+                    // Creamos un aviso flotante temporal
+                    const toast = document.createElement('div');
+                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 1000; box-shadow: 0 0 20px ${color};`;
+                    toast.innerText = text;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => toast.remove(), 3000);
                 },
     
                 rechargeDemo() {
-                    if (this.accountType === 'DEMO' && this.socket) {
-                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                    } else {
-                        alert("Solo puedes restablecer los $10,000 en la cuenta DEMO.");
+                    if (this.accountType === 'DEMO') {
+                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                            this.showAccountMenu = false;
+                        }
                     }
-                    this.showAccountMenu = false;
-                },
-    
-                showPopupResult(status, profit) {
-                    const isWin = status === 'won';
-                    const color = isWin ? '#00ffa3' : '#ff3355';
-                    const msg = isWin ? `GANADA: +$${profit}` : `PERDIDA: $${profit}`;
-                    this.status = msg;
-                    const div = document.createElement('div');
-                    div.style.cssText = `position:fixed; top:25%; left:50%; transform:translateX(-50%); background:${color}; color:black; padding:15px 40px; border-radius:10px; font-weight:900; z-index:10000; box-shadow:0 0 30px rgba(0,0,0,0.5);`;
-                    div.innerHTML = msg;
-                    document.body.appendChild(div);
-                    setTimeout(() => div.remove(), 3000);
                 },
     
                 executeTrade(type) {
-                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+                    if (!this.socket) return;
+                    this.status = `Enviando ${type === 'CALL' ? 'Rise' : 'Fall'}...`;
+                    
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
