@@ -15,50 +15,23 @@
         .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
         .sub-text { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.2; }
         .infinity-label { font-size: 10px; color: #4b5563; font-weight: 600; margin-top: 2px; }
-        
-        /* Controles +/- */
         .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
         .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
         .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
-
-        /* Gráfico Dark */
         .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
-        #chart-frame { 
-            width: 100%; 
-            height: calc(100% + 120px); 
-            margin-top: -80px; 
-            border: none; 
-            filter: invert(1) hue-rotate(180deg) brightness(0.9);
-        }
-
-        /* Estilos Selector de Cuenta */
-        .account-dropdown {
-            display: none;
-            position: absolute;
-            top: 55px;
-            right: 0;
-            width: 280px;
-            background: #111111;
-            border: 1px solid #222222;
-            border-radius: 12px;
-            z-index: 1000;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
+        #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+        .account-dropdown { display: none; position: absolute; top: 55px; right: 0; width: 280px; background: #111111; border: 1px solid #222222; border-radius: 12px; z-index: 1000; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         .account-dropdown.show { display: block; }
         .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
         .acc-item:hover { background: #1a1a1a; }
         .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
-
-        /* Custom Switch */
         .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
         .switch.active { background: rgba(0, 255, 163, 0.2); }
         .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
         .switch.active .dot { left: 19px; background: #00ffa3; }
-
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
-        
         .btn-buy { transition: all 0.2s; }
         .btn-buy:active { transform: scale(0.96); }
     </style>
@@ -68,212 +41,75 @@
     <header class="h-14 bg-[#0d0d0d] border-b border-white/5 flex justify-between items-center px-6 z-20">
         <div class="flex items-center gap-6">
             <span class="text-xl font-black italic tracking-tighter text-[#00ffa3]">ATS ELITE</span>
-            <nav class="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                <a href="#" class="text-[#00ffa3] border-b border-[#00ffa3] pb-1">Operar</a>
-                <a href="#">Señales GPT</a>
-                <a href="#">Registros</a>
-            </nav>
         </div>
         <div class="relative">
-    <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer">
-        <div>
-            <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
-            <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
-        </div>
-        <span class="material-icons-round text-gray-600 text-sm">expand_more</span>
-    </div>
-    
-    <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
-        <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
-        
-        <div class="acc-item" @click="switchAcc('REAL', 'CR7691749')">
-            <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
-            <div class="flex-1">
-                <p class="text-xs font-bold text-white">CR7691749</p>
-                <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
+            <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer">
+                <div>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
+                    <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+                </div>
+                <span class="material-icons-round text-gray-600 text-sm">expand_more</span>
             </div>
-            <span class="text-xs font-bold text-white">$ 0.00</span>
-        </div>
+            
+            <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
+                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
+                
+                <div class="acc-item" @click="switchAcc('REAL')">
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white">Cuenta Real</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">USD REAL</p>
+                    </div>
+                </div>
 
-        <div class="acc-item" @click="switchAcc('DEMO', 'VRTC11421273')">
-            <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
-            <div class="flex-1">
-                <p class="text-xs font-bold text-white">VRTC11421273</p>
-                <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
+                <div class="acc-item" @click="switchAcc('DEMO')">
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white">Cuenta Demo</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">USD VIRTUAL</p>
+                    </div>
+                </div>
             </div>
-            <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="balance"></span></span>
         </div>
-
-        <div class="p-2 border-t border-white/5 bg-black/40">
-            <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
-                <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
-            </button>
-        </div>
-    </div>
-</div>
     </header>
 
     <div class="flex flex-1 overflow-hidden p-1 gap-1">
-        
         <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
-            <div>
-                <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
-                <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
-            </div>
-
+            <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
             <div class="space-y-3">
-                <div>
-                    <label class="label-turbo">Mercado</label>
-                    <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
-                    <p class="sub-text">Volatilidad constante de 100% con un tique a cada 2 segundos</p>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Estrategia</label>
-                    <div class="relative">
-                        <select class="input-turbo"><option>Turbo Trade 1.1</option></select>
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">settings</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Modo de negociación</label>
-                    <div class="relative">
-                        <select class="input-turbo"><option>Veloz</option></select>
-                        <span class="material-icons-round absolute right-3 top-2.5 text-yellow-500 text-sm">bolt</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Cuantía inicial $</label>
-                    <input type="number" x-model="stake" class="input-turbo">
-                    <p class="infinity-label">Infinity% del saldo</p>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Lucro objetivo $</label>
-                    <input type="number" value="10" class="input-turbo">
-                    <p class="infinity-label">Infinity% del saldo</p>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Límite de pérdida $</label>
-                    <div class="relative">
-                        <input type="number" value="50" class="input-turbo">
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">settings</span>
-                    </div>
-                    <p class="infinity-label">Infinity% del saldo</p>
-                </div>
-
-                <div class="bg-[#1a1a1a] border border-white/5 p-3 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[#222]">
-                    <div class="flex items-center gap-3">
-                        <span class="material-icons-round text-yellow-500">warning</span>
-                        <div class="leading-tight">
-                            <p class="text-[10px] font-black uppercase text-white">Gestión de riesgo</p>
-                            <p class="text-[10px] text-green-500 font-bold">Conservador / Bajo riesgo</p>
-                            <p class="text-[9px] text-gray-500">Valor recomendado: mín. $50</p>
-                        </div>
-                    </div>
-                    <span class="material-icons-round text-gray-600">chevron_right</span>
-                </div>
+                <label class="label-turbo">Cuantía inicial $</label>
+                <input type="number" x-model="stake" class="input-turbo">
             </div>
-
-            <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto active:scale-95 transition-all shadow-lg">
+            <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto shadow-lg">
                 <span class="material-icons-round" x-text="isBotRunning ? 'stop' : 'play_circle'"></span>
-                <span class="text-xs font-black uppercase tracking-widest" x-text="isBotRunning ? 'Detener Robot' : 'Iniciar Robot'"></span>
+                <span class="text-xs font-black uppercase" x-text="isBotRunning ? 'Detener Robot' : 'Iniciar Robot'"></span>
             </button>
         </aside>
 
         <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col bg-black">
-            <div class="h-10 border-b border-white/5 flex items-center px-4 gap-6 bg-[#0d0d0d] z-10">
-                <div class="flex gap-6 text-[10px] font-black uppercase italic tracking-widest h-full items-center">
-                    <button class="text-[#00ffa3] border-b-2 border-[#00ffa3] h-full px-2">Gráfico</button>
-                    <button class="text-gray-500 h-full px-2">Dígitos</button>
-                    <button class="text-gray-500 h-full px-2">Historial</button>
-                </div>
-            </div>
             <div class="flex-1 chart-container">
                 <iframe id="chart-frame" src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
             </div>
         </main>
 
         <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
-            <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white">Modo manual</h3>
-                <div class="flex items-center gap-2" @click="agendar = !agendar">
-                    <span class="text-[10px] font-bold text-gray-500 uppercase">Agendar</span>
-                    <div class="switch" :class="agendar ? 'active' : ''"><div class="dot"></div></div>
-                </div>
-            </div>
-
-            <p class="text-[#00ffa3] font-bold text-xs">$0 (0%)</p>
-
+            <h3 class="text-sm font-bold text-white">Modo manual</h3>
             <div class="space-y-4">
-                <div>
-                    <label class="label-turbo">Mercado</label>
-                    <select class="input-turbo font-bold"><option>Volatility 100 Index</option></select>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Tipo de Negociación</label>
-                    <div class="relative">
-                        <select class="input-turbo pr-10"><option>Rise/Fall</option></select>
-                        <span class="material-icons-round absolute right-3 top-2.5 text-gray-500 text-sm">chevron_left</span>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center gap-1 mb-1">
-                        <label class="label-turbo m-0">Duración</label>
-                        <span class="material-icons-round text-[12px] text-blue-400">info</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="control-group flex-1">
-                            <button @click="ticks > 1 && ticks--" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                            <span x-text="ticks" class="font-bold text-sm"></span>
-                            <button @click="ticks++" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                        </div>
-                        <select class="bg-[#161616] border border-[#262626] rounded-lg px-2 text-[10px] font-bold uppercase"><option>Ticks</option></select>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Cuantía inicial</label>
-                    <div class="control-group">
-                        <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
-                        <button @click="stake = (parseFloat(stake) + 1).toFixed(2)" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="label-turbo">Multiplicador de entrada</label>
-                    <div class="control-group">
-                        <button class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                        <span class="font-bold text-sm">Auto</span>
-                        <button class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                    </div>
+                <div class="control-group">
+                    <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
+                    <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
+                    <button @click="stake = (parseFloat(stake) + 1).toFixed(2)" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2">
-                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
-                        <div class="text-left">
-                            <span class="block text-xl font-black italic">Rise</span>
-                            <span class="block text-[10px] font-bold opacity-60">85.00%</span>
-                        </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.85).toFixed(2) + ' USD'"></span>
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 font-black">
+                        RISE <span x-text="(stake * 0.85).toFixed(2)"></span>
                     </button>
-
-                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 active:scale-95 shadow-lg">
-                        <div class="text-left">
-                            <span class="block text-xl font-black italic">Fall</span>
-                            <span class="block text-[10px] font-bold opacity-60">84.00%</span>
-                        </div>
-                        <span class="text-base font-black italic" x-text="(stake * 0.84).toFixed(2) + ' USD'"></span>
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 font-black">
+                        FALL <span x-text="(stake * 0.84).toFixed(2)"></span>
                     </button>
                 </div>
             </div>
-            
             <div class="mt-auto p-2 bg-white/5 rounded text-[9px] font-mono text-gray-500">
                 Estado: <span class="text-[#00ffa3]" x-text="status"></span>
             </div>
@@ -284,9 +120,9 @@
         function tradingCore() {
             return {
                 showAccountMenu: false,
-                agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
+                loginid: '',
                 stake: 5.00,
                 ticks: 1,
                 isBotRunning: false,
@@ -295,12 +131,34 @@
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    const token = params.get('token1') || params.get('token2');
+                    // Captura inicial: prioriza la demo (acct1) o real (token1)
+                    const token = params.get('acct1') || params.get('token1');
                     if (token) this.connect(token);
                     else this.status = 'Token no detectado';
                 },
     
+                // FUNCIÓN QUE TE FALTABA PARA HACER CLIC EN LAS CUENTAS
+                switchAcc(type) {
+                    this.showAccountMenu = false;
+                    const params = new URLSearchParams(window.location.search);
+                    // Mapeo exacto de tu URL: REAL usa token1, DEMO usa acct1
+                    const targetToken = (type === 'REAL') ? params.get('token1') : params.get('acct1');
+
+                    if (targetToken) {
+                        this.status = `Cambiando a ${type}...`;
+                        this.connect(targetToken);
+                    } else {
+                        alert(`No se encontró el token para la cuenta ${type} en la URL`);
+                    }
+                },
+
                 connect(token) {
+                    // Limpieza de socket previo para evitar errores de "Invalid Token"
+                    if (this.socket) {
+                        this.socket.onclose = null;
+                        this.socket.close();
+                    }
+
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -310,9 +168,16 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        if (data.msg_type === 'authorize' && !data.error) {
+                        if (data.error) {
+                            this.status = 'Error: ' + data.error.message;
+                            return;
+                        }
+
+                        if (data.msg_type === 'authorize') {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
+                            this.loginid = data.authorize.loginid;
                             this.status = 'Conectado';
+                            // Pedir balance y suscribirse
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
@@ -322,53 +187,16 @@
                                 maximumFractionDigits: 2 
                             });
                         }
-    
-                        // DETECTAR RESULTADO DE LA OPERACIÓN (PROFIT/LOSS)
-                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
-                            const contract = data.proposal_open_contract;
-                            this.showTradeResult(contract.status, contract.profit);
-                        }
-    
-                        if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada con éxito';
-                            // Nos suscribimos al contrato para saber cuándo termina y ver el resultado
-                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
-                        }
-    
-                        if (data.error) {
-                            this.status = 'Error: ' + data.error.message;
-                        }
+                    };
+
+                    this.socket.onclose = () => {
+                        if (!this.status.includes('Cambiando')) this.status = 'Desconectado';
                     };
                 },
     
-                // FUNCIÓN PARA MOSTRAR RESULTADO VISUAL (Ya que no se puede dibujar en el iframe)
-                showTradeResult(status, profit) {
-                    const color = status === 'won' ? '#00ffa3' : '#ff3355';
-                    const text = status === 'won' ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
-                    
-                    this.status = text;
-                    
-                    // Creamos un aviso flotante temporal
-                    const toast = document.createElement('div');
-                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 1000; box-shadow: 0 0 20px ${color};`;
-                    toast.innerText = text;
-                    document.body.appendChild(toast);
-                    
-                    setTimeout(() => toast.remove(), 3000);
-                },
-    
-                rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                            this.showAccountMenu = false;
-                        }
-                    }
-                },
-    
                 executeTrade(type) {
-                    if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Rise' : 'Fall'}...`;
+                    if (!this.socket || this.socket.readyState !== 1) return;
+                    this.status = `Enviando ${type}...`;
                     
                     this.socket.send(JSON.stringify({
                         "buy": 1,
