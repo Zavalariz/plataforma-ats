@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ELIAAA - TERMINAL PRO</title>
+    <title>ATS ELTT - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -284,7 +284,7 @@
                 agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
-                stake: 1.00,
+                stake: 5.00,
                 ticks: 1,
                 isBotRunning: false,
                 status: 'Esperando conexión',
@@ -298,7 +298,6 @@
                 },
     
                 connect(token) {
-                    // Conexión oficial a la API de Deriv
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -308,15 +307,12 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        // 1. Manejo de Autorización
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.status = 'Conectado';
-                            // Suscripción en tiempo real al balance
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        // 2. Recepción de Balance (Aquí es donde ocurre la magia de actualización)
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
@@ -324,42 +320,53 @@
                             });
                         }
     
-                        // 3. Confirmación de Recarga Virtual
-                        if (data.msg_type === 'topup_virtual' && !data.error) {
-                            this.status = '¡Recarga exitosa en servidor!';
+                        // DETECTAR RESULTADO DE LA OPERACIÓN (PROFIT/LOSS)
+                        if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
+                            const contract = data.proposal_open_contract;
+                            this.showTradeResult(contract.status, contract.profit);
                         }
     
-                        // Manejo de errores de la API
+                        if (data.msg_type === 'buy' && !data.error) {
+                            this.status = 'Orden ejecutada con éxito';
+                            // Nos suscribimos al contrato para saber cuándo termina y ver el resultado
+                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
+                        }
+    
                         if (data.error) {
                             this.status = 'Error: ' + data.error.message;
                         }
                     };
                 },
     
-                switchAcc(type, val, id) {
-                    this.accountType = type;
-                    this.balance = val;
-                    this.showAccountMenu = false;
-                    this.status = "Cambiado a " + id;
+                // FUNCIÓN PARA MOSTRAR RESULTADO VISUAL (Ya que no se puede dibujar en el iframe)
+                showTradeResult(status, profit) {
+                    const color = status === 'won' ? '#00ffa3' : '#ff3355';
+                    const text = status === 'won' ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
+                    
+                    this.status = text;
+                    
+                    // Creamos un aviso flotante temporal
+                    const toast = document.createElement('div');
+                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 1000; box-shadow: 0 0 20px ${color};`;
+                    toast.innerText = text;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => toast.remove(), 3000);
                 },
     
-                // FUNCIÓN DE RECARGA REAL CONECTADA A DERIV
                 rechargeDemo() {
                     if (this.accountType === 'DEMO') {
                         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.status = 'Solicitando recarga real...';
-                            // Comando oficial para resetear la cuenta demo a $10,000
                             this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
                             this.showAccountMenu = false;
                         }
-                    } else {
-                        this.status = 'Cambie a cuenta demo para recargar';
                     }
                 },
     
                 executeTrade(type) {
                     if (!this.socket) return;
-                    this.status = `Enviando ${type === 'CALL' ? 'Compra' : 'Venta'}...`;
+                    this.status = `Enviando ${type === 'CALL' ? 'Rise' : 'Fall'}...`;
+                    
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
