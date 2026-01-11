@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS UNICO N - TERMINAL PRO</title>
+    <title>ATS UNICO S - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -77,34 +77,42 @@
         <div class="relative">
             <div @click.stop="showAccountMenu = !showAccountMenu" class="text-right px-3 py-1 bg-black rounded border border-white/5 flex items-center gap-3 cursor-pointer">
                 <div>
-                    <p class="text-[9px] text-gray-500 font-bold uppercase">Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span></p>
-                    <p class="text-white font-mono font-bold text-lg leading-none">$<span x-text="balance">0.00</span></p>
+                    <p class="text-[9px] text-gray-500 font-bold uppercase">
+                        Balance <span :class="accountType === 'REAL' ? 'text-orange-500' : 'text-[#00ffa3]'" x-text="accountType"></span>
+                    </p>
+                    <p class="text-white font-mono font-bold text-lg leading-none">
+                        $<span x-text="balance">0.00</span>
+                    </p>
                 </div>
                 <span class="material-icons-round text-gray-600 text-sm">expand_more</span>
             </div>
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
-                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
+                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5 uppercase">Seleccione una cuenta</div>
                 
-                <div class="acc-item" @click="switchAcc('REAL', 'CR7691749')">
-                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-white">CR7691749</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
+                <div class="acc-item" @click="switchAcc('REAL')">
+                    <div class="acc-icon-circle">
+                        <span class="material-icons-round text-sm" :class="accountType === 'REAL' ? 'text-orange-500' : 'text-gray-500'">person</span>
                     </div>
-                    <span class="text-xs font-bold text-white">$ 0.00</span>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white" x-text="accountType === 'REAL' ? loginid : 'Cuenta Real'"></p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Operar con fondos reales</p>
+                    </div>
+                    <span class="text-xs font-bold text-white" x-show="accountType === 'REAL'">$ <span x-text="balance"></span></span>
                 </div>
         
-                <div class="acc-item" @click="switchAcc('DEMO', 'VRTC11421273')">
-                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
-                    <div class="flex-1">
-                        <p class="text-xs font-bold text-white">VRTC11421273</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
+                <div class="acc-item" @click="switchAcc('DEMO')">
+                    <div class="acc-icon-circle">
+                        <span class="material-icons-round text-sm" :class="accountType === 'DEMO' ? 'text-[#00ffa3]' : 'text-gray-500'">account_circle</span>
                     </div>
-                    <span class="text-xs font-bold text-[#00ffa3]">$ <span x-text="balance"></span></span>
+                    <div class="flex-1">
+                        <p class="text-xs font-bold text-white" x-text="accountType === 'DEMO' ? loginid : 'Cuenta Demo'"></p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Entrenamiento</p>
+                    </div>
+                    <span class="text-xs font-bold text-[#00ffa3]" x-show="accountType === 'DEMO'">$ <span x-text="balance"></span></span>
                 </div>
         
-                <div class="p-2 border-t border-white/5 bg-black/40">
+                <div class="p-2 border-t border-white/5 bg-black/40" x-show="accountType === 'DEMO'">
                     <button @click="rechargeDemo()" class="w-full py-2 text-[10px] font-black text-gray-500 flex items-center justify-center gap-2 hover:text-white transition-colors">
                         <span class="material-icons-round text-sm">sync</span> RECARREGAR CONTA DEMO
                     </button>
@@ -287,6 +295,8 @@
                 agendar: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
+                loginid: '', // Se llenará con el ID real de Deriv
+                currency: 'USD',
                 stake: 5.00,
                 ticks: 1,
                 isBotRunning: false,
@@ -295,39 +305,47 @@
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    // Priorizamos iniciar con el token 2 (Demo) por seguridad
-                    const token = params.get('token2') || params.get('token1'); 
+                    // Según tu captura: acct1 suele ser la Demo y token1 la Real
+                    // Priorizamos iniciar con la cuenta Demo por seguridad
+                    const token = params.get('acct1') || params.get('token2') || params.get('token1');
+                    
                     if (token) {
                         this.connect(token);
                     } else {
-                        this.status = 'Error: Falta ?token1=... o ?token2=... en la URL';
+                        this.status = 'Error: No se detectaron tokens en la URL';
                     }
                 },
-
-                switchAcc(type, id) {
-                    this.showAccountMenu = false; // Cierra el menú
+    
+                switchAcc(type) {
+                    this.showAccountMenu = false;
                     this.status = `Cambiando a cuenta ${type}...`;
                     
-                    // Obtenemos los tokens de la URL
                     const params = new URLSearchParams(window.location.search);
-                    const tokenReal = params.get('token1'); // Supongamos que token1 es Real
-                    const tokenDemo = params.get('token2'); // Supongamos que token2 es Demo
-                    
-                    const targetToken = (type === 'REAL') ? tokenReal : tokenDemo;
-
+                    let targetToken;
+    
+                    // Lógica de detección basada en tu URL actual
+                    if (type === 'REAL') {
+                        targetToken = params.get('token1');
+                    } else {
+                        // Intenta obtener el token de la cuenta Demo
+                        targetToken = params.get('acct1') || params.get('token2');
+                    }
+    
                     if (targetToken) {
-                        // Cerramos la conexión actual antes de abrir la nueva
-                        if (this.socket) this.socket.close();
+                        // Cerramos conexión previa para evitar conflictos de sesión
+                        if (this.socket) {
+                            this.socket.onclose = () => {}; // Evitar disparar eventos de error al cerrar
+                            this.socket.close();
+                        }
                         this.balance = '0.00';
                         this.connect(targetToken);
                     } else {
-                        this.status = `Error: No hay token para cuenta ${type}`;
-                        // Si no hay token nuevo, al menos cambiamos visualmente para que veas el efecto
-                        this.accountType = type;
+                        this.status = `Error: No hay token guardado para ${type}`;
                     }
                 },
     
                 connect(token) {
+                    // Importante: app_id 119907 es el estándar para pruebas
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -337,47 +355,72 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
+                        // 1. Autorización exitosa
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
+                            this.loginid = data.authorize.loginid;
+                            this.currency = data.authorize.currency;
                             this.status = 'Conectado';
+                            
+                            // Suscribirse al balance para tener actualizaciones en tiempo real
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
-                        if (data.msg_type === 'balance') {
+                        // 2. Actualización de Balance
+                        if (data.msg_type === 'balance' && !data.error) {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2 
                             });
                         }
     
-                        // DETECTAR RESULTADO DE LA OPERACIÓN (PROFIT/LOSS)
+                        // 3. Resultado de contrato (Ganada/Perdida)
                         if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
                             const contract = data.proposal_open_contract;
                             this.showTradeResult(contract.status, contract.profit);
                         }
     
+                        // 4. Confirmación de compra
                         if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada con éxito';
-                            // Nos suscribimos al contrato para saber cuándo termina y ver el resultado
-                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
+                            this.status = 'Orden ejecutada';
+                            // Nos suscribimos al contrato para recibir el resultado cuando cierre
+                            this.socket.send(JSON.stringify({ 
+                                "proposal_open_contract": 1, 
+                                "contract_id": data.buy.contract_id, 
+                                "subscribe": 1 
+                            }));
                         }
     
+                        // 5. Manejo de errores del servidor
                         if (data.error) {
                             this.status = 'Error: ' + data.error.message;
+                            console.error("Deriv Error:", data.error);
+                        }
+                    };
+    
+                    this.socket.onclose = () => {
+                        if (this.status !== 'Cambiando a cuenta...') {
+                            this.status = 'Desconectado';
                         }
                     };
                 },
     
-                // FUNCIÓN PARA MOSTRAR RESULTADO VISUAL (Ya que no se puede dibujar en el iframe)
                 showTradeResult(status, profit) {
-                    const color = status === 'won' ? '#00ffa3' : '#ff3355';
-                    const text = status === 'won' ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
+                    const isWin = status === 'won';
+                    const color = isWin ? '#00ffa3' : '#ff3355';
+                    const text = isWin ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
                     
                     this.status = text;
                     
-                    // Creamos un aviso flotante temporal
+                    // Notificación visual en pantalla
                     const toast = document.createElement('div');
-                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 1000; box-shadow: 0 0 20px ${color};`;
+                    toast.style.cssText = `
+                        position: absolute; top: 20%; left: 50%; 
+                        transform: translateX(-50%); background: ${color}; 
+                        color: black; padding: 15px 30px; border-radius: 12px; 
+                        font-weight: 900; z-index: 10000; text-transform: uppercase;
+                        box-shadow: 0 0 30px ${color}88;
+                    `;
                     toast.innerText = text;
                     document.body.appendChild(toast);
                     
@@ -385,16 +428,20 @@
                 },
     
                 rechargeDemo() {
-                    if (this.accountType === 'DEMO') {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                            this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                            this.showAccountMenu = false;
-                        }
+                    if (this.accountType === 'DEMO' && this.socket) {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                        this.showAccountMenu = false;
+                    } else {
+                        alert("Solo puedes recargar en cuenta DEMO");
                     }
                 },
     
                 executeTrade(type) {
-                    if (!this.socket) return;
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                        this.status = 'Error: Sin conexión';
+                        return;
+                    }
+    
                     this.status = `Enviando ${type === 'CALL' ? 'Rise' : 'Fall'}...`;
                     
                     this.socket.send(JSON.stringify({
@@ -404,7 +451,7 @@
                             "amount": parseFloat(this.stake),
                             "basis": "stake",
                             "contract_type": type,
-                            "currency": "USD",
+                            "currency": this.currency,
                             "duration": parseInt(this.ticks),
                             "duration_unit": "t",
                             "symbol": "R_100"
@@ -415,4 +462,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
