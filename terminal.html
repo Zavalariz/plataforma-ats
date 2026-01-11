@@ -13,24 +13,15 @@
         .panel-turbo { background: #0d0d0d; border: 1px solid #1a1a1a; }
         .input-turbo { background: #161616; border: 1px solid #262626; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 600; width: 100%; color: white; outline: none; }
         .label-turbo { font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 4px; display: block; }
-        .sub-text { font-size: 10px; color: #6b7280; margin-top: 2px; line-height: 1.2; }
-        .infinity-label { font-size: 10px; color: #4b5563; font-weight: 600; margin-top: 2px; }
         .control-group { background: #161616; border: 1px solid #262626; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
-        .btn-math { padding: 8px 12px; color: #7c3aed; transition: all 0.2s; cursor: pointer; }
-        .btn-math:hover { background: rgba(124, 58, 237, 0.1); }
-        .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000 !important; }
+        .btn-math { padding: 8px 12px; color: #7c3aed; cursor: pointer; }
+        .chart-container { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000; }
         #chart-frame { width: 100%; height: calc(100% + 120px); margin-top: -80px; border: none; filter: invert(1) hue-rotate(180deg) brightness(0.9); }
-        .account-dropdown { display: none; position: absolute; top: 55px; right: 0; width: 280px; background: #111111; border: 1px solid #222222; border-radius: 12px; z-index: 1000; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .account-dropdown { display: none; position: absolute; top: 55px; right: 0; width: 280px; background: #111111; border: 1px solid #222222; border-radius: 12px; z-index: 1000; }
         .account-dropdown.show { display: block; }
-        .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: 0.2s; }
+        .acc-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; }
         .acc-item:hover { background: #1a1a1a; }
         .acc-icon-circle { width: 32px; height: 32px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
-        .switch { width: 34px; height: 18px; background: #262626; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
-        .switch.active { background: rgba(0, 255, 163, 0.2); }
-        .dot { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
-        .switch.active .dot { left: 19px; background: #00ffa3; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
         .btn-buy { transition: all 0.2s; }
         .btn-buy:active { transform: scale(0.96); }
     </style>
@@ -51,19 +42,19 @@
             </div>
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
-                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
+                <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5 uppercase">Seleccionar Cuenta</div>
                 <div class="acc-item" @click="switchAcc('REAL')">
-                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
+                    <div class="acc-icon-circle"><span class="material-icons-round text-sm text-orange-500">person</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">CR7691749</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta real USD</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Cuenta Real USD</p>
                     </div>
                 </div>
                 <div class="acc-item" @click="switchAcc('DEMO')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-[#00ffa3]">account_circle</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">VRTC11421273</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">Conta demo USD</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">Cuenta Demo USD</p>
                     </div>
                 </div>
             </div>
@@ -72,14 +63,13 @@
 
     <div class="flex flex-1 overflow-hidden p-1 gap-1">
         <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
-            <h3 class="text-sm font-bold text-white uppercase">IA Config</h3>
+            <h3 class="text-sm font-bold text-white uppercase italic">Configuración IA</h3>
             <div class="space-y-3">
-                <div><label class="label-turbo">Stake</label><input type="number" x-model="stake" class="input-turbo"></div>
-                <div class="bg-[#1a1a1a] p-3 rounded-xl"><p class="text-[10px] text-green-500 font-bold">Riesgo Bajo</p></div>
+                <div><label class="label-turbo">Inversión (Stake)</label><input type="number" x-model="stake" class="input-turbo"></div>
             </div>
             <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto">
                 <span class="material-icons-round" x-text="isBotRunning ? 'stop' : 'play_circle'"></span>
-                <span class="text-xs font-black uppercase" x-text="isBotRunning ? 'Detener' : 'Iniciar'"></span>
+                <span class="text-xs font-black uppercase" x-text="isBotRunning ? 'Detener Robot' : 'Iniciar Robot'"></span>
             </button>
         </aside>
 
@@ -90,80 +80,104 @@
         </main>
 
         <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
-            <h3 class="text-sm font-bold text-white uppercase">Operación Manual</h3>
+            <h3 class="text-sm font-bold text-white uppercase italic">Modo Manual</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="label-turbo">Ticks</label>
+                    <label class="label-turbo">Duración (Ticks)</label>
                     <div class="control-group">
                         <button @click="ticks > 1 && ticks--" class="btn-math"><span>-</span></button>
-                        <span x-text="ticks" class="font-bold"></span>
+                        <span x-text="ticks" class="font-bold text-sm"></span>
                         <button @click="ticks++" class="btn-math"><span>+</span></button>
                     </div>
                 </div>
                 <div class="flex flex-col gap-3">
-                    <button @click="executeTrade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl font-black uppercase italic shadow-lg">Rise</button>
-                    <button @click="executeTrade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl font-black uppercase italic shadow-lg">Fall</button>
+                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl font-black uppercase italic shadow-lg">Rise (Subida)</button>
+                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl font-black uppercase italic shadow-lg">Fall (Bajada)</button>
                 </div>
             </div>
-            <div class="mt-auto p-2 bg-white/5 text-[9px] font-mono text-gray-500">Estado: <span class="text-[#00ffa3]" x-text="status"></span></div>
+            <div class="mt-auto p-2 bg-white/5 text-[9px] font-mono text-gray-500">
+                Estado: <span class="text-[#00ffa3]" x-text="status"></span>
+            </div>
         </aside>
     </div>
 
     <script>
         function tradingCore() {
             return {
-                showAccountMenu: false, balance: '0.00', accountType: 'Cargando...',
-                stake: 5.00, ticks: 1, isBotRunning: false, status: 'Iniciando...',
-                socket: null, t1: '', t2: '',
+                showAccountMenu: false, balance: '0.00', accountType: '...',
+                stake: 5.00, ticks: 1, isBotRunning: false, status: 'Esperando...',
+                socket: null,
+                // Almacenamos los tokens globalmente dentro del objeto
+                tokenReal: '',
+                tokenDemo: '',
 
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    this.t1 = params.get('token1'); // Real
-                    this.t2 = params.get('token2'); // Demo
-                    // Conecta a la demo por defecto o a la que haya
-                    this.connect(this.t2 || this.t1);
+                    this.tokenReal = params.get('token1');
+                    this.tokenDemo = params.get('token2');
+                    
+                    // Iniciamos con la Demo por defecto si existe
+                    if (this.tokenDemo) {
+                        this.connect(this.tokenDemo);
+                    } else if (this.tokenReal) {
+                        this.connect(this.tokenReal);
+                    } else {
+                        this.status = "Error: Tokens faltantes";
+                    }
                 },
 
                 connect(token) {
                     if (!token) return;
-                    if (this.socket) { this.socket.close(); }
                     
+                    // Si ya hay un socket abierto, lo cerramos
+                    if (this.socket) {
+                        this.socket.onmessage = null;
+                        this.socket.close();
+                    }
+
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
-                    
+
                     this.socket.onopen = () => {
                         this.socket.send(JSON.stringify({ "authorize": token }));
                     };
 
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
+                        
                         if (data.msg_type === 'authorize' && !data.error) {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.status = 'Cuenta ' + this.accountType + ' Lista';
+                            this.status = 'Conectado a ' + this.accountType;
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
-                        if (data.msg_type === 'balance') {
+
+                        if (data.msg_type === 'balance' && !data.error) {
                             this.balance = data.balance.balance.toLocaleString('en-US', { minimumFractionDigits: 2 });
                         }
-                        if (data.error) { this.status = 'Error: ' + data.error.message; }
+
+                        if (data.error) {
+                            this.status = "Error: " + data.error.message;
+                        }
                     };
                 },
 
                 switchAcc(type) {
-                    const token = (type === 'REAL') ? this.t1 : this.t2;
+                    let token = (type === 'REAL') ? this.tokenReal : this.tokenDemo;
                     if (token) {
                         this.showAccountMenu = false;
-                        this.status = 'Sincronizando ' + type + '...';
+                        this.status = "Sincronizando con " + type + "...";
                         this.connect(token);
+                    } else {
+                        alert("Token " + type + " no encontrado en la URL.");
                     }
                 },
 
-                executeTrade(type) {
+                executeTrade(dir) {
                     if (!this.socket || this.socket.readyState !== 1) return;
                     this.socket.send(JSON.stringify({
                         "buy": 1, "price": parseFloat(this.stake),
                         "parameters": {
                             "amount": parseFloat(this.stake), "basis": "stake",
-                            "contract_type": type, "currency": "USD",
+                            "contract_type": dir, "currency": "USD",
                             "duration": parseInt(this.ticks), "duration_unit": "t", "symbol": "R_100"
                         }
                     }));
