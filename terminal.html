@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS UNIC - TERMINAL PRO</title>
+    <title>ATS UN - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -32,8 +32,6 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
-        .btn-buy { transition: all 0.2s; }
-        .btn-buy:active { transform: scale(0.96); }
     </style>
 </head>
 <body x-data="tradingCore()" x-init="init()" class="flex flex-col h-screen" @click.away="showAccountMenu = false">
@@ -53,20 +51,18 @@
             
             <div class="account-dropdown" :class="showAccountMenu ? 'show' : ''">
                 <div class="p-3 text-[10px] text-gray-500 font-black border-b border-white/5">SELECIONE UMA CONTA</div>
-                
                 <div class="acc-item" @click="switchAcc('REAL')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">person</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">Cuenta Real</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">USD REAL</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">CR7691749</p>
                     </div>
                 </div>
-
                 <div class="acc-item" @click="switchAcc('DEMO')">
                     <div class="acc-icon-circle"><span class="material-icons-round text-sm text-gray-500">account_circle</span></div>
                     <div class="flex-1">
                         <p class="text-xs font-bold text-white">Cuenta Demo</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">USD VIRTUAL</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">VRTC14805754</p>
                     </div>
                 </div>
             </div>
@@ -75,18 +71,14 @@
 
     <div class="flex flex-1 overflow-hidden p-1 gap-1">
         <aside class="w-[310px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
-            <h3 class="text-sm font-bold text-white">Configuraciones de la IA</h3>
-            <div class="space-y-3">
-                <label class="label-turbo">Cuantía inicial $</label>
-                <input type="number" x-model="stake" class="input-turbo">
-            </div>
-            <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center gap-2 mt-auto shadow-lg">
-                <span class="material-icons-round" x-text="isBotRunning ? 'stop' : 'play_circle'"></span>
+            <h3 class="text-sm font-bold text-white">Configuraciones IA</h3>
+            <input type="number" x-model="stake" class="input-turbo">
+            <button @click="isBotRunning = !isBotRunning" :class="isBotRunning ? 'bg-red-500' : 'bg-[#7c3aed]'" class="w-full py-4 rounded-2xl flex items-center justify-center mt-auto shadow-lg">
                 <span class="text-xs font-black uppercase" x-text="isBotRunning ? 'Detener Robot' : 'Iniciar Robot'"></span>
             </button>
         </aside>
 
-        <main class="flex-1 panel-turbo overflow-hidden relative flex flex-col bg-black">
+        <main class="flex-1 panel-turbo overflow-hidden flex flex-col bg-black">
             <div class="flex-1 chart-container">
                 <iframe id="chart-frame" src="https://tradingview.binary.com/v2/index.html?symbol=R_100&interval=1t&theme=dark"></iframe>
             </div>
@@ -94,22 +86,8 @@
 
         <aside class="w-[320px] panel-turbo p-4 flex flex-col gap-4 overflow-y-auto">
             <h3 class="text-sm font-bold text-white">Modo manual</h3>
-            <div class="space-y-4">
-                <div class="control-group">
-                    <button @click="stake > 0.35 && (stake = (parseFloat(stake) - 1).toFixed(2))" class="btn-math"><span class="material-icons-round text-sm">remove</span></button>
-                    <input type="number" x-model="stake" class="bg-transparent text-center font-bold text-sm outline-none w-20">
-                    <button @click="stake = (parseFloat(stake) + 1).toFixed(2)" class="btn-math"><span class="material-icons-round text-sm">add</span></button>
-                </div>
-
-                <div class="flex flex-col gap-3 pt-2">
-                    <button @click="executeTrade('CALL')" class="btn-buy w-full bg-[#00ffa3] text-black py-4 rounded-xl flex items-center justify-between px-6 font-black">
-                        RISE <span x-text="(stake * 0.85).toFixed(2)"></span>
-                    </button>
-                    <button @click="executeTrade('PUT')" class="btn-buy w-full bg-[#ff3355] text-white py-4 rounded-xl flex items-center justify-between px-6 font-black">
-                        FALL <span x-text="(stake * 0.84).toFixed(2)"></span>
-                    </button>
-                </div>
-            </div>
+            <button @click="executeTrade('CALL')" class="w-full bg-[#00ffa3] text-black py-4 rounded-xl font-black">RISE</button>
+            <button @click="executeTrade('PUT')" class="w-full bg-[#ff3355] text-white py-4 rounded-xl font-black">FALL</button>
             <div class="mt-auto p-2 bg-white/5 rounded text-[9px] font-mono text-gray-500">
                 Estado: <span class="text-[#00ffa3]" x-text="status"></span>
             </div>
@@ -122,40 +100,36 @@
                 showAccountMenu: false,
                 balance: '0.00',
                 accountType: 'CONECTANDO...',
-                loginid: '',
                 stake: 5.00,
-                ticks: 1,
-                isBotRunning: false,
-                status: 'Esperando conexión',
+                status: 'Iniciando...',
                 socket: null,
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    // Captura inicial: prioriza la demo (acct1) o real (token1)
+                    // IMPORTANTE: En tu URL, acct1 es la demo de 10k
                     const token = params.get('acct1') || params.get('token1');
                     if (token) this.connect(token);
-                    else this.status = 'Token no detectado';
+                    else this.status = 'Error: No hay token en URL';
                 },
     
-                // FUNCIÓN QUE TE FALTABA PARA HACER CLIC EN LAS CUENTAS
                 switchAcc(type) {
                     this.showAccountMenu = false;
                     const params = new URLSearchParams(window.location.search);
-                    // Mapeo exacto de tu URL: REAL usa token1, DEMO usa acct1
+                    // REAL usa token1 | DEMO usa acct1
                     const targetToken = (type === 'REAL') ? params.get('token1') : params.get('acct1');
 
                     if (targetToken) {
-                        this.status = `Cambiando a ${type}...`;
+                        this.status = 'Cambiando cuenta...';
                         this.connect(targetToken);
                     } else {
-                        alert(`No se encontró el token para la cuenta ${type} en la URL`);
+                        this.status = 'Error: Token no encontrado';
                     }
                 },
 
                 connect(token) {
-                    // Limpieza de socket previo para evitar errores de "Invalid Token"
+                    // MATAMOS cualquier conexión anterior para evitar "Token is invalid"
                     if (this.socket) {
-                        this.socket.onclose = null;
+                        this.socket.onclose = function () {}; 
                         this.socket.close();
                     }
 
@@ -175,40 +149,30 @@
 
                         if (data.msg_type === 'authorize') {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
-                            this.loginid = data.authorize.loginid;
                             this.status = 'Conectado';
-                            // Pedir balance y suscribirse
                             this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                         }
     
                         if (data.msg_type === 'balance') {
                             this.balance = data.balance.balance.toLocaleString('en-US', { 
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2 
+                                minimumFractionDigits: 2, maximumFractionDigits: 2 
                             });
                         }
                     };
 
                     this.socket.onclose = () => {
-                        if (!this.status.includes('Cambiando')) this.status = 'Desconectado';
+                        if (!this.status.includes('Error')) this.status = 'Desconectado';
                     };
                 },
     
                 executeTrade(type) {
                     if (!this.socket || this.socket.readyState !== 1) return;
-                    this.status = `Enviando ${type}...`;
-                    
                     this.socket.send(JSON.stringify({
-                        "buy": 1,
-                        "price": parseFloat(this.stake),
+                        "buy": 1, "price": parseFloat(this.stake),
                         "parameters": {
-                            "amount": parseFloat(this.stake),
-                            "basis": "stake",
-                            "contract_type": type,
-                            "currency": "USD",
-                            "duration": parseInt(this.ticks),
-                            "duration_unit": "t",
-                            "symbol": "R_100"
+                            "amount": parseFloat(this.stake), "basis": "stake",
+                            "contract_type": type, "currency": "USD",
+                            "duration": 1, "duration_unit": "t", "symbol": "R_100"
                         }
                     }));
                 }
