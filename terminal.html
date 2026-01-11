@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS ACA - TERMINAL PRO</title>
+    <title>ATS AYY - TERMINAL PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -291,41 +291,39 @@
     
                 init() {
                     const params = new URLSearchParams(window.location.search);
-                    // Detección automática basada en parámetros reales de la URL
-                    const token = params.get('acct1') || params.get('token2') || params.get('token1');
+                    // Según tu captura, acct1 es Demo y token1 es Real.
+                    // Iniciamos con el que esté disponible.
+                    const token = params.get('token1') || params.get('acct1') || params.get('token2');
                     if (token) {
                         this.connect(token);
                     } else {
-                        this.status = 'Error: No se detectó token en URL';
+                        this.status = 'Error: No hay tokens en la URL';
                     }
                 },
-
+    
                 switchAcc(type) {
                     this.showAccountMenu = false;
-                    this.status = `Cambiando a cuenta ${type}...`;
+                    this.status = `Conectando a ${type}...`;
                     const params = new URLSearchParams(window.location.search);
-                    let targetToken;
-
-                    if (type === 'REAL') {
-                        targetToken = params.get('token1');
-                    } else {
-                        targetToken = params.get('acct1') || params.get('token2');
-                    }
-
+                    
+                    // Mapeo exacto de tu URL: token1 (Real), acct1 (Demo)
+                    let targetToken = (type === 'REAL') ? params.get('token1') : params.get('acct1');
+    
                     if (targetToken) {
                         if (this.socket) {
                             this.socket.onclose = () => {}; 
                             this.socket.close();
                         }
                         this.balance = '0.00';
-                        // Pequeño delay para asegurar que el socket anterior cerró
-                        setTimeout(() => this.connect(targetToken), 300);
+                        // Esperamos un instante para que el socket cierre antes de abrir el nuevo
+                        setTimeout(() => this.connect(targetToken), 500);
                     } else {
-                        this.status = `Error: No hay token para ${type}`;
+                        this.status = `Error: Token ${type} no encontrado en URL`;
                     }
                 },
     
                 connect(token) {
+                    // Si el error persiste, verifica que el App ID 119907 esté permitido para tu dominio
                     this.socket = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=119907');
                     
                     this.socket.onopen = () => {
@@ -335,7 +333,13 @@
                     this.socket.onmessage = (msg) => {
                         const data = JSON.parse(msg.data);
                         
-                        if (data.msg_type === 'authorize' && !data.error) {
+                        if (data.error) {
+                            this.status = 'Error: ' + data.error.message;
+                            console.error("Deriv Error:", data.error);
+                            return;
+                        }
+    
+                        if (data.msg_type === 'authorize') {
                             this.accountType = data.authorize.is_virtual ? 'DEMO' : 'REAL';
                             this.loginid = data.authorize.loginid;
                             this.currency = data.authorize.currency;
@@ -350,47 +354,42 @@
                             });
                         }
     
+                        if (data.msg_type === 'buy') {
+                            this.status = 'Orden abierta';
+                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
+                        }
+    
                         if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract.is_sold) {
                             const contract = data.proposal_open_contract;
                             this.showTradeResult(contract.status, contract.profit);
                         }
-    
-                        if (data.msg_type === 'buy' && !data.error) {
-                            this.status = 'Orden ejecutada';
-                            this.socket.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
-                        }
-    
-                        if (data.error) {
-                            this.status = 'Error: ' + data.error.message;
-                        }
                     };
-
+    
                     this.socket.onclose = () => {
-                        if(this.status !== 'Conectado') this.status = 'Desconectado';
+                        if (!this.status.includes('Conectando')) {
+                            this.status = 'Sesión cerrada';
+                        }
                     };
                 },
     
                 showTradeResult(status, profit) {
                     const isWin = status === 'won';
+                    this.status = isWin ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
+                    
                     const color = isWin ? '#00ffa3' : '#ff3355';
-                    const text = isWin ? `¡GANADA! +$${profit}` : `PERDIDA: $${profit}`;
-                    this.status = text;
                     const toast = document.createElement('div');
-                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 10000; box-shadow: 0 0 20px ${color};`;
-                    toast.innerText = text;
+                    toast.style.cssText = `position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: ${color}; color: black; padding: 15px 30px; border-radius: 10px; font-weight: 800; z-index: 10000; box-shadow: 0 0 20px ${color}88;`;
+                    toast.innerText = this.status;
                     document.body.appendChild(toast);
                     setTimeout(() => toast.remove(), 3000);
                 },
     
-                rechargeDemo() {
-                    if (this.accountType === 'DEMO' && this.socket) {
-                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
-                    }
-                },
-    
                 executeTrade(type) {
-                    if (!this.socket || this.socket.readyState !== 1) return;
-                    this.status = `Enviando ${type}...`;
+                    if (!this.socket || this.socket.readyState !== 1) {
+                        this.status = 'Error: No conectado';
+                        return;
+                    }
+                    this.status = 'Enviando operación...';
                     this.socket.send(JSON.stringify({
                         "buy": 1,
                         "price": parseFloat(this.stake),
@@ -404,6 +403,12 @@
                             "symbol": "R_100"
                         }
                     }));
+                },
+    
+                rechargeDemo() {
+                    if (this.accountType === 'DEMO' && this.socket) {
+                        this.socket.send(JSON.stringify({ "topup_virtual": 1 }));
+                    }
                 }
             }
         }
