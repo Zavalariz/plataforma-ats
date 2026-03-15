@@ -25,38 +25,24 @@ export default {
         onResultReadyCallback(results);
     },
 
-    resolveSymbol: async (symbolName, onSymbolResolvedCallback, onResolveErrorCallback) => {
-        try {
-            const symbols = await getSymbols();
-            // Buscamos el símbolo, asegurando que symbolName sea string
-            const nameToFind = typeof symbolName === 'string' ? symbolName : symbolName.name;
-            const symbolItem = symbols.find(({ symbol }) => symbol === nameToFind);
-
-            if (!symbolItem) {
-                onResolveErrorCallback("Símbolo no encontrado");
-                return;
-            }
-
-            const symbolInfo = {
-                name: symbolItem.symbol,
-                full_name: symbolItem.symbol,
-                description: symbolItem.displayName || symbolItem.symbol,
-                type: 'stock',
-                session: '24x7',
-                timezone: 'Etc/UTC',
-                exchange: 'Deriv',
-                listed_exchange: 'Deriv',
-                minmov: 1,
-                pricescale: 100, // Ajusta esto si ves precios raros
-                has_intraday: true,
-                supported_resolutions: configurationData.supported_resolutions,
-                data_status: 'streaming',
-            };
-
-            setTimeout(() => onSymbolResolvedCallback(symbolInfo), 0);
-        } catch (e) {
-            onResolveErrorCallback("Error en resolveSymbol");
-        }
+    resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback) => {
+        const symbolInfo = {
+            name: symbolName,
+            full_name: symbolName,
+            description: "Deriv Synthetic Index",
+            type: 'stock',
+            session: '24x7',
+            timezone: 'Etc/UTC',
+            exchange: 'Deriv',
+            minmov: 1,
+            pricescale: 100,
+            has_intraday: true,
+            supported_resolutions: ['1', '5', '15', '30', '60'],
+            data_status: 'streaming',
+        };
+        
+        // IMPORTANTE: Asegúrate de que no devuelves nada 'undefined'
+        setTimeout(() => onSymbolResolvedCallback(symbolInfo), 0);
     },
 
     getBars: async (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) => {
