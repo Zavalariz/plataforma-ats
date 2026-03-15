@@ -5,6 +5,8 @@ let derivWS = null;
 const messageQueue = []; 
 let _onRealtimeCallback = null;
 
+// --- CONFIGURACIÓN DE CONEXIÓN ---
+
 export function initDerivWSConnection() {
     if (derivWS && (derivWS.readyState === WebSocket.OPEN || derivWS.readyState === WebSocket.CONNECTING)) return;
 
@@ -20,28 +22,37 @@ export function initDerivWSConnection() {
 
     derivWS.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
+        
         if (data.error) {
             console.error("❌ Error de Deriv:", data.error.message);
             return;
         }
+
+        // Manejar respuesta de Ticks en tiempo real (Suscripción)
         if (data.msg_type === 'tick' && _onRealtimeCallback) {
             const tick = data.tick;
             _onRealtimeCallback({
-                time: tick.epoch * 1000,
-                close: tick.quote,
-                open: tick.quote,
-                high: tick.quote,
-                low: tick.quote,
+                time: parseInt(tick.epoch) * 1000,
+                close: parseFloat(tick.quote),
+                open: parseFloat(tick.quote),
+                high: parseFloat(tick.quote),
+                low: parseFloat(tick.quote),
                 volume: 0
             });
         }
+
+        // Manejar respuesta de Historial de Velas con Evento Único
         if (data.msg_type === 'candles') {
-            window.dispatchEvent(new CustomEvent('deriv_candles', { detail: data.candles }));
+            const eventName = data.echo_req.passthrough?.event_name || 'deriv_candles';
+            window.dispatchEvent(new CustomEvent(eventName, { detail: data.candles }));
         }
     };
 
     derivWS.onerror = (err) => console.error("❌ Error WS:", err);
-    derivWS.onclose = () => setTimeout(initDerivWSConnection, 5000);
+    derivWS.onclose = () => {
+        console.warn("⚠️ Conexión cerrada. Reintentando en 5s...");
+        setTimeout(initDerivWSConnection, 5000);
+    };
 }
 
 function safeSend(message) {
@@ -51,6 +62,8 @@ function safeSend(message) {
         messageQueue.push(message);
     }
 }
+
+// --- FUNCIONES PARA DATAFEED ---
 
 export function getSymbols() {
     return [
@@ -64,19 +77,11 @@ export function getSymbols() {
 
 export function getHistoryDWS(symbol, from, to, resolution) {
     return new Promise((resolve) => {
-        // CORRECCIÓN AQUÍ: Verificamos si symbol es objeto o string
-        let symbolName = "";
-        if (typeof symbol === 'string') {
-            symbolName = symbol;
-        } else if (symbol && symbol.name) {
-            symbolName = symbol.name;
-        } else {
-            symbolName = "R_100"; // Fallback por seguridad
-        }
-
-        // Limpiamos el nombre para Deriv
+        // Normalización del Símbolo
+        let symbolName = (typeof symbol === 'string') ? symbol : (symbol?.name || "R_100");
         const symbolID = symbolName.split(':').pop().replace('Index', '').trim();
 
+        // Conversión de Granularidad (TV -> Deriv)
         let granularity = 60; 
         if (resolution === '1') granularity = 60;
         else if (resolution === '5') granularity = 300;
@@ -84,32 +89,40 @@ export function getHistoryDWS(symbol, from, to, resolution) {
         else if (resolution === '60') granularity = 3600;
         else if (resolution === 'D') granularity = 86400;
 
+        // Nombre de evento único para evitar colisiones de callbacks
+        const eventUniqueId = `deriv_candles_${symbolID}_${Math.random().toString(36).substr(2, 9)}`;
+
         const request = {
             ticks_history: symbolID,
             adjust_start_time: 1,
             count: 1000,
             end: "latest",
             style: "candles",
-            granularity: granularity
+            granularity: granularity,
+            passthrough: { event_name: eventUniqueId } // Importante para el onmessage
         };
 
         const handleResponse = (e) => {
             if (e.detail) {
                 const candles = e.detail.map(c => ({
-                    time: c.epoch * 1000,
+                    time: parseInt(c.epoch) * 1000, // Forzado a entero y milisegundos
                     low: parseFloat(c.low),
                     high: parseFloat(c.high),
                     open: parseFloat(c.open),
                     close: parseFloat(c.close),
                     volume: 0
                 }));
-                window.removeEventListener('deriv_candles', handleResponse);
+                
+                // Ordenar cronológicamente
+                candles.sort((a, b) => a.time - b.time);
+                
+                window.removeEventListener(eventUniqueId, handleResponse);
                 resolve(candles);
             }
         };
 
-        window.addEventListener('deriv_candles', handleResponse);
-        console.log(`🛰️ Solicitando historial de: ${symbolID}`);
+        window.addEventListener(eventUniqueId, handleResponse);
+        console.log(`🛰️ Fetching: ${symbolID} | Resolution: ${resolution}`);
         safeSend(request);
     });
 }
