@@ -2,103 +2,276 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Elite Terminal | Pro Trading</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ATS Elite | Pro Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="data:,">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         body { background: #020606; color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
-        #tv_chart_container { height: calc(100vh - 140px); width: 100%; background: #020606; }
-        .glass-header { background: rgba(10, 15, 14, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #14211e; }
-        .btn-buy { background: #00ffa3; color: #000; font-weight: 800; transition: all 0.2s; }
-        .btn-sell { background: #ff4444; color: #fff; font-weight: 800; transition: all 0.2s; }
-        .btn-buy:active, .btn-sell:active { transform: scale(0.95); opacity: 0.8; }
+        #tv_chart_container { height: 100%; width: 100%; background: #020606; }
+        
+        /* Estilos UI MT5 */
+        .input-mt5 { background: #0a0f0e; border: 1px solid #14211e; border-radius: 4px; padding: 10px; color: white; width: 100%; outline: none; text-align: center; font-family: monospace; font-size: 16px; font-weight: bold; }
+        .input-sl { border-bottom: 3px solid #ff4444; color: #ff4444; }
+        .input-tp { border-bottom: 3px solid #00ffa3; color: #00ffa3; }
+        .btn-buy { background: #162e26; border: 1px solid #00ffa3; color: #00ffa3; transition: 0.2s; }
+        .btn-sell { background: #2e1616; border: 1px solid #ff4444; color: #ff4444; transition: 0.2s; }
+        .btn-buy:active, .btn-sell:active { transform: scale(0.98); opacity: 0.8; }
+        
+        .nav-tab { flex: 1; text-align: center; padding: 10px; font-size: 10px; font-weight: 800; color: #444; text-transform: uppercase; cursor: pointer; }
+        .nav-tab.active { color: #00ffa3; border-top: 2px solid #00ffa3; background: linear-gradient(to bottom, #00ffa310, transparent); }
+        
+        /* Precios dinámicos en botones */
+        .price-main { font-size: 20px; font-weight: 900; line-height: 1; }
+        .price-sub { font-size: 10px; vertical-align: super; opacity: 0.8; }
+        .price-prefix { font-size: 10px; opacity: 0.8; }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body x-data="{ tab: 'chart', search: '' }" class="flex flex-col h-screen">
 
-    <header class="h-16 glass-header flex items-center justify-between px-6 z-50">
-        <div class="flex items-center gap-4">
+    <header class="h-14 bg-[#0a0f0e] border-b border-[#14211e] flex items-center justify-between px-4 shrink-0 z-50">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html' + window.location.search" class="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-900 text-zinc-400">
+                <span class="material-icons-round text-sm">arrow_back</span>
+            </button>
             <div class="flex flex-col">
-                <span id="balance" class="text-[#00ffa3] font-mono text-xl font-black">$ 0.00</span>
-                <span class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Balance Real Time</span>
+                <span id="balance-display" class="text-[#00ffa3] font-mono font-black text-sm">$ 0.00</span>
+                <span class="text-[8px] text-zinc-500 uppercase font-bold tracking-widest">Live Balance</span>
             </div>
         </div>
-
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
-                <div id="connection-indicator" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]"></div>
-                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">Deriv Server</span>
-            </div>
-            <button onclick="window.location.href='dashboard.html' + window.location.search" class="text-xs text-zinc-500 hover:text-white transition-colors uppercase font-bold">Cerrar</button>
-        </div>
+        <div id="acc-badge" class="text-[9px] font-black uppercase px-2 py-1 rounded bg-white/5 border border-white/10 italic text-zinc-500">DEMO</div>
     </header>
 
-    <div id="tv_chart_container"></div>
+    <main class="flex-1 relative overflow-hidden bg-black">
+        
+        <section x-show="tab === 'quotes'" class="absolute inset-0 bg-[#020606] overflow-y-auto z-[60]" x-cloak>
+            <div class="sticky top-0 z-10 bg-[#0a0f0e] p-3 border-b border-[#14211e]">
+                <input type="text" x-model="search" placeholder="Buscar mercado..." class="w-full bg-black border border-white/10 rounded-lg py-2 px-4 text-xs outline-none text-white">
+            </div>
+            <div class="divide-y divide-white/5">
+                <template x-for="m in [
+                    {s:'R_100', n:'Volatility 100'}, {s:'R_75', n:'Volatility 75'}, {s:'R_50', n:'Volatility 50'},
+                    {s:'BOOM1000', n:'Boom 1000'}, {s:'CRASH1000', n:'Crash 1000'}, {s:'1HZ100V', n:'Volatility 100 (1s)'}
+                ]">
+                    <div x-show="m.n.toLowerCase().includes(search.toLowerCase())" @click="changeMarket(m.s); tab='chart'" class="p-4 flex justify-between active:bg-zinc-900 cursor-pointer">
+                        <b class="text-sm" x-text="m.n"></b>
+                        <span class="text-[#00ffa3] text-[10px] font-bold italic tracking-tighter">DERIV LIVE</span>
+                    </div>
+                </template>
+            </div>
+        </section>
 
-    <footer class="h-20 bg-[#0a0f0e] border-t border-[#14211e] p-4 flex items-center justify-center gap-4">
-        <div class="grid grid-cols-2 gap-4 w-full max-w-4xl">
-            <button onclick="alert('Venta ejecutada')" class="btn-sell h-12 rounded-xl uppercase text-xs tracking-widest shadow-lg shadow-red-900/20">
-                Sell / Put
-            </button>
-            <button onclick="alert('Compra ejecutada')" class="btn-buy h-12 rounded-xl uppercase text-xs tracking-widest shadow-lg shadow-emerald-900/20">
-                Buy / Call
-            </button>
+        <section x-show="tab === 'chart'" class="absolute inset-0 flex flex-col">
+            <div class="flex-1 relative">
+                <div id="tv_chart_container"></div>
+            </div>
+            
+            <div class="bg-[#0a0f0e] border-t border-[#14211e] p-4 shrink-0">
+                <div class="flex items-center gap-2 mb-3">
+                    <button onclick="adjustLot(-0.01)" class="w-12 h-11 bg-zinc-900 rounded font-bold">-0.01</button>
+                    <input type="number" id="lot-input" value="0.10" step="0.01" class="flex-1 input-mt5">
+                    <button onclick="adjustLot(0.01)" class="w-12 h-11 bg-zinc-900 rounded font-bold">+0.01</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input type="number" id="sl-input" placeholder="S/L (Opcional)" class="input-mt5 input-sl">
+                    <input type="number" id="tp-input" placeholder="T/P (Opcional)" class="input-mt5 input-tp">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="executeTrade('MULTDOWN')" class="btn-sell h-16 rounded-lg flex flex-col items-center justify-center">
+                        <span class="text-[10px] font-black uppercase mb-1">Sell / Put</span>
+                        <div id="sell-price-container" class="font-mono flex items-baseline">
+                            <span class="price-prefix">0.0</span><span class="price-main">00</span><span class="price-sub">0</span>
+                        </div>
+                    </button>
+                    <button onclick="executeTrade('MULTUP')" class="btn-buy h-16 rounded-lg flex flex-col items-center justify-center">
+                        <span class="text-[10px] font-black uppercase mb-1">Buy / Call</span>
+                        <div id="buy-price-container" class="font-mono flex items-baseline">
+                            <span class="price-prefix">0.0</span><span class="price-main">00</span><span class="price-sub">0</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section x-show="tab === 'trading'" class="absolute inset-0 bg-[#020606] p-4 overflow-y-auto z-[60]" x-cloak>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xs font-black uppercase text-zinc-500 tracking-widest">Posiciones Abiertas</h2>
+                <button onclick="closeAllTrades()" class="bg-red-500/10 border border-red-500/50 text-red-500 px-3 py-1 rounded text-[9px] font-black uppercase">Cerrar Todo</button>
+            </div>
+            <div id="active-trades-container" class="space-y-3 pb-24">
+                </div>
+        </section>
+    </main>
+
+    <nav class="h-16 bg-[#0a0f0e] border-t border-[#14211e] flex items-center shrink-0 z-[70]">
+        <div @click="tab = 'quotes'" :class="tab === 'quotes' ? 'active' : ''" class="nav-tab">
+            <span class="material-icons-round block text-lg">list</span>Mercados
         </div>
-    </footer>
+        <div @click="tab = 'chart'" :class="tab === 'chart' ? 'active' : ''" class="nav-tab">
+            <span class="material-icons-round block text-lg">show_chart</span>Gráfico
+        </div>
+        <div @click="tab = 'trading'" :class="tab === 'trading' ? 'active' : ''" class="nav-tab">
+            <span class="material-icons-round block text-lg">account_balance_wallet</span>Trading
+        </div>
+    </nav>
 
     <script type="module">
         import { widget } from './charting_library/charting_library.esm.js';
         import Datafeed from './datafeed.js';
-        import { initDerivWSConnection } from './streaming.js';
+        import { initDerivWSConnection, getSocket } from './streaming.js';
+
+        let tvWidget;
+        let activeTrades = {};
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
-            const token1 = params.get('token1');
             const activeType = params.get('active_type') || 'demo';
+            document.getElementById('acc-badge').innerText = activeType;
 
-            if (token1) {
-                localStorage.setItem('selectedAccount', JSON.stringify({
-                    token: token1,
-                    type: activeType
-                }));
-            }
-
+            // 1. Iniciar WS
             initDerivWSConnection();
 
-            const tvWidget = new widget({
-                symbol: 'R_100', 
+            // 2. Cargar TradingView
+            tvWidget = new widget({
+                symbol: 'R_100',
                 interval: '1',
                 container: "tv_chart_container",
-                // CAMBIO CLAVE AQUÍ: Se añade static/ para que encuentre los bundles que subiste
-                library_path: "charting_library/static/", 
+                library_path: "charting_library/static/",
                 datafeed: Datafeed,
                 locale: "en",
                 theme: "Dark",
                 autosize: true,
-                loading_screen: { backgroundColor: "#020606" },
-                disabled_features: [
-                    "header_saveload",
-                    "study_templates",
-                    "use_localstorage_for_settings",
-                    "header_symbol_search",
-                    "symbol_search_hot_key"
-                ],
-                enabled_features: ["side_toolbar_in_fullscreen_mode"],
+                disabled_features: ["header_saveload", "header_symbol_search"],
                 overrides: {
                     "paneProperties.background": "#020606",
                     "paneProperties.vertGridProperties.color": "#0a0f0e",
                     "paneProperties.horzGridProperties.color": "#0a0f0e",
-                    "symbolWatermarkProperties.transparency": 90,
                     "scalesProperties.textColor": "#666"
-                },
-                custom_css_url: ""
+                }
             });
 
-            tvWidget.onChartReady(() => {
-                console.log("ATS Terminal Ready");
+            // 3. Escuchar datos de Deriv (Balance y Precios)
+            window.addEventListener('deriv_data', (e) => {
+                const data = e.detail;
+                
+                if (data.msg_type === 'balance') {
+                    document.getElementById('balance-display').innerText = `$ ${data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                }
+
+                if (data.msg_type === 'tick') {
+                    updateButtonPrices(data.tick.quote);
+                }
+
+                if (data.msg_type === 'proposal_open_contract') {
+                    updateTradeUI(data.proposal_open_contract);
+                }
             });
         };
+
+        // Cambiar Mercado
+        window.changeMarket = (symbol) => {
+            tvWidget.setSymbol(symbol, '1', () => {
+                console.log("Mercado cambiado a:", symbol);
+            });
+        };
+
+        // Ejecutar Operación
+        window.executeTrade = (type) => {
+            const socket = getSocket();
+            const lot = document.getElementById('lot-input').value;
+            const sl = document.getElementById('sl-input').value;
+            const tp = document.getElementById('tp-input').value;
+            const symbol = tvWidget.activeChart().symbol();
+
+            const request = {
+                buy: 1,
+                price: parseFloat(lot) * 100,
+                parameters: {
+                    amount: parseFloat(lot) * 100,
+                    basis: "stake",
+                    contract_type: type,
+                    currency: "USD",
+                    duration: 1,
+                    duration_unit: "h", // Duración por defecto para Multipliers/Options
+                    symbol: symbol
+                }
+            };
+
+            if(sl || tp) {
+                request.parameters.limit_order = {};
+                if(sl) request.parameters.limit_order.stop_loss = parseFloat(sl);
+                if(tp) request.parameters.limit_order.take_profit = parseFloat(tp);
+            }
+
+            socket.send(JSON.stringify(request));
+            // Feedback visual rápido
+            console.log("Enviando orden...", request);
+        };
+
+        // Cerrar Posiciones
+        window.closeT = (id) => {
+            getSocket().send(JSON.stringify({ sell: id, price: 0 }));
+        };
+
+        window.closeAllTrades = () => {
+            Object.keys(activeTrades).forEach(id => window.closeT(id));
+        };
+    </script>
+
+    <script>
+        // Lógica de UI (No requiere módulos)
+        function adjustLot(v) {
+            const input = document.getElementById('lot-input');
+            input.value = (parseFloat(input.value) + v).toFixed(2);
+        }
+
+        function updateButtonPrices(price) {
+            const pStr = price.toFixed(4);
+            const prefix = pStr.slice(0, -3);
+            const main = pStr.slice(-3, -1);
+            const sub = pStr.slice(-1);
+
+            const html = `<span class="price-prefix">${prefix}</span><span class="price-main">${main}</span><span class="price-sub">${sub}</span>`;
+            document.getElementById('sell-price-container').innerHTML = html;
+            document.getElementById('buy-price-container').innerHTML = html;
+        }
+
+        function updateTradeUI(c) {
+            const id = c.contract_id;
+            const container = document.getElementById('active-trades-container');
+            
+            if (c.is_sold) {
+                document.getElementById(`t-${id}`)?.remove();
+                return;
+            }
+
+            let tradeDiv = document.getElementById(`t-${id}`);
+            if (!tradeDiv) {
+                tradeDiv = document.createElement('div');
+                tradeDiv.id = `t-${id}`;
+                tradeDiv.className = "bg-[#0a0f0e] border border-white/5 rounded-lg overflow-hidden";
+                container.prepend(tradeDiv);
+            }
+
+            const profit = c.profit || 0;
+            const colorClass = profit >= 0 ? 'text-[#00ffa3]' : 'text-red-500';
+
+            tradeDiv.innerHTML = `
+                <div class="p-2 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <span class="text-[9px] font-black uppercase tracking-tighter text-zinc-400">${c.display_name}</span>
+                    <button onclick="closeT(${id})" class="text-red-500 text-[9px] font-bold uppercase">Cerrar</button>
+                </div>
+                <div class="p-3 grid grid-cols-2 gap-y-1 text-[8px] font-bold uppercase text-zinc-500">
+                    <div>Entrada: <span class="text-white font-mono">${c.entry_tick || '...'}</span></div>
+                    <div class="text-right">Stake: <span class="text-white font-mono">$ ${c.buy_price}</span></div>
+                    <div class="col-span-2 pt-2 border-t border-white/5 flex justify-between items-center">
+                        <span class="text-zinc-400">Profit/Loss:</span>
+                        <span class="text-base font-black font-mono tracking-tighter ${colorClass}">$ ${profit.toFixed(2)}</span>
+                    </div>
+                </div>`;
+        }
     </script>
 </body>
 </html>
