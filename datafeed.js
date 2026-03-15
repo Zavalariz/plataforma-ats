@@ -1,35 +1,24 @@
 import { subscribeOnStream, unsubscribeFromStream, getSymbols, getHistoryDWS } from "./streaming.js";
 
-const configurationData = {
-    supported_resolutions: ["1", "2", "3", "5", "10", "15", "30", "60", "120", "240", "480", "1D"],
-    exchanges: [{ value: 'Deriv', name: 'Deriv', desc: 'Deriv' }],
-    symbols_types: [{ name: 'Indices', value: 'stock' }],
-};
+const lastBarsCache = new Map();
 
 export default {
     onReady: (callback) => {
-        setTimeout(() => callback(configurationData), 0);
+        console.log("✅ Datafeed Ready");
+        setTimeout(() => callback({ supported_resolutions: ['1', '5', '15', '30', '60', 'D'] }), 0);
     },
 
-    searchSymbols: async (userInput, exchange, symbolType, onResultReadyCallback) => {
-        const symbols = await getSymbols();
-        const results = symbols
-            .filter(s => s.symbol.toLowerCase().includes(userInput.toLowerCase()))
-            .map(s => ({
-                symbol: s.symbol,
-                full_name: s.symbol,
-                description: s.displayName,
-                exchange: 'Deriv',
-                type: 'stock',
-            }));
-        onResultReadyCallback(results);
+    searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
+        const symbols = getSymbols();
+        const filtered = symbols.filter(s => s.symbol.includes(userInput.toUpperCase()));
+        onResultReadyCallback(filtered);
     },
 
     resolveSymbol: (symbolName, onSymbolResolvedCallback, onResolveErrorCallback) => {
         const symbolInfo = {
             name: symbolName,
             full_name: symbolName,
-            description: "Deriv Synthetic Index",
+            description: symbolName,
             type: 'stock',
             session: '24x7',
             timezone: 'Etc/UTC',
@@ -37,56 +26,44 @@ export default {
             minmov: 1,
             pricescale: 100,
             has_intraday: true,
-            supported_resolutions: ['1', '5', '15', '30', '60'],
+            supported_resolutions: ['1', '5', '15', '30', '60', 'D'],
             data_status: 'streaming',
         };
-        
-        // IMPORTANTE: Asegúrate de que no devuelves nada 'undefined'
         setTimeout(() => onSymbolResolvedCallback(symbolInfo), 0);
     },
 
     getBars: async (symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) => {
         const { from, to, firstDataRequest } = periodParams;
+        
+        // FORZAR resolución si viene undefined
+        const res = resolution || '1';
 
         try {
-            const requestData = {
-                symbol: symbolInfo.name,
-                period: resolution,
-                from: from,
-                to: to,
-            };
-
-            // Llamamos a tu función de streaming.js
-            const history = await getHistoryDWS(requestData, firstDataRequest);
+            const bars = await getHistoryDWS(symbolInfo.name, from, to, res);
             
-            if (!history || history.length === 0) {
+            if (bars.length === 0) {
                 onHistoryCallback([], { noData: true });
                 return;
             }
 
-            const bars = history.map(bar => ({
-                time: bar.epoch * 1000, // TradingView usa milisegundos
-                low: parseFloat(bar.low),
-                high: parseFloat(bar.high),
-                open: parseFloat(bar.open),
-                close: parseFloat(bar.close),
-            }));
-
-            // Ordenar por tiempo para evitar errores visuales
-            bars.sort((a, b) => a.time - b.time);
+            if (firstDataRequest) {
+                lastBarsCache.set(symbolInfo.name, { ...bars[bars.length - 1] });
+            }
 
             onHistoryCallback(bars, { noData: false });
         } catch (error) {
-            console.error("Error en getBars:", error);
+            console.error("❌ Error en getBars:", error);
             onErrorCallback(error);
         }
     },
 
-    subscribeBars: (symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) => {
-        subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback);
+    subscribeBars: (symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback) => {
+        subscribeOnStream(symbolInfo, resolution, (bar) => {
+            onRealtimeCallback(bar);
+        }, subscribeUID);
     },
 
     unsubscribeBars: (subscriberUID) => {
         unsubscribeFromStream(subscriberUID);
-    },
+    }
 };
