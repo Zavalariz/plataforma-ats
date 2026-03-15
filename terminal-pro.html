@@ -124,35 +124,25 @@
 
         let tvWidget;
         let activeTrades = {};
+        let orderLines = {}; // 🚩 Almacén para las líneas del gráfico
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const activeType = params.get('active_type') || 'demo';
             document.getElementById('acc-badge').innerText = activeType.toUpperCase();
 
-            // --- LÓGICA DE DETECCIÓN DE TOKEN (SÓLO ESTO CAMBIA) ---
+            // --- LÓGICA DE DETECCIÓN DE TOKEN ---
             let selectedToken = null;
             for (let i = 1; i <= 10; i++) {
                 const acc = params.get('acct' + i);
                 const tok = params.get('token' + i);
                 if (!acc || !tok) continue;
-
-                if (activeType === 'demo' && acc.includes('VRTC')) {
-                    selectedToken = tok;
-                    break;
-                } else if (activeType === 'real' && acc.startsWith('CR') && !acc.includes('VRTC')) {
-                    selectedToken = tok;
-                    break;
-                }
+                if (activeType === 'demo' && acc.includes('VRTC')) { selectedToken = tok; break; }
+                else if (activeType === 'real' && acc.startsWith('CR')) { selectedToken = tok; break; }
             }
-
             if (selectedToken) {
-                localStorage.setItem('selectedAccount', JSON.stringify({ 
-                    token: selectedToken, 
-                    type: activeType 
-                }));
+                localStorage.setItem('selectedAccount', JSON.stringify({ token: selectedToken, type: activeType }));
             }
-            // -------------------------------------------------------
 
             // 1. Iniciar WS
             initDerivWSConnection();
@@ -176,66 +166,80 @@
                 }
             });
 
-            // 3. Escuchar datos de Deriv (Balance y Precios)
+            // 3. Escuchar datos de Deriv
             window.addEventListener('deriv_data', (e) => {
                 const data = e.detail;
                 
                 if (data.msg_type === 'balance') {
-                    console.log("💰 ¡BALANCE RECIBIDO!", data.balance);
                     const b = data.balance.balance;
                     const cur = data.balance.currency || 'USD';
                     document.getElementById('balance-display').innerText = `${cur} ${parseFloat(b).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                    
-                    document.getElementById('acc-badge').classList.add('text-emerald-500');
                 }
 
                 if (data.msg_type === 'tick') {
                     updateButtonPrices(data.tick.quote);
                 }
-                
-                if (data.error) {
-                    console.error("❌ Error desde Deriv:", data.error.message);
+
+                // --- LOGICA PARA PINTAR EN EL GRÁFICO ---
+                if (data.msg_type === 'proposal_open_contract') {
+                    const contract = data.proposal_open_contract;
+                    updateTradeUI(contract); // Actualiza la lista visual inferior
+
+                    // Dibujar la línea si el contrato se abre
+                    if (!contract.is_sold && contract.entry_tick && !orderLines[contract.contract_id]) {
+                        try {
+                            const chart = tvWidget.activeChart();
+                            const color = contract.contract_type === 'MULTUP' ? '#00ffa3' : '#ff4444';
+                            
+                            const line = chart.createOrderLine()
+                                .setText(`${contract.contract_type === 'MULTUP' ? 'BUY' : 'SELL'} $${contract.buy_price}`)
+                                .setQuantity(contract.buy_price)
+                                .setPrice(contract.entry_tick)
+                                .setLineColor(color)
+                                .setBodyTextColor("#fff")
+                                .setBodyBackgroundColor(color)
+                                .setBodyBorderColor(color);
+                            
+                            orderLines[contract.contract_id] = line;
+                        } catch (err) { console.error("Error al pintar línea:", err); }
+                    }
+
+                    // Borrar la línea si el contrato se cierra
+                    if (contract.is_sold && orderLines[contract.contract_id]) {
+                        orderLines[contract.contract_id].remove();
+                        delete orderLines[contract.contract_id];
+                    }
                 }
             });
         };
 
         // Cambiar Mercado
         window.changeMarket = (symbol) => {
-            tvWidget.setSymbol(symbol, '1', () => {
-                console.log("Mercado cambiado a:", symbol);
-            });
+            tvWidget.setSymbol(symbol, '1', () => {});
         };
 
-        // Ejecutar Operación
+        // Ejecutar Operación (CON MULTIPLIER CORREGIDO)
         window.executeTrade = (type) => {
             const socket = getSocket();
             const lot = document.getElementById('lot-input').value;
-            const sl = document.getElementById('sl-input').value;
-            const tp = document.getElementById('tp-input').value;
             const symbol = tvWidget.activeChart().symbol();
 
             const request = {
                 buy: 1,
-                price: parseFloat(lot) * 100,
+                price: parseFloat(lot),
                 parameters: {
-                    amount: parseFloat(lot) * 100,
+                    amount: parseFloat(lot),
                     basis: "stake",
                     contract_type: type,
                     currency: "USD",
-                    duration: 1,
-                    duration_unit: "h",
-                    symbol: symbol
+                    multiplier: 100, // <--- Fijo para evitar errores
+                    symbol: symbol,
+                    subscribe: 1 // <--- Importante para que Deriv nos mande updates del contrato
                 }
             };
 
-            if(sl || tp) {
-                request.parameters.limit_order = {};
-                if(sl) request.parameters.limit_order.stop_loss = parseFloat(sl);
-                if(tp) request.parameters.limit_order.take_profit = parseFloat(tp);
-            }
-
             socket.send(JSON.stringify(request));
-            console.log("Enviando orden...", request);
+            console.log("🚀 Enviando orden...", request);
         };
 
         window.closeT = (id) => {
