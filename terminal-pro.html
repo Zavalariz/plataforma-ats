@@ -128,7 +128,31 @@
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const activeType = params.get('active_type') || 'demo';
-            document.getElementById('acc-badge').innerText = activeType;
+            document.getElementById('acc-badge').innerText = activeType.toUpperCase();
+
+            // --- LÓGICA DE DETECCIÓN DE TOKEN (SÓLO ESTO CAMBIA) ---
+            let selectedToken = null;
+            for (let i = 1; i <= 10; i++) {
+                const acc = params.get('acct' + i);
+                const tok = params.get('token' + i);
+                if (!acc || !tok) continue;
+
+                if (activeType === 'demo' && acc.includes('VRTC')) {
+                    selectedToken = tok;
+                    break;
+                } else if (activeType === 'real' && acc.startsWith('CR') && !acc.includes('VRTC')) {
+                    selectedToken = tok;
+                    break;
+                }
+            }
+
+            if (selectedToken) {
+                localStorage.setItem('selectedAccount', JSON.stringify({ 
+                    token: selectedToken, 
+                    type: activeType 
+                }));
+            }
+            // -------------------------------------------------------
 
             // 1. Iniciar WS
             initDerivWSConnection();
@@ -156,14 +180,12 @@
             window.addEventListener('deriv_data', (e) => {
                 const data = e.detail;
                 
-                // Esto nos dirá en la consola EXACTAMENTE qué está enviando Deriv
                 if (data.msg_type === 'balance') {
                     console.log("💰 ¡BALANCE RECIBIDO!", data.balance);
                     const b = data.balance.balance;
                     const cur = data.balance.currency || 'USD';
                     document.getElementById('balance-display').innerText = `${cur} ${parseFloat(b).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
                     
-                    // Ponemos el badge en verde para saber que es real
                     document.getElementById('acc-badge').classList.add('text-emerald-500');
                 }
 
@@ -171,7 +193,6 @@
                     updateButtonPrices(data.tick.quote);
                 }
                 
-                // Si hay un error de autorización o balance, esto nos avisará
                 if (data.error) {
                     console.error("❌ Error desde Deriv:", data.error.message);
                 }
@@ -202,7 +223,7 @@
                     contract_type: type,
                     currency: "USD",
                     duration: 1,
-                    duration_unit: "h", // Duración por defecto para Multipliers/Options
+                    duration_unit: "h",
                     symbol: symbol
                 }
             };
@@ -214,11 +235,9 @@
             }
 
             socket.send(JSON.stringify(request));
-            // Feedback visual rápido
             console.log("Enviando orden...", request);
         };
 
-        // Cerrar Posiciones
         window.closeT = (id) => {
             getSocket().send(JSON.stringify({ sell: id, price: 0 }));
         };
@@ -229,7 +248,6 @@
     </script>
 
     <script>
-        // Lógica de UI (No requiere módulos)
         function adjustLot(v) {
             const input = document.getElementById('lot-input');
             input.value = (parseFloat(input.value) + v).toFixed(2);
