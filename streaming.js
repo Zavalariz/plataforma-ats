@@ -5,8 +5,6 @@ let derivWS = null;
 const messageQueue = []; 
 let _onRealtimeCallback = null;
 
-// --- CONFIGURACIÓN DE CONEXIÓN ---
-
 export function initDerivWSConnection() {
     if (derivWS && (derivWS.readyState === WebSocket.OPEN || derivWS.readyState === WebSocket.CONNECTING)) return;
 
@@ -22,13 +20,10 @@ export function initDerivWSConnection() {
 
     derivWS.onmessage = (msg) => {
         const data = JSON.parse(msg.data);
-        
         if (data.error) {
             console.error("❌ Error de Deriv:", data.error.message);
             return;
         }
-
-        // Manejar respuesta de Ticks en tiempo real (Suscripción)
         if (data.msg_type === 'tick' && _onRealtimeCallback) {
             const tick = data.tick;
             _onRealtimeCallback({
@@ -40,18 +35,13 @@ export function initDerivWSConnection() {
                 volume: 0
             });
         }
-
-        // Manejar respuesta de Historial de Velas
         if (data.msg_type === 'candles') {
             window.dispatchEvent(new CustomEvent('deriv_candles', { detail: data.candles }));
         }
     };
 
     derivWS.onerror = (err) => console.error("❌ Error WS:", err);
-    derivWS.onclose = () => {
-        console.warn("⚠️ Conexión cerrada. Reintentando en 5s...");
-        setTimeout(initDerivWSConnection, 5000);
-    };
+    derivWS.onclose = () => setTimeout(initDerivWSConnection, 5000);
 }
 
 function safeSend(message) {
@@ -61,8 +51,6 @@ function safeSend(message) {
         messageQueue.push(message);
     }
 }
-
-// --- FUNCIONES PARA DATAFEED ---
 
 export function getSymbols() {
     return [
@@ -76,10 +64,19 @@ export function getSymbols() {
 
 export function getHistoryDWS(symbol, from, to, resolution) {
     return new Promise((resolve) => {
-        // Limpiar el símbolo por si viene con texto extra
-        const symbolID = symbol.split(':').pop().replace('Index', '').trim();
+        // CORRECCIÓN AQUÍ: Verificamos si symbol es objeto o string
+        let symbolName = "";
+        if (typeof symbol === 'string') {
+            symbolName = symbol;
+        } else if (symbol && symbol.name) {
+            symbolName = symbol.name;
+        } else {
+            symbolName = "R_100"; // Fallback por seguridad
+        }
 
-        // Convertir resolución de TradingView a segundos de Deriv
+        // Limpiamos el nombre para Deriv
+        const symbolID = symbolName.split(':').pop().replace('Index', '').trim();
+
         let granularity = 60; 
         if (resolution === '1') granularity = 60;
         else if (resolution === '5') granularity = 300;
@@ -112,14 +109,15 @@ export function getHistoryDWS(symbol, from, to, resolution) {
         };
 
         window.addEventListener('deriv_candles', handleResponse);
-        console.log(`🛰️ Solicitando: ${symbolID} | Granularidad: ${granularity}s`);
+        console.log(`🛰️ Solicitando historial de: ${symbolID}`);
         safeSend(request);
     });
 }
 
 export function subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscribeUID) {
     _onRealtimeCallback = onRealtimeCallback;
-    const symbolID = symbolInfo.name.split(':').pop().trim();
+    let symbolID = typeof symbolInfo === 'string' ? symbolInfo : symbolInfo.name;
+    symbolID = symbolID.split(':').pop().trim();
     
     const request = {
         ticks: symbolID,
