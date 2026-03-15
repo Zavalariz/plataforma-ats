@@ -235,41 +235,43 @@
             const socket = getSocket();
             let lot = parseFloat(document.getElementById('lot-input').value);
             
-            // 🚩 CORRECCIÓN 1: Validar Stake mínimo (Deriv no acepta 0.10 en Multipliers)
-            if (lot < 1) {
-                console.warn("Stake demasiado bajo. Ajustando a $1.00 para evitar error de validación.");
+            // Forzamos mínimo de 1.00 por seguridad
+            if (isNaN(lot) || lot < 1) {
                 lot = 1.00;
                 document.getElementById('lot-input').value = "1.00";
             }
 
             const symbol = tvWidget.activeChart().symbol();
 
+            // Construimos el objeto EXACTO que pide la API de Deriv
             const request = {
                 buy: 1,
-                price: lot, // El monto a invertir
+                price: lot, 
                 parameters: {
                     amount: lot,
                     basis: "stake",
-                    contract_type: type,
+                    contract_type: type, // MULTUP o MULTDOWN
                     currency: "USD",
-                    multiplier: 100, 
-                    symbol: symbol,
-                    subscribe: 1 
+                    multiplier: 100,
+                    symbol: symbol
                 }
             };
 
-            // 🚩 CORRECCIÓN 2: Limpiar parámetros opcionales si están vacíos
-            const sl = document.getElementById('sl-input').value;
-            const tp = document.getElementById('tp-input').value;
+            // Solo agregamos el suscribe si queremos recibir el evento de línea pintada
+            request.subscribe = 1;
+
+            // Manejo estricto de SL/TP: Solo si tienen números válidos
+            const slValue = document.getElementById('sl-input').value;
+            const tpValue = document.getElementById('tp-input').value;
             
-            if(sl || tp) {
+            if (slValue || tpValue) {
                 request.parameters.limit_order = {};
-                if(sl) request.parameters.limit_order.stop_loss = parseFloat(sl);
-                if(tp) request.parameters.limit_order.take_profit = parseFloat(tp);
+                if (slValue) request.parameters.limit_order.stop_loss = parseFloat(slValue);
+                if (tpValue) request.parameters.limit_order.take_profit = parseFloat(tpValue);
             }
 
             socket.send(JSON.stringify(request));
-            console.log("🚀 Enviando orden corregida...", request);
+            console.log("🚀 Enviando orden blindada...", request);
         };
 
         window.closeT = (id) => {
