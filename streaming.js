@@ -1,4 +1,5 @@
 import { store } from "./store/store.js";
+export let socket;
 
 const appId = '119907';
 let derivWS = null;
@@ -146,4 +147,8 @@ export function unsubscribeFromStream(subscriberUID) {
         derivWS.send(JSON.stringify({ forget_all: "ticks" }));
     }
     _onRealtimeCallback = null;
+}
+
+export function getSocket() {
+    return socket;
 }
