@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Elite Platform | Dashboard Multi-Account Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#020606', panel: '#0a0f0e', accent: '#00ffa3', border: '#14211e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #020606; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(10, 15, 14, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 163, 0.1); }
+        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 163, 0.3); }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="dashboardManager()" x-init="init()" x-cloak>
+
+    <nav class="p-6 flex justify-between items-center border-b border-brand-border bg-brand-dark/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-accent flex items-center justify-center font-black text-black text-xl shadow-[0_0_20px_rgba(0,255,163,0.3)]">A</div>
+            <div>
+                <h1 class="font-extrabold text-lg tracking-tight neon-text">ATS <span class="text-white font-light">PRO</span></h1>
+                <p class="text-[10px] text-brand-accent font-bold uppercase tracking-widest">Real Market Mode</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="text-right hidden md:block">
+                <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-tighter">Balance Disponible</p>
+                <p class="text-xl font-black text-white" x-text="'$ ' + parseFloat(balance).toLocaleString('en-US', {minimumFractionDigits: 2})"></p>
+            </div>
+            
+            <div class="flex gap-2 bg-brand-panel p-1 rounded-xl border border-brand-border">
+                <button @click="switchAccount('demo')" 
+                        :class="accountType === 'demo' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white'" 
+                        class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">DEMO</button>
+                <button @click="switchAccount('real')" 
+                        :class="accountType === 'real' ? 'bg-brand-accent text-black shadow-lg' : 'text-zinc-500 hover:text-white'" 
+                        class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">REAL</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-6 md:p-10">
+        <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h2 class="text-4xl md:text-5xl font-extrabold mb-2 tracking-tighter">Hola, <span class="text-brand-accent" x-text="userName">Trader</span></h2>
+                <p class="text-zinc-400 max-w-md">Has conectado con éxito. Accede a la terminal profesional para operar en el mercado real.</p>
+            </div>
+            
+            <button @click="goToTerminal()" class="bg-brand-accent text-black px-8 py-4 rounded-2xl font-black text-sm hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_10px_30px_rgba(0,255,163,0.2)] uppercase">
+                Abrir Terminal Real MT5
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="glass p-8 rounded-[32px] border-l-4 border-brand-accent">
+                <p class="text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">ID de Cuenta Activa</p>
+                <p class="text-2xl font-black tracking-tight" x-text="currentAccountID"></p>
+            </div>
+            <div class="glass p-8 rounded-[32px]">
+                <p class="text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Tipo de Mercado</p>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></span>
+                    <p class="text-2xl font-black tracking-tight text-white uppercase" x-text="accountType === 'real' ? 'Forex Real' : 'Demo Virtual'"></p>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-[32px]">
+                <p class="text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Moneda</p>
+                <p class="text-2xl font-black tracking-tight">USD <span class="text-xs text-zinc-500 font-normal ml-2">Dólar Americano</span></p>
+            </div>
+        </div>
+
+        <h3 class="font-bold text-zinc-500 mb-6 uppercase text-xs tracking-[0.2em]">Mercados en Vivo</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass p-6 rounded-2xl border border-white/5">
+                <p class="text-[10px] font-bold text-zinc-500 mb-1">EUR/USD</p>
+                <p class="text-xl font-mono font-bold text-brand-accent">1.0842</p>
+            </div>
+            <div class="glass p-6 rounded-2xl border border-white/5">
+                <p class="text-[10px] font-bold text-zinc-500 mb-1">GBP/USD</p>
+                <p class="text-xl font-mono font-bold text-white">1.2634</p>
+            </div>
+            <div class="glass p-6 rounded-2xl border border-white/5">
+                <p class="text-[10px] font-bold text-zinc-500 mb-1">XAU/USD (ORO)</p>
+                <p class="text-xl font-mono font-bold text-yellow-500">2022.4</p>
+            </div>
+            <div class="glass p-6 rounded-2xl border border-white/5">
+                <p class="text-[10px] font-bold text-zinc-500 mb-1">BTC/USD</p>
+                <p class="text-xl font-mono font-bold text-white">52,431</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CAMBIO: Nombre coincidente con x-data
+        function dashboardManager() {
+            return {
+                balance: 0,
+                accountType: localStorage.getItem('activeAccountType') || 'demo',
+                isConnected: false,
+                userName: 'Cargando...',
+                currentAccountID: '---',
+                allAccounts: [],
+                socket: null,
+                appId: '119907',
+
+                init() {
+                    this.connectToDeriv();
+                },
+
+                connectToDeriv() {
+                    const params = new URLSearchParams(window.location.search);
+                    let tokenToUse = params.get('token1');
+
+                    if (!tokenToUse) {
+                        this.userName = "Sin sesión activa";
+                        return;
+                    }
+
+                    this.socket = new WebSocket(`wss://ws.binaryws.com/websockets/v3?app_id=${this.appId}`);
+                    
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({ "authorize": tokenToUse }));
+                    };
+
+                    this.socket.onmessage = (msg) => {
+                        const data = JSON.parse(msg.data);
+
+                        if (data.msg_type === 'authorize') {
+                            this.isConnected = true;
+                            this.userName = data.authorize.fullname;
+                            this.allAccounts = data.authorize.account_list;
+                            
+                            // Verificar si estamos en el tipo de cuenta correcto
+                            const isTargetType = (this.accountType === 'real' && !data.authorize.is_virtual) || 
+                                                (this.accountType === 'demo' && data.authorize.is_virtual);
+
+                            if (!isTargetType) {
+                                const targetAcc = this.allAccounts.find(acc => 
+                                    (this.accountType === 'real' && !acc.is_virtual) || 
+                                    (this.accountType === 'demo' && acc.is_virtual)
+                                );
+
+                                if (targetAcc) {
+                                    const idx = this.allAccounts.indexOf(targetAcc) + 1;
+                                    const newToken = params.get('token' + idx);
+                                    if (newToken) {
+                                        this.socket.send(JSON.stringify({ "authorize": newToken }));
+                                        return;
+                                    }
+                                }
+                            }
+                            
+                            this.currentAccountID = data.authorize.loginid;
+                            this.socket.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                        }
+
+                        if (data.msg_type === 'balance') {
+                            this.balance = data.balance.balance;
+                        }
+                    };
+                },
+
+                switchAccount(type) {
+                    localStorage.setItem('activeAccountType', type);
+                    this.accountType = type;
+                    // Recarga para limpiar estado y conectar a la cuenta elegida
+                    window.location.reload();
+                },
+
+                goToTerminal() {
+                    const params = new URLSearchParams(window.location.search);
+                    // Agregamos explícitamente el tipo de cuenta activo para que la terminal no tenga que adivinar
+                    params.set('active_type', this.accountType); 
+                    
+                    // Redirigimos con todos los tokens originales + la instrucción de qué cuenta usar
+                    window.location.href = `terminal-pro.html?${params.toString()}`;
+                }
+            }
+        } 
+    </script>
+</body>
+</html>
