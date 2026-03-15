@@ -75,19 +75,21 @@ export function getSymbols() {
     ];
 }
 
-export function getHistoryDWS(symbol, from, to, resolution) {
+export function getHistoryDWS(symbol, from, to, resolution = '1') { // <--- Agregamos = '1'
     return new Promise((resolve) => {
-        // Normalización del Símbolo
         let symbolName = (typeof symbol === 'string') ? symbol : (symbol?.name || "R_100");
         const symbolID = symbolName.split(':').pop().replace('Index', '').trim();
 
-        // Conversión de Granularidad (TV -> Deriv)
+        // Si resolution llega mal, usamos 60 segundos por defecto
         let granularity = 60; 
-        if (resolution === '1') granularity = 60;
-        else if (resolution === '5') granularity = 300;
-        else if (resolution === '15') granularity = 900;
-        else if (resolution === '60') granularity = 3600;
-        else if (resolution === 'D') granularity = 86400;
+        const resStr = String(resolution);
+        
+        if (resStr === '1') granularity = 60;
+        else if (resStr === '5') granularity = 300;
+        else if (resStr === '15') granularity = 900;
+        else if (resStr === '60') granularity = 3600;
+        else if (resStr === 'D') granularity = 86400;
+        else granularity = 60; // Fallback
 
         // Nombre de evento único para evitar colisiones de callbacks
         const eventUniqueId = `deriv_candles_${symbolID}_${Math.random().toString(36).substr(2, 9)}`;
