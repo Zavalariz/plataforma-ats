@@ -156,16 +156,24 @@
             window.addEventListener('deriv_data', (e) => {
                 const data = e.detail;
                 
+                // Esto nos dirá en la consola EXACTAMENTE qué está enviando Deriv
                 if (data.msg_type === 'balance') {
-                    document.getElementById('balance-display').innerText = `$ ${data.balance.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                    console.log("💰 ¡BALANCE RECIBIDO!", data.balance);
+                    const b = data.balance.balance;
+                    const cur = data.balance.currency || 'USD';
+                    document.getElementById('balance-display').innerText = `${cur} ${parseFloat(b).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                    
+                    // Ponemos el badge en verde para saber que es real
+                    document.getElementById('acc-badge').classList.add('text-emerald-500');
                 }
 
                 if (data.msg_type === 'tick') {
                     updateButtonPrices(data.tick.quote);
                 }
-
-                if (data.msg_type === 'proposal_open_contract') {
-                    updateTradeUI(data.proposal_open_contract);
+                
+                // Si hay un error de autorización o balance, esto nos avisará
+                if (data.error) {
+                    console.error("❌ Error desde Deriv:", data.error.message);
                 }
             });
         };
