@@ -233,25 +233,43 @@
         // Ejecutar Operación (CON MULTIPLIER CORREGIDO)
         window.executeTrade = (type) => {
             const socket = getSocket();
-            const lot = document.getElementById('lot-input').value;
+            let lot = parseFloat(document.getElementById('lot-input').value);
+            
+            // 🚩 CORRECCIÓN 1: Validar Stake mínimo (Deriv no acepta 0.10 en Multipliers)
+            if (lot < 1) {
+                console.warn("Stake demasiado bajo. Ajustando a $1.00 para evitar error de validación.");
+                lot = 1.00;
+                document.getElementById('lot-input').value = "1.00";
+            }
+
             const symbol = tvWidget.activeChart().symbol();
 
             const request = {
                 buy: 1,
-                price: parseFloat(lot),
+                price: lot, // El monto a invertir
                 parameters: {
-                    amount: parseFloat(lot),
+                    amount: lot,
                     basis: "stake",
                     contract_type: type,
                     currency: "USD",
-                    multiplier: 100, // <--- Fijo para evitar errores
+                    multiplier: 100, 
                     symbol: symbol,
-                    subscribe: 1 // <--- Importante para que Deriv nos mande updates del contrato
+                    subscribe: 1 
                 }
             };
 
+            // 🚩 CORRECCIÓN 2: Limpiar parámetros opcionales si están vacíos
+            const sl = document.getElementById('sl-input').value;
+            const tp = document.getElementById('tp-input').value;
+            
+            if(sl || tp) {
+                request.parameters.limit_order = {};
+                if(sl) request.parameters.limit_order.stop_loss = parseFloat(sl);
+                if(tp) request.parameters.limit_order.take_profit = parseFloat(tp);
+            }
+
             socket.send(JSON.stringify(request));
-            console.log("🚀 Enviando orden...", request);
+            console.log("🚀 Enviando orden corregida...", request);
         };
 
         window.closeT = (id) => {
