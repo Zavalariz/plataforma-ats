@@ -53,28 +53,25 @@
         import { initDerivWSConnection } from './streaming.js';
 
         window.onload = () => {
-            // 1. CAPTURAR TOKENS DEL DASHBOARD
             const params = new URLSearchParams(window.location.search);
             const token1 = params.get('token1');
             const activeType = params.get('active_type') || 'demo';
 
             if (token1) {
-                // Guardamos para que lo use streaming.js
                 localStorage.setItem('selectedAccount', JSON.stringify({
                     token: token1,
                     type: activeType
                 }));
             }
 
-            // 2. INICIAR CONEXIÓN WEBSOCKET
             initDerivWSConnection();
 
-            // 3. INICIALIZAR GRÁFICO PROFESIONAL
             const tvWidget = new widget({
-                symbol: 'R_100', // Símbolo por defecto
+                symbol: 'R_100', 
                 interval: '1',
                 container: "tv_chart_container",
-                library_path: "charting_library/",
+                // CAMBIO CLAVE AQUÍ: Se añade static/ para que encuentre los bundles que subiste
+                library_path: "charting_library/static/", 
                 datafeed: Datafeed,
                 locale: "en",
                 theme: "Dark",
