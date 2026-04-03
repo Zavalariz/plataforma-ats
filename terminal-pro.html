@@ -248,15 +248,15 @@
             // ESTRUCTURA DE MERCADO REAL (CFD/Multipliers Pro)
             const request = {
                 buy: 1,
-                price: 100000, // Precio máximo dispuesto a pagar (en mercado real se pone un valor alto para asegurar ejecución)
+                price: 100000,
                 subscribe: 1,
                 parameters: {
-                    amount: lot, // Aquí el 'amount' ahora actúa como multiplicador de puntos (Lote)
-                    basis: "stake", // Deriv usa 'stake' para Multipliers, pero el comportamiento es de mercado real
+                    amount: lot, 
+                    basis: "stake", 
                     contract_type: type, 
                     currency: "USD",
                     symbol: symbol,
-                    // Eliminamos la limitación de tiempo para que la operación sea eterna hasta que tú la cierres
+                    multiplier: 100, 
                 }
             };
 
