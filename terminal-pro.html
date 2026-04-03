@@ -206,32 +206,29 @@
                         }
 
                         // --- LÍNEA DE STOP LOSS (Cálculo Espejo MT5) ---
+                        // --- LÓGICA DE LÍNEAS CORREGIDA (S/L abajo en BUY, arriba en SELL) ---
                         if (contract.limit_order && contract.limit_order.stop_loss) {
                             const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
-                            // Fórmula: Distancia = (Monto / Stake) * (Precio / Multiplicador)
                             const priceDist = (slAmount / stake) * (entryPrice / multiplier);
+                            
+                            // AQUÍ ESTÁ EL TRUCO: Restamos para BUY (MULTUP), sumamos para SELL (MULTDOWN)
                             const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDist : entryPrice + priceDist;
                             
                             if (!orderLines[id].sl) {
-                                orderLines[id].sl = chart.createOrderLine()
-                                    .setText("S/L")
-                                    .setLineColor("#ff4444")
-                                    .setLineStyle(2);
+                                orderLines[id].sl = chart.createOrderLine().setText("S/L").setLineColor("#ff4444").setLineStyle(2);
                             }
                             orderLines[id].sl.setPrice(slPrice);
                         }
 
-                        // --- LÍNEA DE TAKE PROFIT (Cálculo Espejo MT5) ---
                         if (contract.limit_order && contract.limit_order.take_profit) {
                             const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
                             const priceDist = (tpAmount / stake) * (entryPrice / multiplier);
+                            
+                            // AQUÍ: Sumamos para BUY (MULTUP), restamos para SELL (MULTDOWN)
                             const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDist : entryPrice - priceDist;
                             
                             if (!orderLines[id].tp) {
-                                orderLines[id].tp = chart.createOrderLine()
-                                    .setText("T/P")
-                                    .setLineColor("#00ffa3")
-                                    .setLineStyle(2);
+                                orderLines[id].tp = chart.createOrderLine().setText("T/P").setLineColor("#00ffa3").setLineStyle(2);
                             }
                             orderLines[id].tp.setPrice(tpPrice);
                         }
