@@ -248,15 +248,26 @@
             // ESTRUCTURA DE MERCADO REAL (CFD/Multipliers Pro)
             const request = {
                 buy: 1,
-                price: 100000,
+                price: 100000, // Precio máximo de protección
                 subscribe: 1,
                 parameters: {
-                    amount: lot, 
+                    amount: parseFloat(document.getElementById('lot-input').value), // Tu 0.10
                     basis: "stake", 
                     contract_type: type, 
                     currency: "USD",
                     symbol: symbol,
-                    multiplier: 100, 
+                    multiplier: 100, // Esto le da el apalancamiento estilo MT5
+                    
+                    // 🚩 CONFIGURACIÓN DE LÍMITES ESTILO MT5
+                    limit_order: {
+                        // El Stop Loss y Take Profit se envían como MONTO de dinero
+                        // Si quieres que cierre al perder $2, pones 2 (siempre positivo)
+                        stop_loss: Math.abs(parseFloat(document.getElementById('sl-input').value || 0)) || undefined,
+                        take_profit: Math.abs(parseFloat(document.getElementById('tp-input').value || 0)) || undefined
+                    },
+                    
+                    // 🚩 ESTO ES VITAL: Eliminamos cualquier parámetro de 'duration' 
+                    // para que la orden sea indefinida hasta que tú la cierres.
                 }
             };
 
