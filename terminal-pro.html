@@ -266,11 +266,14 @@
 
         window.executeTrade = (direction) => {
             const volume = parseFloat(document.getElementById('lot-input').value); // El cliente pone "1.00"
-            const stopLossPrice = parseFloat(document.getElementById('sl-price-input').value); 
-            
-            // Convertimos el Stop Loss de "Precio" a "Monto USD" internamente
-            // porque Deriv API solo entiende montos en su modo web.
-            const entryPrice = parseFloat(currentTick.quote);
+            let sl = parseFloat(document.getElementById('sl-input').value) || 0;
+            let tp = parseFloat(document.getElementById('tp-input').value) || 0;
+
+            // Validación para que Deriv no te dé error (S/L menor al Lote)
+            if (sl >= volume) {
+                sl = volume * 0.90;
+                document.getElementById('sl-input').value = sl.toFixed(2);
+            }
             const slAmount = Math.abs(entryPrice - stopLossPrice) * (volume * 100 / entryPrice);
 
             const request = {
@@ -281,7 +284,8 @@
                     contract_type: direction,
                     multiplier: 100,       // Esto es invisible para el cliente
                     limit_order: {
-                        stop_loss: slAmount.toFixed(2)
+                        stop_loss: sl > 0 ? sl : null,
+                        take_profit: tp > 0 ? tp : null
                     }
                 }
             };
