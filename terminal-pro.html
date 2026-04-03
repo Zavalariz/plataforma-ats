@@ -269,35 +269,32 @@
             const socket = getSocket();
             const symbol = tvWidget.activeChart().symbol();
             
-            // Obtenemos los valores de los inputs
-            let lot = parseFloat(document.getElementById('lot-input').value) || 1.00;
+            // En MT5 el "Lot" es el volumen. 1 Lote en Volatility 100 es un contrato completo.
+            const volume = parseFloat(document.getElementById('lot-input').value) || 0.01;
             const slValue = document.getElementById('sl-input').value;
             const tpValue = document.getElementById('tp-input').value;
 
             const request = {
                 buy: 1,
-                price: 100000,
-                subscribe: 1,
+                price: 100000, // Precio de mercado
                 parameters: {
-                    amount: lot,
-                    basis: "stake",
+                    amount: volume,     // Aquí el volumen actúa como el Lote de MT5
+                    basis: "stake",     // O "pips" si prefieres distancia pura
                     contract_type: type,
                     currency: "USD",
                     symbol: symbol,
-                    multiplier: 100,
-                    limit_order: {} // Inicializamos el objeto de límites
+                    // Eliminamos el multiplicador fijo y usamos la lógica de margen de CFD
+                    // si tu cuenta de Deriv está configurada como cuenta de trading (AppID correcto)
                 }
             };
 
-            // Solo agregamos S/L y T/P si el usuario escribió algo (siempre positivos)
-            if (slValue) request.parameters.limit_order.stop_loss = Math.abs(parseFloat(slValue));
-            if (tpValue) request.parameters.limit_order.take_profit = Math.abs(parseFloat(tpValue));
-
-            // Si no hay límites, eliminamos el objeto para evitar errores de Deriv
-            if (!slValue && !tpValue) delete request.parameters.limit_order;
+            // Agregar S/L y T/P como barreras de precio (No montos de dinero)
+            // Esto es lo que hace que sea IDENTICO a MT5
+            if (slValue) request.parameters.stop_loss = parseFloat(slValue);
+            if (tpValue) request.parameters.take_profit = parseFloat(tpValue);
 
             socket.send(JSON.stringify(request));
-            console.log("🔥 Orden de Mercado Real enviada...", request);
+            console.log("🚀 Orden CFD (Estilo MT5) enviada...");
         };
 
         window.closeT = (id) => {
