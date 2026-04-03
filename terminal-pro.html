@@ -207,12 +207,13 @@
 
                         // --- LÍNEA DE STOP LOSS (Cálculo Espejo MT5) ---
                         // --- LÓGICA DE LÍNEAS CORREGIDA (S/L abajo en BUY, arriba en SELL) ---
+                        // 1. STOP LOSS (S/L)
                         if (contract.limit_order && contract.limit_order.stop_loss) {
                             const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
-                            const priceDist = (slAmount / stake) * (entryPrice / multiplier);
+                            const priceDistSL = (slAmount / stake) * (entryPrice / multiplier);
                             
-                            // AQUÍ ESTÁ EL TRUCO: Restamos para BUY (MULTUP), sumamos para SELL (MULTDOWN)
-                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDist : entryPrice + priceDist;
+                            // BUY: Resta (abajo) | SELL: Suma (arriba)
+                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDistSL : entryPrice + priceDistSL;
                             
                             if (!orderLines[id].sl) {
                                 orderLines[id].sl = chart.createOrderLine().setText("S/L").setLineColor("#ff4444").setLineStyle(2);
@@ -220,12 +221,13 @@
                             orderLines[id].sl.setPrice(slPrice);
                         }
 
+                        // 2. TAKE PROFIT (T/P)
                         if (contract.limit_order && contract.limit_order.take_profit) {
                             const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
-                            const priceDist = (tpAmount / stake) * (entryPrice / multiplier);
+                            const priceDistTP = (tpAmount / stake) * (entryPrice / multiplier);
                             
-                            // AQUÍ: Sumamos para BUY (MULTUP), restamos para SELL (MULTDOWN)
-                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDist : entryPrice - priceDist; 
+                            // BUY: Suma (arriba) | SELL: Resta (abajo)
+                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDistTP : entryPrice - priceDistTP; 
                             
                             if (!orderLines[id].tp) {
                                 orderLines[id].tp = chart.createOrderLine().setText("T/P").setLineColor("#00ffa3").setLineStyle(2);
