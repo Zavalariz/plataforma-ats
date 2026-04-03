@@ -265,31 +265,38 @@
         };
 
         window.executeTrade = (direction) => {
-            const volume = parseFloat(document.getElementById('lot-input').value); // El cliente pone "1.00"
+            const socket = getSocket();
+            if (!socket) return;
+
+            const volume = parseFloat(document.getElementById('lot-input').value) || 1.00;
             let sl = parseFloat(document.getElementById('sl-input').value) || 0;
             let tp = parseFloat(document.getElementById('tp-input').value) || 0;
 
-            // Validación para que Deriv no te dé error (S/L menor al Lote)
+            // Validación para que Deriv no rechace la orden (S/L menor al Lote)
             if (sl >= volume) {
                 sl = volume * 0.90;
                 document.getElementById('sl-input').value = sl.toFixed(2);
             }
-            const slAmount = Math.abs(entryPrice - stopLossPrice) * (volume * 100 / entryPrice);
 
             const request = {
                 buy: 1,
+                price: 100000,
                 parameters: {
-                    amount: volume,        // Para el cliente es su Lote
+                    amount: volume,        // Esto es el "Lote" para el cliente
                     basis: "stake",
                     contract_type: direction,
-                    multiplier: 100,       // Esto es invisible para el cliente
+                    currency: "USD",
+                    symbol: tvWidget.activeChart().symbol(),
+                    multiplier: 100,       // Motor interno obligatorio
                     limit_order: {
                         stop_loss: sl > 0 ? sl : null,
                         take_profit: tp > 0 ? tp : null
                     }
                 }
             };
+            
             socket.send(JSON.stringify(request));
+            console.log("🚀 Orden enviada con éxito");
         };
 
         window.closeT = (id) => {
