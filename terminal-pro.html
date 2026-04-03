@@ -230,9 +230,9 @@
 
                     // 3. LIMPIEZA TOTAL AL CERRAR
                     if (contract.is_sold && orderLines[id]) {
-                        if (orderLines[id].main) orderLines[id].main.remove();
-                        if (orderLines[id].sl) orderLines[id].sl.remove();
-                        if (orderLines[id].tp) orderLines[id].tp.remove();
+                        if (orderLines[id].main && typeof orderLines[id].main.remove === 'function') orderLines[id].main.remove();
+                        if (orderLines[id].sl && typeof orderLines[id].sl.remove === 'function') orderLines[id].sl.remove();
+                        if (orderLines[id].tp && typeof orderLines[id].tp.remove === 'function') orderLines[id].tp.remove();   
                         delete orderLines[id];
                     }
                 }
@@ -247,52 +247,34 @@
         // Ejecutar Operación (CON MULTIPLIER CORREGIDO)
         window.executeTrade = (type) => {
             const socket = getSocket();
-            let lot = parseFloat(document.getElementById('lot-input').value);
-            
-            // Validación de lotaje para mercado real (mínimo suele ser 0.01 o 0.10 según el índice)
-            if (isNaN(lot) || lot <= 0) {
-                lot = 0.10; 
-                document.getElementById('lot-input').value = "0.10";
-            }
-
             const symbol = tvWidget.activeChart().symbol();
+            
+            // Obtenemos los valores de los inputs
+            let lot = parseFloat(document.getElementById('lot-input').value) || 1.00;
+            const slValue = document.getElementById('sl-input').value;
+            const tpValue = document.getElementById('tp-input').value;
 
-            // ESTRUCTURA DE MERCADO REAL (CFD/Multipliers Pro)
             const request = {
                 buy: 1,
-                price: 100000, // Precio máximo de protección
+                price: 100000,
                 subscribe: 1,
                 parameters: {
-                    amount: parseFloat(document.getElementById('lot-input').value), // Tu 0.10
-                    basis: "stake", 
-                    contract_type: type, 
+                    amount: lot,
+                    basis: "stake",
+                    contract_type: type,
                     currency: "USD",
                     symbol: symbol,
-                    multiplier: 100, // Esto le da el apalancamiento estilo MT5
-                    
-                    // 🚩 CONFIGURACIÓN DE LÍMITES ESTILO MT5
-                    limit_order: {
-                        // El Stop Loss y Take Profit se envían como MONTO de dinero
-                        // Si quieres que cierre al perder $2, pones 2 (siempre positivo)
-                        stop_loss: Math.abs(parseFloat(document.getElementById('sl-input').value || 0)) || undefined,
-                        take_profit: Math.abs(parseFloat(document.getElementById('tp-input').value || 0)) || undefined
-                    },
-                    
-                    // 🚩 ESTO ES VITAL: Eliminamos cualquier parámetro de 'duration' 
-                    // para que la orden sea indefinida hasta que tú la cierres.
+                    multiplier: 100,
+                    limit_order: {} // Inicializamos el objeto de límites
                 }
             };
 
-            // Manejo de SL/TP dinámico
-            const slValue = document.getElementById('sl-input').value;
-            const tpValue = document.getElementById('tp-input').value;
-            
-            if (slValue || tpValue) {
-                request.parameters.limit_order = {};
-                // En mercado real, el SL y TP pueden ser precios exactos o montos de dinero
-                if (slValue) request.parameters.limit_order.stop_loss = parseFloat(slValue);
-                if (tpValue) request.parameters.limit_order.take_profit = parseFloat(tpValue);
-            }
+            // Solo agregamos S/L y T/P si el usuario escribió algo (siempre positivos)
+            if (slValue) request.parameters.limit_order.stop_loss = Math.abs(parseFloat(slValue));
+            if (tpValue) request.parameters.limit_order.take_profit = Math.abs(parseFloat(tpValue));
+
+            // Si no hay límites, eliminamos el objeto para evitar errores de Deriv
+            if (!slValue && !tpValue) delete request.parameters.limit_order;
 
             socket.send(JSON.stringify(request));
             console.log("🔥 Orden de Mercado Real enviada...", request);
