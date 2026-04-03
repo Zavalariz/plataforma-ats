@@ -3,7 +3,7 @@ import { store } from "./store/store.js";
 // Exportamos la variable que usará el HTML
 export let socket;
 
-const appId = '119907';
+const appId = '131895';
 let derivWS = null;
 const messageQueue = []; 
 let _onRealtimeCallback = null;
