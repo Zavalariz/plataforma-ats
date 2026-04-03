@@ -210,7 +210,7 @@
                         // 1. STOP LOSS (S/L)
                         if (contract.limit_order && contract.limit_order.stop_loss) {
                             const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
-                            const priceDistSL = (slAmount / stake) * (entryPrice / multiplier);
+                            const priceDistSL = (slAmount * entryPrice) / (stake * multiplier);
                             
                             // BUY: Resta (abajo) | SELL: Suma (arriba)
                             const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDistSL : entryPrice + priceDistSL;
@@ -224,7 +224,7 @@
                         // 2. TAKE PROFIT (T/P)
                         if (contract.limit_order && contract.limit_order.take_profit) {
                             const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
-                            const priceDistTP = (tpAmount / stake) * (entryPrice / multiplier);
+                            const priceDistTP = (tpAmount * entryPrice) / (stake * multiplier);
                             
                             // BUY: Suma (arriba) | SELL: Resta (abajo)
                             const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDistTP : entryPrice - priceDistTP; 
