@@ -204,16 +204,19 @@
                                 .setLineColor(mainColor)
                                 .setBodyBackgroundColor(mainColor);
                         }
-
-                        // --- LÍNEA DE STOP LOSS (Cálculo Espejo MT5) ---
-                        // --- LÓGICA DE LÍNEAS CORREGIDA (S/L abajo en BUY, arriba en SELL) ---
                         // 1. STOP LOSS (S/L)
                         if (contract.limit_order && contract.limit_order.stop_loss) {
                             const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
+                            // Calculamos la distancia exacta en puntos del precio
                             const priceDistSL = (slAmount * entryPrice) / (stake * multiplier);
                             
-                            // BUY: Resta (abajo) | SELL: Suma (arriba)
-                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDistSL : entryPrice + priceDistSL;
+                            // IMPORTANTE: Forzamos el cálculo matemático
+                            let slPrice;
+                            if (contract.contract_type === 'MULTUP') {
+                                slPrice = entryPrice - priceDistSL; // Compra: Precio menos distancia (ABAJO)
+                            } else {
+                                slPrice = entryPrice + priceDistSL; // Venta: Precio más distancia (ARRIBA)
+                            }
                             
                             if (!orderLines[id].sl) {
                                 orderLines[id].sl = chart.createOrderLine().setText("S/L").setLineColor("#ff4444").setLineStyle(2);
@@ -226,8 +229,12 @@
                             const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
                             const priceDistTP = (tpAmount * entryPrice) / (stake * multiplier);
                             
-                            // BUY: Suma (arriba) | SELL: Resta (abajo)
-                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDistTP : entryPrice - priceDistTP; 
+                            let tpPrice;
+                            if (contract.contract_type === 'MULTUP') {
+                                tpPrice = entryPrice + priceDistTP; // Compra: Precio más distancia (ARRIBA)
+                            } else {
+                                tpPrice = entryPrice - priceDistTP; // Venta: Precio menos distancia (ABAJO)
+                            }
                             
                             if (!orderLines[id].tp) {
                                 orderLines[id].tp = chart.createOrderLine().setText("T/P").setLineColor("#00ffa3").setLineStyle(2);
