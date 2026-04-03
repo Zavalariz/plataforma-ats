@@ -186,62 +186,73 @@
 
                     const id = contract.contract_id;
 
-                    // 1. SI LA ORDEN ES NUEVA, CREAMOS LAS LÍNEAS
-                    if (!contract.is_sold && contract.entry_tick && !orderLines[id]) {
-                        orderLines[id] = {}; // Creamos un objeto para guardar las 3 líneas
+                    // 1. SI LA ORDEN ES NUEVA O CAMBIAN LOS LÍMITES, CREAMOS/ACTUALIZAMOS LÍNEAS
+                    if (!contract.is_sold && contract.entry_tick) {
+                        if (!orderLines[id]) orderLines[id] = {};
                         
                         const mainColor = contract.contract_type === 'MULTUP' ? '#00ffa3' : '#ff4444';
                         const entryPrice = parseFloat(contract.entry_tick);
+                        const multiplier = parseFloat(contract.multiplier || 100);
+                        const stake = parseFloat(contract.buy_price);
 
                         // --- LÍNEA PRINCIPAL (ORDEN) ---
-                        orderLines[id].main = chart.createOrderLine()
-                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'}`)
-                            .setQuantity(`Lot: ${contract.buy_price}`)
-                            .setPrice(entryPrice)
-                            .setLineColor(mainColor)
-                            .setBodyBackgroundColor(mainColor);
+                        if (!orderLines[id].main) {
+                            orderLines[id].main = chart.createOrderLine()
+                                .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'}`)
+                                .setQuantity(`Lot: ${stake}`)
+                                .setPrice(entryPrice)
+                                .setLineColor(mainColor)
+                                .setBodyBackgroundColor(mainColor);
+                        }
 
-                        // --- LÍNEA DE STOP LOSS (Si existe) ---
+                        // --- LÍNEA DE STOP LOSS (Cálculo Espejo MT5) ---
                         if (contract.limit_order && contract.limit_order.stop_loss) {
-                            // Usamos el stop_loss.order_amount directamente si Deriv lo manda como precio, 
-                            // o calculamos la distancia. Para Multipliers lo ideal es:
-                            const slPrice = parseFloat(contract.limit_order.stop_loss.order_price || 0);
+                            const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
+                            // Fórmula: Distancia = (Monto / Stake) * (Precio / Multiplicador)
+                            const priceDist = (slAmount / stake) * (entryPrice / multiplier);
+                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - priceDist : entryPrice + priceDist;
                             
-                            if (slPrice > 0) {
+                            if (!orderLines[id].sl) {
                                 orderLines[id].sl = chart.createOrderLine()
                                     .setText("S/L")
-                                    .setPrice(slPrice)
                                     .setLineColor("#ff4444")
                                     .setLineStyle(2);
                             }
+                            orderLines[id].sl.setPrice(slPrice);
                         }
 
-                        // --- LÍNEA DE TAKE PROFIT (Si existe) ---
+                        // --- LÍNEA DE TAKE PROFIT (Cálculo Espejo MT5) ---
                         if (contract.limit_order && contract.limit_order.take_profit) {
                             const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
-                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + (tpAmount/100) : entryPrice - (tpAmount/100);
+                            const priceDist = (tpAmount / stake) * (entryPrice / multiplier);
+                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDist : entryPrice - priceDist;
                             
-                            orderLines[id].tp = chart.createOrderLine()
-                                .setText("T/P")
-                                .setPrice(tpPrice)
-                                .setLineColor("#00ffa3")
-                                .setLineStyle(2);
+                            if (!orderLines[id].tp) {
+                                orderLines[id].tp = chart.createOrderLine()
+                                    .setText("T/P")
+                                    .setLineColor("#00ffa3")
+                                    .setLineStyle(2);
+                            }
+                            orderLines[id].tp.setPrice(tpPrice);
                         }
                     }
 
-                    // 2. ACTUALIZACIÓN DINÁMICA DEL COLOR (Ganancia/Pérdida)
+                    // 2. ACTUALIZACIÓN DINÁMICA DEL COLOR Y PROFIT
                     if (!contract.is_sold && orderLines[id] && orderLines[id].main) {
                         const currentProfit = contract.profit || 0;
                         const dynamicColor = currentProfit >= 0 ? '#00ffa3' : '#ff4444';
-                        orderLines[id].main.setLineColor(dynamicColor).setBodyBackgroundColor(dynamicColor)
-                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} (${currentProfit.toFixed(2)})`);
+                        orderLines[id].main.setLineColor(dynamicColor)
+                            .setBodyBackgroundColor(dynamicColor)
+                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} ($ ${currentProfit.toFixed(2)})`);
                     }
 
-                    // 3. LIMPIEZA TOTAL AL CERRAR
+                    // 3. LIMPIEZA TOTAL AL CERRAR (Igual que en MT5 al cerrar posición)
                     if (contract.is_sold && orderLines[id]) {
-                        if (orderLines[id].main && typeof orderLines[id].main.remove === 'function') orderLines[id].main.remove();
-                        if (orderLines[id].sl && typeof orderLines[id].sl.remove === 'function') orderLines[id].sl.remove();
-                        if (orderLines[id].tp && typeof orderLines[id].tp.remove === 'function') orderLines[id].tp.remove();   
+                        Object.keys(orderLines[id]).forEach(key => {
+                            if (orderLines[id][key] && typeof orderLines[id][key].remove === 'function') {
+                                orderLines[id][key].remove();
+                            }
+                        });
                         delete orderLines[id];
                     }
                 }
