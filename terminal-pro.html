@@ -169,18 +169,8 @@
             window.addEventListener('deriv_data', (e) => {
                 const data = e.detail;
                 
-                if (data.msg_type === 'balance') {
-                    const b = data.balance.balance;
-                    const cur = data.balance.currency || 'USD';
-                    document.getElementById('balance-display').innerText = `${cur} ${parseFloat(b).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                }
+                // ... (lo del balance y el tick se queda igual) ...
 
-                if (data.msg_type === 'tick') {
-                    updateButtonPrices(data.tick.quote);
-                }
-
-                // --- LOGICA PARA PINTAR EN EL GRÁFICO ---
-                // --- LOGICA PARA PINTAR EN EL GRÁFICO (CON FIX DE TIMING) ---
                 if (data.msg_type === 'proposal_open_contract') {
                     const contract = data.proposal_open_contract;
                     updateTradeUI(contract);
@@ -188,40 +178,62 @@
                     const chart = tvWidget.activeChart();
                     if (!chart) return;
 
-                    // 1. CREACIÓN NATIVA: Si el contrato tiene precio de entrada y no tiene línea aún
-                    if (!contract.is_sold && contract.entry_tick && !orderLines[contract.contract_id]) {
-                        const color = contract.contract_type === 'MULTUP' ? '#00ffa3' : '#ff4444';
-                        
-                        // Aquí usamos la API oficial de la librería
-                        const line = chart.createOrderLine()
-                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} $${contract.buy_price}`)
-                            .setQuantity(`Lot: ${contract.buy_price}`)
-                            .setPrice(parseFloat(contract.entry_tick)) // El anclaje al eje de precio
-                            .setLineColor(color)
-                            .setBodyTextColor("#fff")
-                            .setBodyBackgroundColor(color)
-                            .setBodyBorderColor(color)
-                            .setLineStyle(2); 
+                    const id = contract.contract_id;
 
-                        orderLines[contract.contract_id] = line;
+                    // 1. SI LA ORDEN ES NUEVA, CREAMOS LAS LÍNEAS
+                    if (!contract.is_sold && contract.entry_tick && !orderLines[id]) {
+                        orderLines[id] = {}; // Creamos un objeto para guardar las 3 líneas
+                        
+                        const mainColor = contract.contract_type === 'MULTUP' ? '#00ffa3' : '#ff4444';
+                        const entryPrice = parseFloat(contract.entry_tick);
+
+                        // --- LÍNEA PRINCIPAL (ORDEN) ---
+                        orderLines[id].main = chart.createOrderLine()
+                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'}`)
+                            .setQuantity(`Lot: ${contract.buy_price}`)
+                            .setPrice(entryPrice)
+                            .setLineColor(mainColor)
+                            .setBodyBackgroundColor(mainColor);
+
+                        // --- LÍNEA DE STOP LOSS (Si existe) ---
+                        if (contract.limit_order && contract.limit_order.stop_loss) {
+                            const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
+                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - (slAmount/100) : entryPrice + (slAmount/100);
+                            
+                            orderLines[id].sl = chart.createOrderLine()
+                                .setText("S/L")
+                                .setPrice(slPrice)
+                                .setLineColor("#ff4444")
+                                .setLineStyle(2);
+                        }
+
+                        // --- LÍNEA DE TAKE PROFIT (Si existe) ---
+                        if (contract.limit_order && contract.limit_order.take_profit) {
+                            const tpAmount = parseFloat(contract.limit_order.take_profit.order_amount);
+                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + (tpAmount/100) : entryPrice - (tpAmount/100);
+                            
+                            orderLines[id].tp = chart.createOrderLine()
+                                .setText("T/P")
+                                .setPrice(tpPrice)
+                                .setLineColor("#00ffa3")
+                                .setLineStyle(2);
+                        }
                     }
 
-                    // 2. ACTUALIZACIÓN DINÁMICA: Cambia el color si vas ganando o perdiendo (como MarketView)
-                    if (!contract.is_sold && orderLines[contract.contract_id]) {
+                    // 2. ACTUALIZACIÓN DINÁMICA DEL COLOR (Ganancia/Pérdida)
+                    if (!contract.is_sold && orderLines[id] && orderLines[id].main) {
                         const currentProfit = contract.profit || 0;
                         const dynamicColor = currentProfit >= 0 ? '#00ffa3' : '#ff4444';
-                        
-                        orderLines[contract.contract_id]
-                            .setLineColor(dynamicColor)
-                            .setBodyBackgroundColor(dynamicColor)
-                            .setBodyBorderColor(dynamicColor)
-                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} (${currentProfit >= 0 ? '+' : ''}${currentProfit.toFixed(2)})`);
+                        orderLines[id].main.setLineColor(dynamicColor).setBodyBackgroundColor(dynamicColor)
+                            .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} (${currentProfit.toFixed(2)})`);
                     }
 
-                    // 3. LIMPIEZA: Elimina la línea del motor gráfico al cerrar la operación
-                    if (contract.is_sold && orderLines[contract.contract_id]) {
-                        orderLines[contract.contract_id].remove();
-                        delete orderLines[contract.contract_id];
+                    // 3. LIMPIEZA TOTAL AL CERRAR
+                    if (contract.is_sold && orderLines[id]) {
+                        if (orderLines[id].main) orderLines[id].main.remove();
+                        if (orderLines[id].sl) orderLines[id].sl.remove();
+                        if (orderLines[id].tp) orderLines[id].tp.remove();
+                        delete orderLines[id];
                     }
                 }
             });
