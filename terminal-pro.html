@@ -123,7 +123,6 @@
         import { initDerivWSConnection, getSocket } from './streaming.js';
 
         let tvWidget;
-        let activeTrades = {};
         let orderLines = {}; // 🚩 Almacén para las líneas del gráfico
 
         window.onload = () => {
@@ -196,7 +195,7 @@
                         // Aquí usamos la API oficial de la librería
                         const line = chart.createOrderLine()
                             .setText(`${contract.contract_type === 'MULTUP' ? 'CALL' : 'PUT'} $${contract.buy_price}`)
-                            .setQuantity(`Stake: ${contract.buy_price}`)
+                            .setQuantity(`Lot: ${contract.buy_price}`)
                             .setPrice(parseFloat(contract.entry_tick)) // El anclaje al eje de precio
                             .setLineColor(color)
                             .setBodyTextColor("#fff")
@@ -238,43 +237,42 @@
             const socket = getSocket();
             let lot = parseFloat(document.getElementById('lot-input').value);
             
-            // Forzamos mínimo de 1.00 por seguridad
-            if (isNaN(lot) || lot < 1) {
-                lot = 1.00;
-                document.getElementById('lot-input').value = "1.00";
+            // Validación de lotaje para mercado real (mínimo suele ser 0.01 o 0.10 según el índice)
+            if (isNaN(lot) || lot <= 0) {
+                lot = 0.10; 
+                document.getElementById('lot-input').value = "0.10";
             }
 
             const symbol = tvWidget.activeChart().symbol();
 
-            // Construimos el objeto EXACTO que pide la API de Deriv
+            // ESTRUCTURA DE MERCADO REAL (CFD/Multipliers Pro)
             const request = {
                 buy: 1,
-                price: lot, 
+                price: 100000, // Precio máximo dispuesto a pagar (en mercado real se pone un valor alto para asegurar ejecución)
+                subscribe: 1,
                 parameters: {
-                    amount: lot,
-                    basis: "stake",
-                    contract_type: type, // MULTUP o MULTDOWN
+                    amount: lot, // Aquí el 'amount' ahora actúa como multiplicador de puntos (Lote)
+                    basis: "stake", // Deriv usa 'stake' para Multipliers, pero el comportamiento es de mercado real
+                    contract_type: type, 
                     currency: "USD",
-                    multiplier: 100,
-                    symbol: symbol
+                    symbol: symbol,
+                    // Eliminamos la limitación de tiempo para que la operación sea eterna hasta que tú la cierres
                 }
             };
 
-            // Solo agregamos el suscribe si queremos recibir el evento de línea pintada
-            request.subscribe = 1;
-
-            // Manejo estricto de SL/TP: Solo si tienen números válidos
+            // Manejo de SL/TP dinámico
             const slValue = document.getElementById('sl-input').value;
             const tpValue = document.getElementById('tp-input').value;
             
             if (slValue || tpValue) {
                 request.parameters.limit_order = {};
+                // En mercado real, el SL y TP pueden ser precios exactos o montos de dinero
                 if (slValue) request.parameters.limit_order.stop_loss = parseFloat(slValue);
                 if (tpValue) request.parameters.limit_order.take_profit = parseFloat(tpValue);
             }
 
             socket.send(JSON.stringify(request));
-            console.log("🚀 Enviando orden blindada...", request);
+            console.log("🔥 Orden de Mercado Real enviada...", request);
         };
 
         window.closeT = (id) => {
@@ -287,6 +285,7 @@
     </script>
 
     <script>
+        let activeTrades = {};
         function adjustLot(v) {
             const input = document.getElementById('lot-input');
             input.value = (parseFloat(input.value) + v).toFixed(2);
@@ -303,15 +302,20 @@
             document.getElementById('buy-price-container').innerHTML = html;
         }
 
+
         function updateTradeUI(c) {
             const id = c.contract_id;
             const container = document.getElementById('active-trades-container');
             
+            // --- LIMPIEZA AL CERRAR ---
             if (c.is_sold) {
                 document.getElementById(`t-${id}`)?.remove();
+                delete activeTrades[id]; // Eliminamos la operación del conteo global
+                actualizarBalanceVisual(); // Recalculamos el balance
                 return;
             }
 
+            // --- CREACIÓN / ACTUALIZACIÓN DE LA TARJETA ---
             let tradeDiv = document.getElementById(`t-${id}`);
             if (!tradeDiv) {
                 tradeDiv = document.createElement('div');
@@ -330,12 +334,30 @@
                 </div>
                 <div class="p-3 grid grid-cols-2 gap-y-1 text-[8px] font-bold uppercase text-zinc-500">
                     <div>Entrada: <span class="text-white font-mono">${c.entry_tick || '...'}</span></div>
-                    <div class="text-right">Stake: <span class="text-white font-mono">$ ${c.buy_price}</span></div>
+                    <div class="text-right">Lot: <span class="text-white font-mono">${c.buy_price}</span></div>
                     <div class="col-span-2 pt-2 border-t border-white/5 flex justify-between items-center">
                         <span class="text-zinc-400">Profit/Loss:</span>
                         <span class="text-base font-black font-mono tracking-tighter ${colorClass}">$ ${profit.toFixed(2)}</span>
                     </div>
                 </div>`;
+
+            // --- LÓGICA DE BALANCE DINÁMICO ---
+            activeTrades[id] = profit;
+            actualizarBalanceVisual();
+        }
+
+        function actualizarBalanceVisual() {
+            const totalProfit = Object.values(activeTrades).reduce((a, b) => a + b, 0);
+            const balanceDisplay = document.getElementById('balance-display');
+            
+            // Aquí podrías guardar el balance base en una variable global al recibir el primer mensaje 'balance'
+            // Por ahora, solo mostraremos el profit flotante si hay operaciones
+            if (Object.keys(activeTrades).length > 0) {
+                balanceDisplay.style.color = totalProfit >= 0 ? '#00ffa3' : '#ff4444';
+                // Opcional: balanceDisplay.innerText = `$ ${(balance_base + totalProfit).toFixed(2)}`;
+            } else {
+                balanceDisplay.style.color = '#00ffa3';
+            }
         }
     </script>
 </body>
