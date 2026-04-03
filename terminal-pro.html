@@ -169,7 +169,13 @@
             window.addEventListener('deriv_data', (e) => {
                 const data = e.detail;
                 
-                // ... (lo del balance y el tick se queda igual) ...
+                if (data.msg_type === 'balance') {
+                    const b = data.balance.balance;
+                    const cur = data.balance.currency || 'USD';
+                    // Guardamos el balance base para los cálculos
+                    window.balance_base = parseFloat(b); 
+                    document.getElementById('balance-display').innerText = `${cur} ${window.balance_base.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                }
 
                 if (data.msg_type === 'proposal_open_contract') {
                     const contract = data.proposal_open_contract;
@@ -197,14 +203,17 @@
 
                         // --- LÍNEA DE STOP LOSS (Si existe) ---
                         if (contract.limit_order && contract.limit_order.stop_loss) {
-                            const slAmount = parseFloat(contract.limit_order.stop_loss.order_amount);
-                            const slPrice = contract.contract_type === 'MULTUP' ? entryPrice - (slAmount/100) : entryPrice + (slAmount/100);
+                            // Usamos el stop_loss.order_amount directamente si Deriv lo manda como precio, 
+                            // o calculamos la distancia. Para Multipliers lo ideal es:
+                            const slPrice = parseFloat(contract.limit_order.stop_loss.order_price || 0);
                             
-                            orderLines[id].sl = chart.createOrderLine()
-                                .setText("S/L")
-                                .setPrice(slPrice)
-                                .setLineColor("#ff4444")
-                                .setLineStyle(2);
+                            if (slPrice > 0) {
+                                orderLines[id].sl = chart.createOrderLine()
+                                    .setText("S/L")
+                                    .setPrice(slPrice)
+                                    .setLineColor("#ff4444")
+                                    .setLineStyle(2);
+                            }
                         }
 
                         // --- LÍNEA DE TAKE PROFIT (Si existe) ---
@@ -355,14 +364,14 @@
             const totalProfit = Object.values(activeTrades).reduce((a, b) => a + b, 0);
             const balanceDisplay = document.getElementById('balance-display');
             
-            // Aquí podrías guardar el balance base en una variable global al recibir el primer mensaje 'balance'
-            // Por ahora, solo mostraremos el profit flotante si hay operaciones
-            if (Object.keys(activeTrades).length > 0) {
-                balanceDisplay.style.color = totalProfit >= 0 ? '#00ffa3' : '#ff4444';
-                // Opcional: balanceDisplay.innerText = `$ ${(balance_base + totalProfit).toFixed(2)}`;
-            } else {
-                balanceDisplay.style.color = '#00ffa3';
+            // Si ya recibimos el balance inicial de Deriv, sumamos el profit flotante
+            if (window.balance_base !== undefined) {
+                const finalBalance = window.balance_base + totalProfit;
+                balanceDisplay.innerText = `$ ${finalBalance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             }
+            
+            // Cambiar color según la ganancia total
+            balanceDisplay.style.color = totalProfit >= 0 ? '#00ffa3' : '#ff4444';
         }
     </script>
 </body>
