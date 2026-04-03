@@ -225,7 +225,7 @@
                             const priceDist = (tpAmount / stake) * (entryPrice / multiplier);
                             
                             // AQUÍ: Sumamos para BUY (MULTUP), restamos para SELL (MULTDOWN)
-                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDist : entryPrice - priceDist;
+                            const tpPrice = contract.contract_type === 'MULTUP' ? entryPrice + priceDist : entryPrice - priceDist; 
                             
                             if (!orderLines[id].tp) {
                                 orderLines[id].tp = chart.createOrderLine().setText("T/P").setLineColor("#00ffa3").setLineStyle(2);
