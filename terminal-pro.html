@@ -213,7 +213,7 @@
                             // IMPORTANTE: Forzamos el cálculo matemático
                             let slPrice;
                             if (contract.contract_type === 'MULTUP') {
-                                slPrice = entryPrice - priceDistSL; // Compra: Precio menos distancia (ABAJO)
+                                slPrice = entryPrice - 100; // Compra: Precio menos distancia (ABAJO)
                             } else {
                                 slPrice = entryPrice + priceDistSL; // Venta: Precio más distancia (ARRIBA)
                             }
